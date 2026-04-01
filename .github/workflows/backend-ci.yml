@@ -1,0 +1,118 @@
+name: backend-ci
+
+on:
+  push:
+    paths:
+      - 'Backend/**'
+      - '.github/workflows/backend-ci.yml'
+  pull_request:
+    paths:
+      - 'Backend/**'
+      - '.github/workflows/backend-ci.yml'
+
+jobs:
+  test-backend:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: siggab
+          POSTGRES_PASSWORD: siggab
+          POSTGRES_DB: siggab_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U siggab -d siggab_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    defaults:
+      run:
+        working-directory: Backend
+
+    env:
+      DATABASE_URL: postgresql://siggab:siggab@localhost:5432/siggab_test
+      JWT_SECRET: siggab_ci_secret_super_seguro_2026
+      JWT_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 7d
+      PORT: 3000
+      NODE_ENV: test
+      AUTO_BACKUP_ENABLED: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.15.0
+          cache: 'npm'
+          cache-dependency-path: Backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate OpenAPI contract
+        run: npm run openapi:generate
+
+      - name: Validate OpenAPI contract
+        run: npm run openapi:validate
+
+      - name: Prisma generate
+        run: npx prisma generate
+
+      - name: Sync schema
+        run: npx prisma db push --accept-data-loss
+
+      - name: Seed database
+        run: npm run seed
+
+      - name: Start API server
+        run: node src/server.js &
+
+      - name: Wait for API health
+        run: |
+          for i in {1..30}; do
+            if curl -sf http://127.0.0.1:3000/api/health > /dev/null; then
+              echo "API lista";
+              exit 0;
+            fi
+            sleep 2
+          done
+          echo "La API no respondió a tiempo"
+          exit 1
+
+      - name: Run endpoint tests
+        run: npm test
+
+      - name: Stop API server (normal mode)
+        run: pkill -f "node src/server.js" || true
+
+      - name: Start API server (csrf mode)
+        env:
+          ENABLE_CSRF_PROTECTION: true
+          CSRF_HEADER_NAME: x-csrf-token
+          CSRF_TOKEN: siggab_csrf_token_super_seguro_2026
+        run: node src/server.js &
+
+      - name: Wait for API health (csrf mode)
+        run: |
+          for i in {1..30}; do
+            if curl -sf http://127.0.0.1:3000/api/health > /dev/null; then
+              echo "API lista en modo CSRF";
+              exit 0;
+            fi
+            sleep 2
+          done
+          echo "La API no respondio en modo CSRF"
+          exit 1
+
+      - name: Run CSRF security tests
+        env:
+          TEST_CSRF_HEADER_NAME: x-csrf-token
+          TEST_CSRF_TOKEN: siggab_csrf_token_super_seguro_2026
+        run: npm run test:csrf

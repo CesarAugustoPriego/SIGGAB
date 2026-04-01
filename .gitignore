@@ -1,0 +1,32 @@
+# ─── Node ───
+node_modules/
+**/node_modules/
+
+# ─── Logs ───
+*.log
+npm-debug.log*
+
+# ─── Env ───
+.env
+.env.*
+!.env.example
+
+# ─── Build ───
+dist/
+build/
+**/dist/
+**/build/
+
+# ─── Prisma ───
+generated/
+
+# ─── Backups ───
+backups/
+
+# ─── OS ───
+.DS_Store
+Thumbs.db
+
+# ─── Editor ───
+.vscode/
+.idea/

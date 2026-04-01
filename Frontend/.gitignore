@@ -1,0 +1,21 @@
+# ─── Node ───
+node_modules/
+
+# ─── Build ───
+dist/
+build/
+
+# ─── Env ───
+.env
+.env.*
+!.env.example
+
+# ─── Logs ───
+*.log
+
+# ─── OS ───
+.DS_Store
+Thumbs.db
+
+# ─── Cache ───
+.cache/

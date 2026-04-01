@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1200" viewBox="0 0 900 1200" fill="none">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="780" y2="1200" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1F8D3A"/>
+      <stop offset="1" stop-color="#0A5F25"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="1200" fill="url(#g)"/>
+  <rect x="46" y="46" width="808" height="1108" rx="10" stroke="#D3F0DC" stroke-width="4" stroke-dasharray="18 14"/>
+  <text x="450" y="520" font-family="Arial, sans-serif" font-size="66" font-weight="700" text-anchor="middle" fill="#EFFFF4">Imagen lateral</text>
+  <text x="450" y="592" font-family="Arial, sans-serif" font-size="34" text-anchor="middle" fill="#E1F8E7">Registro / branding</text>
+  <text x="450" y="652" font-family="Arial, sans-serif" font-size="26" text-anchor="middle" fill="#CBE8D4">Reemplaza este archivo</text>
+</svg>

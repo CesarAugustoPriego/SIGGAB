@@ -1,0 +1,3675 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "SIGGAB API",
+    "version": "2.1.0",
+    "description": "Sistema Gestor de Ganado Bovino (SIGGAB) - API REST.\n\nTodos los endpoints (excepto login y refresh) requieren Bearer token.\nRespuesta estandar: { success, data, message, errors }.",
+    "contact": {
+      "name": "SIGGAB Dev Team"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api",
+      "description": "Desarrollo local"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Token JWT obtenido en POST /auth/login"
+      }
+    },
+    "schemas": {
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Operacion exitosa"
+          },
+          "errors": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "success",
+          "data",
+          "message",
+          "errors"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "data": {
+            "type": "object",
+            "nullable": true,
+            "example": null
+          },
+          "message": {
+            "type": "string",
+            "example": "Error de validacion"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "nullable": true
+          }
+        },
+        "required": [
+          "success",
+          "data",
+          "message",
+          "errors"
+        ]
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "properties": {
+          "username": {
+            "type": "string",
+            "minLength": 3,
+            "example": "admin"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 6,
+            "example": "SiggabAdmin2026!"
+          }
+        }
+      },
+      "RefreshTokenRequest": {
+        "type": "object",
+        "required": [
+          "refreshToken"
+        ],
+        "properties": {
+          "refreshToken": {
+            "type": "string"
+          }
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          },
+          "usuario": {
+            "type": "object",
+            "properties": {
+              "idUsuario": {
+                "type": "integer",
+                "example": 2
+              },
+              "nombreCompleto": {
+                "type": "string",
+                "example": "Administrador SIGGAB"
+              },
+              "username": {
+                "type": "string",
+                "example": "admin"
+              },
+              "rol": {
+                "type": "string",
+                "example": "Administrador"
+              }
+            }
+          }
+        }
+      },
+      "Rol": {
+        "type": "object",
+        "properties": {
+          "idRol": {
+            "type": "integer",
+            "example": 2
+          },
+          "nombreRol": {
+            "type": "string",
+            "example": "Administrador"
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "Usuario": {
+        "type": "object",
+        "properties": {
+          "idUsuario": {
+            "type": "integer",
+            "example": 1
+          },
+          "nombreCompleto": {
+            "type": "string",
+            "example": "Juan Perez"
+          },
+          "username": {
+            "type": "string",
+            "example": "jperez"
+          },
+          "idRol": {
+            "type": "integer",
+            "example": 3
+          },
+          "activo": {
+            "type": "boolean",
+            "example": true
+          },
+          "intentosFallidos": {
+            "type": "integer",
+            "example": 0
+          },
+          "bloqueadoHasta": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "fechaCreacion": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "rol": {
+            "$ref": "#/components/schemas/Rol"
+          }
+        }
+      },
+      "CreateUsuarioRequest": {
+        "type": "object",
+        "required": [
+          "nombreCompleto",
+          "username",
+          "password",
+          "idRol"
+        ],
+        "properties": {
+          "nombreCompleto": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 100
+          },
+          "username": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 50
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128
+          },
+          "idRol": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "Raza": {
+        "type": "object",
+        "properties": {
+          "idRaza": {
+            "type": "integer",
+            "example": 1
+          },
+          "nombreRaza": {
+            "type": "string",
+            "example": "Holstein"
+          },
+          "activo": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "Animal": {
+        "type": "object",
+        "properties": {
+          "idAnimal": {
+            "type": "integer",
+            "example": 1
+          },
+          "numeroArete": {
+            "type": "string",
+            "example": "MX-001-2026"
+          },
+          "fechaIngreso": {
+            "type": "string",
+            "format": "date"
+          },
+          "pesoInicial": {
+            "type": "number",
+            "example": 350.2
+          },
+          "idRaza": {
+            "type": "integer",
+            "example": 1
+          },
+          "procedencia": {
+            "type": "string",
+            "example": "Rancho Norte"
+          },
+          "edadEstimada": {
+            "type": "integer",
+            "example": 18
+          },
+          "estadoSanitarioInicial": {
+            "type": "string",
+            "example": "Sano"
+          },
+          "estadoActual": {
+            "type": "string",
+            "enum": [
+              "ACTIVO",
+              "VENDIDO",
+              "MUERTO",
+              "TRANSFERIDO"
+            ],
+            "example": "ACTIVO"
+          },
+          "motivoBaja": {
+            "type": "string",
+            "nullable": true
+          },
+          "fechaBaja": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "raza": {
+            "$ref": "#/components/schemas/Raza"
+          }
+        }
+      },
+      "CreateAnimalRequest": {
+        "type": "object",
+        "required": [
+          "numeroArete",
+          "fechaIngreso",
+          "pesoInicial",
+          "idRaza",
+          "procedencia",
+          "edadEstimada",
+          "estadoSanitarioInicial"
+        ],
+        "properties": {
+          "numeroArete": {
+            "type": "string"
+          },
+          "fechaIngreso": {
+            "type": "string",
+            "format": "date"
+          },
+          "pesoInicial": {
+            "type": "number"
+          },
+          "idRaza": {
+            "type": "integer"
+          },
+          "procedencia": {
+            "type": "string"
+          },
+          "edadEstimada": {
+            "type": "integer"
+          },
+          "estadoSanitarioInicial": {
+            "type": "string"
+          }
+        }
+      },
+      "BajaAnimalRequest": {
+        "type": "object",
+        "required": [
+          "estadoActual",
+          "motivoBaja",
+          "fechaBaja"
+        ],
+        "properties": {
+          "estadoActual": {
+            "type": "string",
+            "enum": [
+              "VENDIDO",
+              "MUERTO",
+              "TRANSFERIDO"
+            ]
+          },
+          "motivoBaja": {
+            "type": "string",
+            "minLength": 5
+          },
+          "fechaBaja": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "TipoInsumo": {
+        "type": "object",
+        "properties": {
+          "idTipoInsumo": {
+            "type": "integer"
+          },
+          "nombreTipo": {
+            "type": "string"
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true
+          },
+          "activo": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Insumo": {
+        "type": "object",
+        "properties": {
+          "idInsumo": {
+            "type": "integer"
+          },
+          "nombreInsumo": {
+            "type": "string"
+          },
+          "idTipoInsumo": {
+            "type": "integer"
+          },
+          "unidadMedida": {
+            "type": "string"
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true
+          },
+          "stockActual": {
+            "type": "number"
+          },
+          "activo": {
+            "type": "boolean"
+          },
+          "tipoInsumo": {
+            "$ref": "#/components/schemas/TipoInsumo"
+          }
+        }
+      },
+      "DetalleSolicitud": {
+        "type": "object",
+        "properties": {
+          "idInsumo": {
+            "type": "integer"
+          },
+          "cantidad": {
+            "type": "number"
+          },
+          "precioEstimado": {
+            "type": "number"
+          },
+          "subtotalEstimado": {
+            "type": "number"
+          },
+          "insumo": {
+            "$ref": "#/components/schemas/Insumo"
+          }
+        }
+      },
+      "SolicitudCompra": {
+        "type": "object",
+        "properties": {
+          "idSolicitud": {
+            "type": "integer"
+          },
+          "fechaSolicitud": {
+            "type": "string",
+            "format": "date"
+          },
+          "estadoSolicitud": {
+            "type": "string",
+            "enum": [
+              "PENDIENTE",
+              "APROBADA",
+              "RECHAZADA"
+            ]
+          },
+          "observaciones": {
+            "type": "string",
+            "nullable": true
+          },
+          "detalles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DetalleSolicitud"
+            }
+          }
+        }
+      },
+      "LoteProductivo": {
+        "type": "object",
+        "properties": {
+          "idLote": {
+            "type": "integer"
+          },
+          "fechaInicio": {
+            "type": "string",
+            "format": "date"
+          },
+          "fechaFin": {
+            "type": "string",
+            "format": "date"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "PENDIENTE",
+              "APROBADO",
+              "RECHAZADO"
+            ]
+          }
+        }
+      },
+      "DashboardResumen": {
+        "type": "object",
+        "properties": {
+          "totalAnimalesActivos": {
+            "type": "integer",
+            "example": 120
+          },
+          "vacunacionesMes": {
+            "type": "integer",
+            "example": 15
+          },
+          "pesosPendientesValidar": {
+            "type": "integer",
+            "example": 8
+          },
+          "alertasProximas7Dias": {
+            "type": "integer",
+            "example": 3
+          },
+          "solicitudesCompraPendientes": {
+            "type": "integer",
+            "example": 2
+          },
+          "insumosStockAgotado": {
+            "type": "integer",
+            "example": 1
+          },
+          "inventarioTotalItems": {
+            "type": "integer",
+            "example": 75
+          },
+          "inventarioTotalUnidades": {
+            "type": "number",
+            "example": 1540.5
+          },
+          "gananciaPromedioKg": {
+            "type": "number",
+            "example": 12.4
+          },
+          "natalidadPorcentaje": {
+            "type": "number",
+            "example": 18.5
+          },
+          "mortalidadPorcentaje": {
+            "type": "number",
+            "example": 2.1
+          },
+          "generadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/animales": {
+      "get": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Listar animales",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "estado",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ACTIVO",
+                "VENDIDO",
+                "MUERTO",
+                "TRANSFERIDO"
+              ]
+            },
+            "description": "Filtrar por estado actual"
+          },
+          {
+            "in": "query",
+            "name": "raza",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Filtrar por ID de raza"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de animales"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Registrar nuevo animal",
+        "description": "Roles permitidos → Administrador, Médico Veterinario, Producción, Campo",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAnimalRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Animal registrado exitosamente"
+          },
+          "400": {
+            "description": "Error de validación o raza inexistente"
+          },
+          "403": {
+            "description": "Sin permisos"
+          }
+        }
+      }
+    },
+    "/animales/arete/{numero}/historial": {
+      "get": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Historial completo por arete (RF04)",
+        "description": "Endpoint orientado a escaneo de arete en app movil.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "numero",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Animal y su historial sanitario/productivo"
+          },
+          "404": {
+            "description": "Animal no encontrado"
+          }
+        }
+      }
+    },
+    "/animales/arete/{numero}": {
+      "get": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Buscar animal por número de arete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "numero",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "MX-001-2024"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Animal encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Animal"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Animal no encontrado"
+          }
+        }
+      }
+    },
+    "/animales/{id}": {
+      "get": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Obtener animal por ID",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Animal encontrado"
+          },
+          "404": {
+            "description": "No encontrado"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Actualizar datos del animal",
+        "description": "Solo Administrador. No aplica para baja (usar /baja).",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "procedencia": {
+                    "type": "string"
+                  },
+                  "edadEstimada": {
+                    "type": "integer"
+                  },
+                  "idRaza": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Animal actualizado"
+          },
+          "400": {
+            "description": "Animal dado de baja o raza inexistente"
+          },
+          "403": {
+            "description": "Sin permisos"
+          },
+          "404": {
+            "description": "No encontrado"
+          }
+        }
+      }
+    },
+    "/animales/{id}/baja": {
+      "patch": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Dar de baja un animal (RN-08)",
+        "description": "**RN-08:** Registra obligatoriamente el motivo y fecha de baja.\nUna vez dado de baja, el animal no puede modificarse ni recibir registros productivos.\n",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BajaAnimalRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Animal dado de baja"
+          },
+          "400": {
+            "description": "El animal ya fue dado de baja anteriormente"
+          },
+          "403": {
+            "description": "Sin permisos (solo Administrador)"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Iniciar sesion",
+        "description": "Retorna accessToken y refreshToken. Tras 5 intentos fallidos consecutivos, responde 423 por bloqueo temporal.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login exitoso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/LoginResponse"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error de validacion"
+          },
+          "401": {
+            "description": "Credenciales invalidas o cuenta desactivada"
+          },
+          "423": {
+            "description": "Cuenta bloqueada temporalmente por seguridad"
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Renovar access token",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Nuevo accessToken generado"
+          },
+          "401": {
+            "description": "Refresh token revocado o expirado"
+          },
+          "423": {
+            "description": "Cuenta bloqueada temporalmente por seguridad"
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Cerrar sesion (revoca refreshToken)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sesion cerrada"
+          },
+          "401": {
+            "description": "No autenticado"
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Perfil del usuario autenticado",
+        "responses": {
+          "200": {
+            "description": "Datos del usuario actual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Usuario"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No autenticado"
+          }
+        }
+      }
+    },
+    "/calendario-sanitario/alertas": {
+      "get": {
+        "tags": [
+          "CalendarioSanitario"
+        ],
+        "summary": "Obtener alertas sanitarias proximas (RF06)",
+        "description": "Retorna eventos con alerta activa. El backend aplica regla minima de 3 dias de anticipacion.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "dias",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 7
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Alertas obtenidas"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permisos"
+          }
+        }
+      }
+    },
+    "/calendario-sanitario": {
+      "get": {
+        "tags": [
+          "CalendarioSanitario"
+        ],
+        "summary": "Listar eventos del calendario sanitario",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "animal",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "estado",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDIENTE",
+                "COMPLETADO",
+                "CANCELADO"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Eventos obtenidos"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permisos"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CalendarioSanitario"
+        ],
+        "summary": "Programar evento sanitario",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "idAnimal",
+                  "idTipoEvento",
+                  "fechaProgramada"
+                ],
+                "properties": {
+                  "idAnimal": {
+                    "type": "integer"
+                  },
+                  "idTipoEvento": {
+                    "type": "integer"
+                  },
+                  "fechaProgramada": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "fechaAlerta": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Opcional. Si no se envia, backend calcula automaticamente 3 dias antes."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Evento programado"
+          },
+          "400": {
+            "description": "Error de validacion o regla de negocio"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permisos"
+          }
+        }
+      }
+    },
+    "/calendario-sanitario/{id}": {
+      "get": {
+        "tags": [
+          "CalendarioSanitario"
+        ],
+        "summary": "Obtener evento de calendario por ID",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Evento encontrado"
+          },
+          "404": {
+            "description": "Evento no encontrado"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "CalendarioSanitario"
+        ],
+        "summary": "Actualizar evento programado",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "idTipoEvento": {
+                    "type": "integer"
+                  },
+                  "fechaProgramada": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "fechaAlerta": {
+                    "type": "string",
+                    "format": "date",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evento actualizado"
+          },
+          "400": {
+            "description": "Error de validacion"
+          },
+          "404": {
+            "description": "Evento no encontrado"
+          }
+        }
+      }
+    },
+    "/calendario-sanitario/{id}/completar": {
+      "patch": {
+        "tags": [
+          "CalendarioSanitario"
+        ],
+        "summary": "Marcar evento como completado o cancelado",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "estado"
+                ],
+                "properties": {
+                  "estado": {
+                    "type": "string",
+                    "enum": [
+                      "COMPLETADO",
+                      "CANCELADO"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evento procesado"
+          },
+          "400": {
+            "description": "Error de validacion"
+          },
+          "404": {
+            "description": "Evento no encontrado"
+          }
+        }
+      }
+    },
+    "/compras-realizadas": {
+      "get": {
+        "tags": [
+          "Compras"
+        ],
+        "summary": "Listar compras realizadas",
+        "responses": {
+          "200": {
+            "description": "Lista de compras con detalles y movimientos generados"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Compras"
+        ],
+        "summary": "Registrar compra realizada (RN-16 — genera entradas de inventario)",
+        "description": "**RN-16:** Al confirmar la compra, el sistema ejecuta una **transacción atómica** que:\n1. Crea la compra y sus detalles\n2. Genera un `MovimientoInventario` ENTRADA por cada detalle\n3. Actualiza `stockActual` de cada insumo\n\n**RN-17:** La solicitud asociada debe estar en estado `APROBADA`.\n",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "idSolicitud",
+                  "fechaCompra",
+                  "detalles"
+                ],
+                "properties": {
+                  "idSolicitud": {
+                    "type": "integer"
+                  },
+                  "fechaCompra": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "detalles": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "idInsumo": {
+                          "type": "integer"
+                        },
+                        "cantidadReal": {
+                          "type": "number"
+                        },
+                        "precioUnitario": {
+                          "type": "number"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Compra registrada y stock actualizado automáticamente"
+          },
+          "400": {
+            "description": "Solicitud no aprobada o ya tiene compra (RN-17)"
+          }
+        }
+      }
+    },
+    "/compras-realizadas/{id}": {
+      "get": {
+        "tags": [
+          "Compras"
+        ],
+        "summary": "Obtener compra por ID con detalles y movimientos generados",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Compra con detalles y movimientos de inventario"
+          }
+        }
+      }
+    },
+    "/dashboard/resumen": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "KPIs generales del rancho",
+        "description": "Retorna totales rápidos del sistema — animales activos, alertas próximas, solicitudes pendientes, stock agotado.",
+        "responses": {
+          "200": {
+            "description": "KPIs generales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/DashboardResumen"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dashboard/ganado": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Distribución del hato (por raza y estado)",
+        "responses": {
+          "200": {
+            "description": "Agrupaciones del hato ganadero"
+          }
+        }
+      }
+    },
+    "/dashboard/produccion": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Indicadores productivos (últimos 30 días)",
+        "description": "Promedio de peso, total litros de leche y eventos reproductivos agrupados por tipo.",
+        "responses": {
+          "200": {
+            "description": "Métricas productivas"
+          }
+        }
+      }
+    },
+    "/dashboard/sanitario": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Estado sanitario — próximos eventos y pendientes por aprobar",
+        "responses": {
+          "200": {
+            "description": "Panel sanitario"
+          }
+        }
+      }
+    },
+    "/dashboard/inventario": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Estado del inventario — insumos agotados y bajo stock",
+        "responses": {
+          "200": {
+            "description": "Panel de inventario"
+          }
+        }
+      }
+    },
+    "/dashboard/stream": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Stream SSE de KPIs de resumen en tiempo real",
+        "description": "Envía un snapshot de /dashboard/resumen cada 15 segundos.",
+        "responses": {
+          "200": {
+            "description": "Stream abierto"
+          }
+        }
+      }
+    },
+    "/dashboard/bitacora": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Bitácora de auditoría (solo Admin)",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "maximum": 500
+            },
+            "description": "Número de registros a retornar"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Últimas acciones registradas en el sistema"
+          },
+          "403": {
+            "description": "Solo accesible por Administrador"
+          }
+        }
+      }
+    },
+    "/eventos-reproductivos": {
+      "get": {
+        "tags": [
+          "ProductivoReproductivo"
+        ],
+        "summary": "Listar eventos reproductivos",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "idAnimal",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "idLote",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tipo",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CELO",
+                "MONTA",
+                "PRENEZ",
+                "PARTO",
+                "ABORTO"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "estado",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDIENTE",
+                "APROBADO",
+                "RECHAZADO"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Eventos obtenidos"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ProductivoReproductivo"
+        ],
+        "summary": "Registrar evento reproductivo",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "idAnimal",
+                  "idLote",
+                  "tipoEvento",
+                  "fechaEvento"
+                ],
+                "properties": {
+                  "idAnimal": {
+                    "type": "integer"
+                  },
+                  "idLote": {
+                    "type": "integer"
+                  },
+                  "tipoEvento": {
+                    "type": "string",
+                    "enum": [
+                      "CELO",
+                      "MONTA",
+                      "PRENEZ",
+                      "PARTO",
+                      "ABORTO"
+                    ]
+                  },
+                  "fechaEvento": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "observaciones": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Evento creado"
+          },
+          "400": {
+            "description": "Error de validacion"
+          }
+        }
+      }
+    },
+    "/eventos-reproductivos/{id}": {
+      "get": {
+        "tags": [
+          "ProductivoReproductivo"
+        ],
+        "summary": "Obtener evento reproductivo por ID",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Evento encontrado"
+          },
+          "404": {
+            "description": "Evento no encontrado"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "ProductivoReproductivo"
+        ],
+        "summary": "Modificar evento reproductivo",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "tipoEvento": {
+                    "type": "string",
+                    "enum": [
+                      "CELO",
+                      "MONTA",
+                      "PRENEZ",
+                      "PARTO",
+                      "ABORTO"
+                    ]
+                  },
+                  "fechaEvento": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "observaciones": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evento actualizado"
+          },
+          "400": {
+            "description": "Error de validacion"
+          },
+          "404": {
+            "description": "Evento no encontrado"
+          }
+        }
+      }
+    },
+    "/eventos-reproductivos/{id}/validar": {
+      "patch": {
+        "tags": [
+          "ProductivoReproductivo"
+        ],
+        "summary": "Validar evento reproductivo",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "estadoValidacion"
+                ],
+                "properties": {
+                  "estadoValidacion": {
+                    "type": "string",
+                    "enum": [
+                      "APROBADO",
+                      "RECHAZADO"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evento validado"
+          },
+          "400": {
+            "description": "Error de validacion"
+          },
+          "404": {
+            "description": "Evento no encontrado"
+          }
+        }
+      }
+    },
+    "/eventos-sanitarios/tipos": {
+      "get": {
+        "tags": [
+          "EventosSanitarios"
+        ],
+        "summary": "Listar tipos de evento sanitario",
+        "responses": {
+          "200": {
+            "description": "Catalogo de tipos sanitarios"
+          },
+          "401": {
+            "description": "No autenticado"
+          }
+        }
+      }
+    },
+    "/eventos-sanitarios": {
+      "get": {
+        "tags": [
+          "EventosSanitarios"
+        ],
+        "summary": "Listar eventos sanitarios",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "animal",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tipo",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "estado",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDIENTE",
+                "APROBADO",
+                "RECHAZADO"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Eventos sanitarios obtenidos"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permisos"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "EventosSanitarios"
+        ],
+        "summary": "Registrar evento sanitario",
+        "description": "El registro queda en estado PENDIENTE hasta su autorizacion oficial.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "idAnimal",
+                  "idTipoEvento",
+                  "fechaEvento"
+                ],
+                "properties": {
+                  "idAnimal": {
+                    "type": "integer"
+                  },
+                  "idTipoEvento": {
+                    "type": "integer"
+                  },
+                  "fechaEvento": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "diagnostico": {
+                    "type": "string"
+                  },
+                  "medicamento": {
+                    "type": "string"
+                  },
+                  "dosis": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Evento sanitario creado"
+          },
+          "400": {
+            "description": "Error de validacion"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permisos"
+          }
+        }
+      }
+    },
+    "/eventos-sanitarios/{id}": {
+      "get": {
+        "tags": [
+          "EventosSanitarios"
+        ],
+        "summary": "Obtener evento sanitario por ID",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Evento encontrado"
+          },
+          "404": {
+            "description": "Evento no encontrado"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "EventosSanitarios"
+        ],
+        "summary": "Modificar evento sanitario",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "idTipoEvento": {
+                    "type": "integer"
+                  },
+                  "fechaEvento": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "diagnostico": {
+                    "type": "string"
+                  },
+                  "medicamento": {
+                    "type": "string"
+                  },
+                  "dosis": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evento modificado"
+          },
+          "400": {
+            "description": "Error de validacion"
+          },
+          "404": {
+            "description": "Evento no encontrado"
+          }
+        }
+      }
+    },
+    "/eventos-sanitarios/{id}/aprobar": {
+      "patch": {
+        "tags": [
+          "EventosSanitarios"
+        ],
+        "summary": "Autorizar o rechazar evento sanitario (RF11)",
+        "description": "Autorizacion oficial permitida solo para Medico Veterinario.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "estadoAprobacion"
+                ],
+                "properties": {
+                  "estadoAprobacion": {
+                    "type": "string",
+                    "enum": [
+                      "APROBADO",
+                      "RECHAZADO"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evento autorizado o rechazado"
+          },
+          "400": {
+            "description": "Error de validacion o regla de negocio"
+          },
+          "403": {
+            "description": "Sin permisos"
+          },
+          "404": {
+            "description": "Evento no encontrado"
+          }
+        }
+      }
+    },
+    "/insumos/tipos": {
+      "get": {
+        "tags": [
+          "Inventario"
+        ],
+        "summary": "Listar tipos de insumo",
+        "responses": {
+          "200": {
+            "description": "Tipos obtenidos"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Inventario"
+        ],
+        "summary": "Crear tipo de insumo",
+        "description": "Solo Administrador.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "nombreTipo"
+                ],
+                "properties": {
+                  "nombreTipo": {
+                    "type": "string"
+                  },
+                  "descripcion": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Tipo creado"
+          },
+          "400": {
+            "description": "Error de validacion"
+          },
+          "403": {
+            "description": "Sin permisos"
+          }
+        }
+      }
+    },
+    "/insumos/tipos/{id}": {
+      "patch": {
+        "tags": [
+          "Inventario"
+        ],
+        "summary": "Modificar tipo de insumo",
+        "description": "Solo Administrador.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombreTipo": {
+                    "type": "string"
+                  },
+                  "descripcion": {
+                    "type": "string"
+                  },
+                  "activo": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tipo actualizado"
+          },
+          "404": {
+            "description": "Tipo no encontrado"
+          }
+        }
+      }
+    },
+    "/insumos/movimientos": {
+      "get": {
+        "tags": [
+          "Inventario"
+        ],
+        "summary": "Listar movimientos de inventario",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "idInsumo",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tipo",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ENTRADA",
+                "SALIDA"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Movimientos obtenidos"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Inventario"
+        ],
+        "summary": "Registrar movimiento manual de inventario",
+        "description": "Flujo operativo solo para salida manual; entradas suelen originarse en compras realizadas.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "idInsumo",
+                  "tipoMovimiento",
+                  "cantidad",
+                  "fechaMovimiento"
+                ],
+                "properties": {
+                  "idInsumo": {
+                    "type": "integer"
+                  },
+                  "tipoMovimiento": {
+                    "type": "string",
+                    "enum": [
+                      "ENTRADA",
+                      "SALIDA"
+                    ]
+                  },
+                  "cantidad": {
+                    "type": "number"
+                  },
+                  "fechaMovimiento": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Movimiento registrado y stock actualizado"
+          },
+          "400": {
+            "description": "Error de validacion o stock insuficiente"
+          }
+        }
+      }
+    },
+    "/insumos/movimientos/{id}": {
+      "get": {
+        "tags": [
+          "Inventario"
+        ],
+        "summary": "Obtener movimiento por ID",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Movimiento obtenido"
+          },
+          "404": {
+            "description": "Movimiento no encontrado"
+          }
+        }
+      }
+    },
+    "/insumos": {
+      "get": {
+        "tags": [
+          "Inventario"
+        ],
+        "summary": "Listar insumos",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "idTipoInsumo",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Insumos obtenidos"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Inventario"
+        ],
+        "summary": "Crear insumo",
+        "description": "Roles permitidos Administrador y Almacen.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "nombreInsumo",
+                  "idTipoInsumo",
+                  "unidadMedida"
+                ],
+                "properties": {
+                  "nombreInsumo": {
+                    "type": "string"
+                  },
+                  "idTipoInsumo": {
+                    "type": "integer"
+                  },
+                  "unidadMedida": {
+                    "type": "string"
+                  },
+                  "descripcion": {
+                    "type": "string"
+                  },
+                  "stockActual": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Insumo creado"
+          },
+          "400": {
+            "description": "Error de validacion"
+          }
+        }
+      }
+    },
+    "/insumos/{id}": {
+      "get": {
+        "tags": [
+          "Inventario"
+        ],
+        "summary": "Obtener insumo por ID",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Insumo obtenido"
+          },
+          "404": {
+            "description": "Insumo no encontrado"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Inventario"
+        ],
+        "summary": "Modificar insumo",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombreInsumo": {
+                    "type": "string"
+                  },
+                  "idTipoInsumo": {
+                    "type": "integer"
+                  },
+                  "unidadMedida": {
+                    "type": "string"
+                  },
+                  "descripcion": {
+                    "type": "string"
+                  },
+                  "activo": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Insumo actualizado"
+          },
+          "400": {
+            "description": "Error de validacion"
+          },
+          "404": {
+            "description": "Insumo no encontrado"
+          }
+        }
+      }
+    },
+    "/lotes-productivos": {
+      "get": {
+        "tags": [
+          "ProductivoLotes"
+        ],
+        "summary": "Listar lotes productivos",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "estado",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDIENTE",
+                "APROBADO",
+                "RECHAZADO"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lotes obtenidos"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permisos"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ProductivoLotes"
+        ],
+        "summary": "Crear lote productivo",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "fechaInicio",
+                  "fechaFin"
+                ],
+                "properties": {
+                  "fechaInicio": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "fechaFin": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Lote creado"
+          },
+          "400": {
+            "description": "Error de validacion"
+          }
+        }
+      }
+    },
+    "/lotes-productivos/{id}": {
+      "get": {
+        "tags": [
+          "ProductivoLotes"
+        ],
+        "summary": "Obtener lote por ID",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lote obtenido"
+          },
+          "404": {
+            "description": "Lote no encontrado"
+          }
+        }
+      }
+    },
+    "/lotes-productivos/{id}/validar": {
+      "patch": {
+        "tags": [
+          "ProductivoLotes"
+        ],
+        "summary": "Validar lote productivo",
+        "description": "Solo Administrador puede aprobar o rechazar lotes.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "estado"
+                ],
+                "properties": {
+                  "estado": {
+                    "type": "string",
+                    "enum": [
+                      "APROBADO",
+                      "RECHAZADO"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Lote validado"
+          },
+          "400": {
+            "description": "Error de validacion"
+          },
+          "404": {
+            "description": "Lote no encontrado"
+          }
+        }
+      }
+    },
+    "/produccion-leche": {
+      "get": {
+        "tags": [
+          "ProductivoLeche"
+        ],
+        "summary": "Listar registros de produccion de leche",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "idAnimal",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "idLote",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "estado",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDIENTE",
+                "APROBADO",
+                "RECHAZADO"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Registros obtenidos"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ProductivoLeche"
+        ],
+        "summary": "Registrar produccion de leche",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "idAnimal",
+                  "idLote",
+                  "litrosProducidos",
+                  "fechaRegistro"
+                ],
+                "properties": {
+                  "idAnimal": {
+                    "type": "integer"
+                  },
+                  "idLote": {
+                    "type": "integer"
+                  },
+                  "litrosProducidos": {
+                    "type": "number"
+                  },
+                  "fechaRegistro": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registro creado"
+          },
+          "400": {
+            "description": "Error de validacion"
+          }
+        }
+      }
+    },
+    "/produccion-leche/{id}": {
+      "get": {
+        "tags": [
+          "ProductivoLeche"
+        ],
+        "summary": "Obtener registro de produccion por ID",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Registro encontrado"
+          },
+          "404": {
+            "description": "Registro no encontrado"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "ProductivoLeche"
+        ],
+        "summary": "Modificar registro de produccion de leche",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "litrosProducidos": {
+                    "type": "number"
+                  },
+                  "fechaRegistro": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Registro actualizado"
+          },
+          "400": {
+            "description": "Error de validacion"
+          },
+          "404": {
+            "description": "Registro no encontrado"
+          }
+        }
+      }
+    },
+    "/produccion-leche/{id}/validar": {
+      "patch": {
+        "tags": [
+          "ProductivoLeche"
+        ],
+        "summary": "Validar registro de produccion de leche",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "estadoValidacion"
+                ],
+                "properties": {
+                  "estadoValidacion": {
+                    "type": "string",
+                    "enum": [
+                      "APROBADO",
+                      "RECHAZADO"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Registro validado"
+          },
+          "400": {
+            "description": "Error de validacion"
+          },
+          "404": {
+            "description": "Registro no encontrado"
+          }
+        }
+      }
+    },
+    "/razas": {
+      "get": {
+        "tags": [
+          "Razas"
+        ],
+        "summary": "Listar razas",
+        "responses": {
+          "200": {
+            "description": "Razas obtenidas"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Razas"
+        ],
+        "summary": "Crear raza",
+        "description": "Solo Administrador.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "nombreRaza"
+                ],
+                "properties": {
+                  "nombreRaza": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 50
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Raza creada"
+          },
+          "400": {
+            "description": "Error de validacion"
+          },
+          "403": {
+            "description": "Sin permisos"
+          }
+        }
+      }
+    },
+    "/razas/{id}": {
+      "patch": {
+        "tags": [
+          "Razas"
+        ],
+        "summary": "Modificar raza",
+        "description": "Solo Administrador.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombreRaza": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 50
+                  },
+                  "activo": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Raza actualizada"
+          },
+          "400": {
+            "description": "Error de validacion"
+          },
+          "403": {
+            "description": "Sin permisos"
+          },
+          "404": {
+            "description": "Raza no encontrada"
+          }
+        }
+      }
+    },
+    "/registros-peso": {
+      "get": {
+        "tags": [
+          "ProductivoPeso"
+        ],
+        "summary": "Listar registros de peso",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "idAnimal",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "idLote",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "estado",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDIENTE",
+                "APROBADO",
+                "RECHAZADO"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Registros obtenidos"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ProductivoPeso"
+        ],
+        "summary": "Crear registro de peso",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "idAnimal",
+                  "idLote",
+                  "peso",
+                  "fechaRegistro"
+                ],
+                "properties": {
+                  "idAnimal": {
+                    "type": "integer"
+                  },
+                  "idLote": {
+                    "type": "integer"
+                  },
+                  "peso": {
+                    "type": "number"
+                  },
+                  "fechaRegistro": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registro creado"
+          },
+          "400": {
+            "description": "Error de validacion"
+          }
+        }
+      }
+    },
+    "/registros-peso/{id}": {
+      "get": {
+        "tags": [
+          "ProductivoPeso"
+        ],
+        "summary": "Obtener registro de peso por ID",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Registro encontrado"
+          },
+          "404": {
+            "description": "Registro no encontrado"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "ProductivoPeso"
+        ],
+        "summary": "Modificar registro de peso",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "peso": {
+                    "type": "number"
+                  },
+                  "fechaRegistro": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Registro actualizado"
+          },
+          "400": {
+            "description": "Error de validacion"
+          },
+          "404": {
+            "description": "Registro no encontrado"
+          }
+        }
+      }
+    },
+    "/registros-peso/{id}/validar": {
+      "patch": {
+        "tags": [
+          "ProductivoPeso"
+        ],
+        "summary": "Validar registro de peso",
+        "description": "Flujo RF11, validacion oficial por Administrador.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "estadoValidacion"
+                ],
+                "properties": {
+                  "estadoValidacion": {
+                    "type": "string",
+                    "enum": [
+                      "APROBADO",
+                      "RECHAZADO"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Registro validado"
+          },
+          "400": {
+            "description": "Error de validacion"
+          },
+          "404": {
+            "description": "Registro no encontrado"
+          }
+        }
+      }
+    },
+    "/reportes/sanitario": {
+      "get": {
+        "tags": [
+          "Reportes"
+        ],
+        "summary": "Generar reporte sanitario",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "fechaInicio",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "fechaFin",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "estadoAprobacion",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDIENTE",
+                "APROBADO",
+                "RECHAZADO"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "idTipoEvento",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "formato",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "json",
+                "csv",
+                "pdf"
+              ],
+              "default": "json"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reporte generado (JSON, CSV o PDF)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reportes/productivo": {
+      "get": {
+        "tags": [
+          "Reportes"
+        ],
+        "summary": "Generar reporte productivo",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "fechaInicio",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "fechaFin",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "idAnimal",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "idLote",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "formato",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "json",
+                "csv",
+                "pdf"
+              ],
+              "default": "json"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reporte generado (JSON, CSV o PDF)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reportes/administrativo": {
+      "get": {
+        "tags": [
+          "Reportes"
+        ],
+        "summary": "Generar reporte administrativo",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "fechaInicio",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "fechaFin",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "formato",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "json",
+                "csv",
+                "pdf"
+              ],
+              "default": "json"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reporte generado (JSON, CSV o PDF)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reportes/comparativo": {
+      "get": {
+        "tags": [
+          "Reportes"
+        ],
+        "summary": "Generar reporte comparativo historico (RF13)",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "modulo",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "sanitario",
+                "productivo"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "periodoAInicio",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "periodoAFin",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "periodoBInicio",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "periodoBFin",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "formato",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "json",
+                "csv",
+                "pdf"
+              ],
+              "default": "json"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reporte comparativo generado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/respaldos": {
+      "get": {
+        "tags": [
+          "Respaldos"
+        ],
+        "summary": "Listar respaldos registrados",
+        "responses": {
+          "200": {
+            "description": "Lista de respaldos"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permisos"
+          }
+        }
+      }
+    },
+    "/respaldos/ejecutar": {
+      "post": {
+        "tags": [
+          "Respaldos"
+        ],
+        "summary": "Ejecutar respaldo manual",
+        "responses": {
+          "200": {
+            "description": "Respaldo ejecutado"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permisos"
+          },
+          "500": {
+            "description": "Error de ejecucion"
+          }
+        }
+      }
+    },
+    "/solicitudes-compra": {
+      "get": {
+        "tags": [
+          "Compras"
+        ],
+        "summary": "Listar solicitudes de compra",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "estado",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDIENTE",
+                "APROBADA",
+                "RECHAZADA"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de solicitudes con sus detalles"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Compras"
+        ],
+        "summary": "Crear solicitud de compra (solo Almacén — RN-13)",
+        "description": "**RN-13:** Solo el rol **Almacén** puede crear solicitudes.\nIncluye detalles con insumos, cantidades y precios estimados.\n",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolicitudCompra"
+              },
+              "example": {
+                "fechaSolicitud": "2024-07-01",
+                "observaciones": "Reposición mensual de medicamentos",
+                "detalles": [
+                  {
+                    "idInsumo": 1,
+                    "cantidad": 50,
+                    "precioEstimado": 12.5
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Solicitud creada con detalles"
+          },
+          "403": {
+            "description": "Solo Almacén puede crear solicitudes (RN-13)"
+          }
+        }
+      }
+    },
+    "/solicitudes-compra/{id}": {
+      "get": {
+        "tags": [
+          "Compras"
+        ],
+        "summary": "Obtener solicitud por ID con detalles",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Solicitud con detalles e historial de compras"
+          },
+          "404": {
+            "description": "No encontrada"
+          }
+        }
+      }
+    },
+    "/solicitudes-compra/{id}/aprobar": {
+      "patch": {
+        "tags": [
+          "Compras"
+        ],
+        "summary": "Aprobar o rechazar solicitud (solo Admin — RN-14)",
+        "description": "**RN-14:** Solo el **Administrador** puede aprobar/rechazar.\n**RN-15:** Una solicitud RECHAZADA no puede reabrirse.\n**RN-17:** Una solicitud con compra ya generada no puede cambiarse.\n",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "estadoSolicitud"
+                ],
+                "properties": {
+                  "estadoSolicitud": {
+                    "type": "string",
+                    "enum": [
+                      "APROBADA",
+                      "RECHAZADA"
+                    ]
+                  },
+                  "observaciones": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada"
+          },
+          "400": {
+            "description": "Ya fue rechazada o ya tiene compra (RN-15, RN-17)"
+          },
+          "403": {
+            "description": "Solo Administrador (RN-14)"
+          }
+        }
+      }
+    },
+    "/usuarios/roles": {
+      "get": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Listar todos los roles disponibles",
+        "responses": {
+          "200": {
+            "description": "Lista de 6 roles del sistema"
+          }
+        }
+      }
+    },
+    "/usuarios": {
+      "get": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Listar usuarios (solo Admin)",
+        "responses": {
+          "200": {
+            "description": "Lista de usuarios"
+          },
+          "403": {
+            "description": "Sin permisos"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Crear usuario (solo Admin)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUsuarioRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Usuario creado"
+          },
+          "409": {
+            "description": "Username ya en uso"
+          }
+        }
+      }
+    },
+    "/usuarios/{id}": {
+      "get": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Obtener usuario por ID",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Datos del usuario"
+          },
+          "404": {
+            "description": "No encontrado"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Actualizar datos del usuario",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombreCompleto": {
+                    "type": "string"
+                  },
+                  "idRol": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Usuario actualizado"
+          }
+        }
+      }
+    },
+    "/usuarios/{id}/estado": {
+      "patch": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Activar o desactivar usuario",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "activo"
+                ],
+                "properties": {
+                  "activo": {
+                    "type": "boolean",
+                    "example": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Estado actualizado"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Animales",
+      "description": "Gestión del hato ganadero"
+    },
+    {
+      "name": "Auth",
+      "description": "Autenticacion y gestion de sesion"
+    },
+    {
+      "name": "CalendarioSanitario",
+      "description": "Programacion y alertas sanitarias"
+    },
+    {
+      "name": "Dashboard",
+      "description": "KPIs y reportes del sistema"
+    },
+    {
+      "name": "ProductivoReproductivo",
+      "description": "Eventos reproductivos por animal"
+    },
+    {
+      "name": "EventosSanitarios",
+      "description": "Registro y autorizacion de eventos sanitarios (RF05, RF11)"
+    },
+    {
+      "name": "Inventario",
+      "description": "Gestion de insumos, tipos y movimientos de inventario"
+    },
+    {
+      "name": "ProductivoLotes",
+      "description": "Lotes semanales para validacion productiva"
+    },
+    {
+      "name": "ProductivoLeche",
+      "description": "Registros de produccion de leche por animal"
+    },
+    {
+      "name": "Razas",
+      "description": "Catalogo de razas bovinas"
+    },
+    {
+      "name": "ProductivoPeso",
+      "description": "Registros de peso por animal"
+    },
+    {
+      "name": "Reportes",
+      "description": "Reportes configurables sanitarios, productivos y administrativos"
+    },
+    {
+      "name": "Respaldos",
+      "description": "Respaldo automatico y manual de datos criticos"
+    },
+    {
+      "name": "Compras",
+      "description": "Solicitudes de compra y compras realizadas (flujo de adquisición)"
+    },
+    {
+      "name": "Usuarios",
+      "description": "Gestión de usuarios y roles del sistema"
+    }
+  ]
+}

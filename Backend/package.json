@@ -1,0 +1,51 @@
+{
+  "name": "siggab-backend",
+  "version": "1.0.0",
+  "description": "SIGGAB — Sistema Gestor de Ganado Bovino — API REST",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "openapi:generate": "node scripts/generate-openapi.js",
+    "openapi:validate": "node scripts/validate-openapi.js",
+    "test:checkpoint:auth": "node tests/test-checkpoint-auth.js",
+    "test:e2e": "node tests/test-endpoints.js && node tests/test-fase3-hardening.js",
+    "test:fase3-hardening": "node tests/test-fase3-hardening.js",
+    "test:csrf": "node tests/test-csrf-protection.js",
+    "test": "node tests/test-endpoints.js && node tests/test-fase3-hardening.js",
+    "backup:restore": "node scripts/restore-backup.js",
+    "prisma:pull": "prisma db pull",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "seed": "node prisma/seed.js"
+  },
+  "keywords": [
+    "siggab",
+    "ganado",
+    "bovino"
+  ],
+  "author": "",
+  "license": "ISC",
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.6.0",
+    "@prisma/client": "^7.6.0",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.1",
+    "pdfkit": "^0.18.0",
+    "pg": "^8.20.0",
+    "prisma": "^7.6.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

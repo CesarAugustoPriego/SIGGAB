@@ -1,0 +1,491 @@
+﻿@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+:root {
+  --surface: #f0f2f1;
+  --panel: #f8f9f9;
+  --topbar: #ffffff;
+  --card: rgba(255, 255, 255, 0.94);
+  --ink: #1e242a;
+  --muted: #6a727a;
+  --line: #d8dde2;
+  --green-700: #0d7f33;
+  --green-600: #19943d;
+  --green-500: #37ab4b;
+  --error-bg: #ffe8e4;
+  --error-ink: #9b2d1e;
+  --success-bg: #e5f8eb;
+  --success-ink: #1f6a3b;
+  font-family: 'IBM Plex Sans', sans-serif;
+  color: var(--ink);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: linear-gradient(180deg, #1e2125 0 84px, var(--surface) 84px 100%);
+}
+
+.app-shell {
+  width: min(1260px, 96vw);
+  margin: 16px auto 30px;
+}
+
+.auth-page {
+  border: 1px solid #dfe5e8;
+  background: var(--panel);
+}
+
+.auth-topbar {
+  min-height: 66px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 20px;
+  padding: 10px 16px;
+  border-bottom: 1px solid #eceff2;
+  background: var(--topbar);
+}
+
+.auth-topbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.auth-topbar__brand img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.auth-topbar__brand strong {
+  font-family: 'Sora', sans-serif;
+  font-size: 38px;
+  letter-spacing: -0.02em;
+}
+
+.auth-topbar__nav {
+  justify-self: center;
+  display: flex;
+  gap: 24px;
+}
+
+.auth-topbar__nav a {
+  color: #5f6973;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.auth-topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.auth-page__canvas {
+  min-height: calc(100vh - 170px);
+  display: grid;
+  place-items: center;
+  padding: 42px 20px;
+}
+
+.auth-login-shell {
+  width: min(420px, 100%);
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+}
+
+.login-card {
+  position: relative;
+  width: 100%;
+  background: var(--card);
+  border: 1px solid #e7ecef;
+  padding: 22px;
+  display: grid;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.login-card__watermark {
+  position: absolute;
+  right: 18px;
+  top: 4px;
+  font-family: 'Sora', sans-serif;
+  font-size: 62px;
+  letter-spacing: -0.03em;
+  color: #eef1f2;
+  font-weight: 800;
+  pointer-events: none;
+}
+
+.login-card h1 {
+  margin: 0;
+  font-family: 'Sora', sans-serif;
+  font-size: clamp(30px, 3vw, 42px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.login-card__subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.login-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.ui-field {
+  display: grid;
+  gap: 5px;
+}
+
+.ui-field__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ui-field__label {
+  color: #616a73;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.ui-field__hint,
+.ui-field__hint-action {
+  color: #11863d;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.ui-field__hint-action {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.ui-field__input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 11px 12px;
+  font-size: 14px;
+  color: var(--ink);
+  background: #fff;
+}
+
+.ui-field__input:focus {
+  outline: none;
+  border-color: #2f9a50;
+  box-shadow: 0 0 0 3px rgba(55, 171, 75, 0.17);
+}
+
+.ui-button {
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.ui-button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.02);
+}
+
+.ui-button:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.ui-button--full {
+  width: 100%;
+}
+
+.ui-button--primary {
+  background: linear-gradient(120deg, var(--green-700), var(--green-500));
+  color: #fff;
+}
+
+.ui-button--ghost {
+  background: #e6eced;
+  color: #26313a;
+}
+
+.ui-button--link {
+  background: transparent;
+  color: #68727a;
+  font-weight: 600;
+  padding: 0;
+  font-size: 13px;
+}
+
+.ui-button--pill {
+  border-radius: 999px;
+  background: #0b8132;
+  color: #fff;
+  padding: 8px 13px;
+  font-size: 12px;
+}
+
+.auth-topbar__actions .ui-button.is-active {
+  color: #0a6127;
+}
+
+.auth-topbar__actions .ui-button--pill.is-active {
+  color: #fff;
+  background: #0a8f34;
+}
+
+.login-form__submit {
+  margin-top: 4px;
+}
+
+.login-meta {
+  margin: 0;
+  font-size: 12px;
+  color: #6d757e;
+}
+
+.login-switch,
+.register-switch {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #5f6872;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-switch__btn,
+.register-switch__btn {
+  color: #117f36;
+  font-size: 13px;
+}
+
+.security-pill {
+  margin: 0;
+  border: 1px solid #dde4df;
+  background: #f8fbf8;
+  border-radius: 999px;
+  padding: 8px 14px;
+  color: #5b6a63;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.error-banner,
+.success-banner {
+  margin: 2px 0 0;
+  border-radius: 10px;
+  padding: 9px 11px;
+  font-size: 13px;
+}
+
+.error-banner {
+  background: var(--error-bg);
+  color: var(--error-ink);
+}
+
+.success-banner {
+  background: var(--success-bg);
+  color: var(--success-ink);
+}
+
+.register-shell {
+  width: min(920px, 100%);
+  min-height: 560px;
+  display: grid;
+  grid-template-columns: minmax(320px, 1fr) minmax(320px, 1fr);
+  border: 1px solid #e0e6e3;
+  background: #fff;
+}
+
+.register-shell__visual {
+  position: relative;
+  overflow: hidden;
+}
+
+.register-shell__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.register-shell__copy {
+  position: absolute;
+  left: 22px;
+  bottom: 22px;
+  color: #e9fff0;
+  width: min(330px, calc(100% - 44px));
+}
+
+.register-shell__copy h2 {
+  margin: 0 0 8px;
+  font-family: 'Sora', sans-serif;
+  font-size: clamp(34px, 4.2vw, 56px);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+}
+
+.register-shell__copy p {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.register-card {
+  padding: 26px;
+  display: grid;
+  align-content: center;
+  gap: 10px;
+}
+
+.register-card h2 {
+  margin: 0;
+  font-family: 'Sora', sans-serif;
+  font-size: clamp(30px, 2.4vw, 40px);
+}
+
+.register-card p {
+  margin: 0;
+  color: #5f6872;
+}
+
+.session-shell {
+  min-height: calc(100vh - 170px);
+  display: grid;
+  place-items: center;
+  background: #f2f5f4;
+}
+
+.session-card {
+  width: min(560px, calc(100% - 28px));
+  border: 1px solid #d8dfdc;
+  background: #fff;
+  padding: 22px;
+  display: grid;
+  gap: 12px;
+}
+
+.session-card h1 {
+  margin: 0;
+  font-family: 'Sora', sans-serif;
+  font-size: clamp(30px, 2.3vw, 38px);
+}
+
+.session-card p {
+  margin: 0;
+}
+
+.session-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+@media (max-width: 1100px) {
+  .auth-topbar__brand strong {
+    font-size: 32px;
+  }
+
+  .auth-topbar__nav {
+    gap: 18px;
+  }
+}
+
+@media (max-width: 900px) {
+  .auth-topbar {
+    grid-template-columns: auto auto;
+    justify-content: space-between;
+  }
+
+  .auth-topbar__nav {
+    display: none;
+  }
+
+  .auth-page__canvas {
+    padding: 26px 12px;
+  }
+
+  .register-shell {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .register-shell__visual {
+    min-height: 260px;
+  }
+}
+
+@media (max-width: 640px) {
+  body {
+    background: #eef2f1;
+  }
+
+  .app-shell {
+    width: 100%;
+    margin: 0;
+  }
+
+  .auth-page {
+    border: 0;
+    min-height: 100vh;
+  }
+
+  .auth-topbar {
+    border-left: 0;
+    border-right: 0;
+    border-top: 0;
+    border-bottom: 1px solid #e6eaed;
+    border-radius: 0;
+    padding: 10px 12px;
+  }
+
+  .auth-topbar__brand strong {
+    font-size: 28px;
+  }
+
+  .auth-page__canvas {
+    min-height: calc(100vh - 67px);
+    padding: 16px;
+  }
+
+  .login-card {
+    padding: 18px;
+  }
+
+  .login-card__watermark {
+    font-size: 46px;
+    right: 10px;
+  }
+
+  .login-card h1 {
+    font-size: 34px;
+  }
+}

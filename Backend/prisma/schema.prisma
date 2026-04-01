@@ -1,0 +1,437 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────────
+
+enum EstadoRegistro {
+  PENDIENTE
+  APROBADO
+  RECHAZADO
+
+  @@map("estado_registro")
+}
+
+enum EstadoAnimal {
+  ACTIVO
+  VENDIDO
+  MUERTO
+  TRANSFERIDO
+
+  @@map("estado_animal")
+}
+
+enum TipoMovimiento {
+  ENTRADA
+  SALIDA
+
+  @@map("tipo_movimiento")
+}
+
+enum EstadoSolicitud {
+  PENDIENTE
+  APROBADA
+  RECHAZADA
+
+  @@map("estado_solicitud")
+}
+
+enum EstadoCalendario {
+  PENDIENTE
+  COMPLETADO
+  CANCELADO
+
+  @@map("estado_calendario")
+}
+
+// ─────────────────────────────────────────────────
+// MÓDULO: ADMINISTRACIÓN DEL SISTEMA
+// ─────────────────────────────────────────────────
+
+model Rol {
+  idRol       Int      @id @default(autoincrement()) @map("id_rol")
+  nombreRol   String   @map("nombre_rol") @db.VarChar(50)
+  descripcion String?  @db.Text
+
+  usuarios Usuario[]
+
+  @@map("roles")
+}
+
+model Usuario {
+  idUsuario      Int      @id @default(autoincrement()) @map("id_usuario")
+  nombreCompleto String   @map("nombre_completo") @db.VarChar(100)
+  username       String   @unique @db.VarChar(50)
+  passwordHash   String   @map("password_hash") @db.VarChar(255)
+  idRol          Int      @map("id_rol")
+  activo         Boolean  @default(true) @map("estado")
+  intentosFallidos Int    @default(0) @map("intentos_fallidos")
+  bloqueadoHasta DateTime? @map("bloqueado_hasta")
+  fechaCreacion  DateTime @default(now()) @map("fecha_creacion")
+
+  rol Rol @relation(fields: [idRol], references: [idRol])
+
+  // Relaciones inversas
+  bitacoras                  Bitacora[]
+  refreshTokens              RefreshToken[]
+  eventosSanitariosAutorizados EventoSanitario[] @relation("AutorizadoPor")
+  calendariosProgramados     CalendarioSanitario[] @relation("ProgramadoPor")
+  lotesCreados               LoteValidacionProductiva[] @relation("CreadoPor")
+  registrosPesoRegistrados   RegistroPeso[] @relation("RegistradoPorPeso")
+  registrosPesoValidados     RegistroPeso[] @relation("ValidadoPorPeso")
+  produccionesRegistradas    ProduccionLeche[] @relation("RegistradoPorLeche")
+  produccionesValidadas      ProduccionLeche[] @relation("ValidadoPorLeche")
+  eventosReproRegistrados    EventoReproductivo[] @relation("RegistradoPorRepro")
+  eventosReproValidados      EventoReproductivo[] @relation("ValidadoPorRepro")
+  solicitudesSolicitadas     SolicitudCompra[] @relation("SolicitadaPor")
+  solicitudesAprobadas       SolicitudCompra[] @relation("AprobadaPor")
+  comprasRealizadasPor       CompraRealizada[] @relation("RealizadaPor")
+  movimientosRegistrados     MovimientoInventario[] @relation("RegistradoPorMov")
+
+  @@index([idRol])
+  @@index([bloqueadoHasta])
+  @@map("usuarios")
+}
+
+model Bitacora {
+  idBitacora    Int      @id @default(autoincrement()) @map("id_bitacora")
+  idUsuario     Int      @map("id_usuario")
+  accion        String   @db.VarChar(50)
+  tablaAfectada String   @map("tabla_afectada") @db.VarChar(50)
+  idRegistro    Int      @map("id_registro")
+  fechaHora     DateTime @default(now()) @map("fecha_accion")
+  detalles      Json?
+
+  usuario Usuario @relation(fields: [idUsuario], references: [idUsuario])
+
+  @@index([idUsuario])
+  @@index([fechaHora])
+  @@index([tablaAfectada])
+  @@map("bitacora")
+}
+
+model RefreshToken {
+  idRefreshToken  Int      @id @default(autoincrement()) @map("id_refresh_token")
+  idUsuario       Int      @map("id_usuario")
+  token           String   @unique @db.VarChar(500)
+  fechaExpiracion DateTime @map("fecha_expiracion")
+  revocado        Boolean  @default(false)
+  fechaCreacion   DateTime @default(now()) @map("fecha_creacion")
+  ipOrigen        String?  @map("ip_origen") @db.VarChar(45)
+  userAgent       String?  @map("user_agent") @db.VarChar(255)
+
+  usuario Usuario @relation(fields: [idUsuario], references: [idUsuario], onDelete: Cascade)
+
+  @@index([idUsuario])
+  @@index([token])
+  @@index([fechaExpiracion])
+  @@map("refresh_tokens")
+}
+
+// ─────────────────────────────────────────────────
+// MÓDULO: GESTIÓN DEL GANADO
+// ─────────────────────────────────────────────────
+
+model Raza {
+  idRaza     Int      @id @default(autoincrement()) @map("id_raza")
+  nombreRaza String   @map("nombre_raza") @db.VarChar(50)
+  activo     Boolean  @default(true)
+
+  animales Animal[]
+
+  @@map("razas")
+}
+
+model Animal {
+  idAnimal               Int          @id @default(autoincrement()) @map("id_animal")
+  numeroArete            String       @unique @map("numero_arete") @db.VarChar(50)
+  fechaIngreso           DateTime     @map("fecha_ingreso") @db.Date
+  pesoInicial            Decimal      @map("peso_inicial")
+  idRaza                 Int          @map("id_raza")
+  procedencia            String?      @db.VarChar(100)
+  edadEstimada           Int?         @map("edad_estimada")
+  estadoSanitarioInicial String?      @map("estado_sanitario_inicial") @db.Text
+  estadoActual           EstadoAnimal @default(ACTIVO) @map("estado_actual")
+  motivoBaja             String?      @map("motivo_baja") @db.Text
+  fechaBaja              DateTime?    @map("fecha_baja") @db.Date
+
+  raza Raza @relation(fields: [idRaza], references: [idRaza])
+
+  // Relaciones inversas
+  eventosSanitarios   EventoSanitario[]
+  calendarioSanitario CalendarioSanitario[]
+  registrosPeso       RegistroPeso[]
+  produccionLeche     ProduccionLeche[]
+  eventosReproductivos EventoReproductivo[]
+
+  @@index([idRaza])
+  @@index([estadoActual])
+  @@map("animales")
+}
+
+// ─────────────────────────────────────────────────
+// MÓDULO: SANITARIO
+// ─────────────────────────────────────────────────
+
+model TipoEventoSanitario {
+  idTipoEvento Int     @id @default(autoincrement()) @map("id_tipo_evento")
+  nombreTipo   String  @map("nombre_tipo") @db.VarChar(50)
+  activo       Boolean @default(true)
+
+  eventosSanitarios   EventoSanitario[]
+  calendarioSanitario CalendarioSanitario[]
+
+  @@map("tipos_evento_sanitario")
+}
+
+model EventoSanitario {
+  idEvento         Int             @id @default(autoincrement()) @map("id_evento")
+  idAnimal         Int             @map("id_animal")
+  idTipoEvento     Int             @map("id_tipo_evento")
+  fechaEvento      DateTime        @map("fecha_evento") @db.Date
+  diagnostico      String?         @db.Text
+  medicamento      String?         @db.VarChar(100)
+  dosis            String?         @db.VarChar(50)
+  estadoAprobacion EstadoRegistro  @default(PENDIENTE) @map("estado_aprobacion")
+  autorizadoPor    Int?            @map("autorizado_por")
+
+  animal       Animal              @relation(fields: [idAnimal], references: [idAnimal])
+  tipoEvento   TipoEventoSanitario @relation(fields: [idTipoEvento], references: [idTipoEvento])
+  autorizador  Usuario?            @relation("AutorizadoPor", fields: [autorizadoPor], references: [idUsuario])
+
+  @@index([idAnimal])
+  @@index([idTipoEvento])
+  @@index([fechaEvento])
+  @@index([estadoAprobacion])
+  @@map("eventos_sanitarios")
+}
+
+model CalendarioSanitario {
+  idCalendario    Int              @id @default(autoincrement()) @map("id_calendario")
+  idAnimal        Int              @map("id_animal")
+  idTipoEvento    Int              @map("id_tipo_evento")
+  fechaProgramada DateTime         @map("fecha_programada") @db.Date
+  fechaAlerta     DateTime?        @map("fecha_alerta") @db.Date
+  programadoPor   Int              @map("programado_por")
+  estado          EstadoCalendario @default(PENDIENTE)
+
+  animal     Animal              @relation(fields: [idAnimal], references: [idAnimal])
+  tipoEvento TipoEventoSanitario @relation(fields: [idTipoEvento], references: [idTipoEvento])
+  programador Usuario             @relation("ProgramadoPor", fields: [programadoPor], references: [idUsuario])
+
+  @@index([idAnimal])
+  @@index([fechaProgramada])
+  @@index([estado])
+  @@map("calendario_sanitario")
+}
+
+// ─────────────────────────────────────────────────
+// MÓDULO: PRODUCTIVO
+// ─────────────────────────────────────────────────
+
+model LoteValidacionProductiva {
+  idLote        Int            @id @default(autoincrement()) @map("id_lote")
+  fechaInicio   DateTime       @map("fecha_inicio") @db.Date
+  fechaFin      DateTime       @map("fecha_fin") @db.Date
+  creadoPor     Int            @map("creado_por")
+  fechaCreacion DateTime       @default(now()) @map("fecha_creacion")
+  estado        EstadoRegistro @default(PENDIENTE)
+
+  creador Usuario @relation("CreadoPor", fields: [creadoPor], references: [idUsuario])
+
+  registrosPeso        RegistroPeso[]
+  produccionesLeche    ProduccionLeche[]
+  eventosReproductivos EventoReproductivo[]
+
+  @@map("lote_validacion_productiva")
+}
+
+model RegistroPeso {
+  idRegistroPeso   Int            @id @default(autoincrement()) @map("id_registro_peso")
+  idAnimal         Int            @map("id_animal")
+  idLote           Int            @map("id_lote")
+  peso             Decimal
+  fechaRegistro    DateTime       @map("fecha_registro") @db.Date
+  registradoPor    Int            @map("registrado_por")
+  estadoValidacion EstadoRegistro @default(PENDIENTE) @map("estado_validacion")
+  validadoPor      Int?           @map("validado_por")
+
+  animal      Animal                   @relation(fields: [idAnimal], references: [idAnimal])
+  lote        LoteValidacionProductiva @relation(fields: [idLote], references: [idLote])
+  registrador Usuario                  @relation("RegistradoPorPeso", fields: [registradoPor], references: [idUsuario])
+  validador   Usuario?                 @relation("ValidadoPorPeso", fields: [validadoPor], references: [idUsuario])
+
+  @@index([idAnimal])
+  @@index([idLote])
+  @@index([fechaRegistro])
+  @@map("registro_peso")
+}
+
+model ProduccionLeche {
+  idProduccion     Int            @id @default(autoincrement()) @map("id_produccion")
+  idAnimal         Int            @map("id_animal")
+  idLote           Int            @map("id_lote")
+  litrosProducidos Decimal        @map("litros_producidos")
+  fechaRegistro    DateTime       @map("fecha_registro") @db.Date
+  registradoPor    Int            @map("registrado_por")
+  estadoValidacion EstadoRegistro @default(PENDIENTE) @map("estado_validacion")
+  validadoPor      Int?           @map("validado_por")
+
+  animal      Animal                   @relation(fields: [idAnimal], references: [idAnimal])
+  lote        LoteValidacionProductiva @relation(fields: [idLote], references: [idLote])
+  registrador Usuario                  @relation("RegistradoPorLeche", fields: [registradoPor], references: [idUsuario])
+  validador   Usuario?                 @relation("ValidadoPorLeche", fields: [validadoPor], references: [idUsuario])
+
+  @@index([idAnimal])
+  @@index([idLote])
+  @@index([fechaRegistro])
+  @@map("produccion_leche")
+}
+
+model EventoReproductivo {
+  idEventoReproductivo Int            @id @default(autoincrement()) @map("id_evento_reproductivo")
+  idAnimal             Int            @map("id_animal")
+  idLote               Int            @map("id_lote")
+  tipoEvento           String         @map("tipo_evento") @db.VarChar(50)
+  fechaEvento          DateTime       @map("fecha_evento") @db.Date
+  observaciones        String?        @db.Text
+  registradoPor        Int            @map("registrado_por")
+  estadoValidacion     EstadoRegistro @default(PENDIENTE) @map("estado_validacion")
+  validadoPor          Int?           @map("validado_por")
+
+  animal      Animal                   @relation(fields: [idAnimal], references: [idAnimal])
+  lote        LoteValidacionProductiva @relation(fields: [idLote], references: [idLote])
+  registrador Usuario                  @relation("RegistradoPorRepro", fields: [registradoPor], references: [idUsuario])
+  validador   Usuario?                 @relation("ValidadoPorRepro", fields: [validadoPor], references: [idUsuario])
+
+  @@index([idAnimal])
+  @@index([idLote])
+  @@index([fechaEvento])
+  @@map("eventos_reproductivos")
+}
+
+// ─────────────────────────────────────────────────
+// MÓDULO: INVENTARIO
+// ─────────────────────────────────────────────────
+
+model TipoInsumo {
+  idTipoInsumo Int     @id @default(autoincrement()) @map("id_tipo_insumo")
+  nombreTipo   String  @map("nombre_tipo") @db.VarChar(50)
+  descripcion  String? @db.Text
+  activo       Boolean @default(true)
+
+  insumos Insumo[]
+
+  @@map("tipos_insumo")
+}
+
+model Insumo {
+  idInsumo     Int     @id @default(autoincrement()) @map("id_insumo")
+  nombreInsumo String  @map("nombre_insumo") @db.VarChar(100)
+  idTipoInsumo Int     @map("id_tipo_insumo")
+  unidadMedida String  @map("unidad_medida") @db.VarChar(20)
+  descripcion  String? @db.Text
+  stockActual  Decimal @default(0) @map("stock_actual")
+  activo       Boolean @default(true)
+
+  tipoInsumo   TipoInsumo             @relation(fields: [idTipoInsumo], references: [idTipoInsumo])
+  movimientos  MovimientoInventario[]
+  detallesSolicitud DetalleSolicitudCompra[]
+  detallesCompra    DetalleCompra[]
+
+  @@map("insumos")
+}
+
+model MovimientoInventario {
+  idMovimiento    Int            @id @default(autoincrement()) @map("id_movimiento")
+  idInsumo        Int            @map("id_insumo")
+  tipoMovimiento  TipoMovimiento @map("tipo_movimiento")
+  cantidad        Decimal
+  fechaMovimiento DateTime       @map("fecha_movimiento") @db.Date
+  referenciaCompra Int?          @map("referencia_compra")
+  registradoPor   Int            @map("registrado_por")
+
+  insumo  Insumo          @relation(fields: [idInsumo], references: [idInsumo])
+  compra  CompraRealizada? @relation(fields: [referenciaCompra], references: [idCompra])
+  registrador Usuario      @relation("RegistradoPorMov", fields: [registradoPor], references: [idUsuario])
+
+  @@index([idInsumo])
+  @@index([fechaMovimiento])
+  @@index([tipoMovimiento])
+  @@index([registradoPor])
+  @@map("movimientos_inventario")
+}
+
+// ─────────────────────────────────────────────────
+// MÓDULO: COMPRAS
+// ─────────────────────────────────────────────────
+
+model SolicitudCompra {
+  idSolicitud      Int             @id @default(autoincrement()) @map("id_solicitud")
+  fechaSolicitud   DateTime        @map("fecha_solicitud") @db.Date
+  solicitadaPor    Int             @map("solicitada_por")
+  estadoSolicitud  EstadoSolicitud @default(PENDIENTE) @map("estado_solicitud")
+  aprobadaPor      Int?            @map("aprobada_por")
+  fechaAprobacion  DateTime?       @map("fecha_aprobacion")
+  observaciones    String?         @db.Text
+
+  solicitante Usuario  @relation("SolicitadaPor", fields: [solicitadaPor], references: [idUsuario])
+  aprobador   Usuario? @relation("AprobadaPor", fields: [aprobadaPor], references: [idUsuario])
+
+  detalles         DetalleSolicitudCompra[]
+  comprasRealizadas CompraRealizada[]
+
+  @@map("solicitudes_compra")
+}
+
+model DetalleSolicitudCompra {
+  idDetalle        Int     @id @default(autoincrement()) @map("id_detalle")
+  idSolicitud      Int     @map("id_solicitud")
+  idInsumo         Int     @map("id_insumo")
+  cantidad         Decimal
+  precioEstimado   Decimal @map("precio_estimado")
+  subtotalEstimado Decimal @map("subtotal_estimado")
+
+  solicitud SolicitudCompra @relation(fields: [idSolicitud], references: [idSolicitud])
+  insumo    Insumo          @relation(fields: [idInsumo], references: [idInsumo])
+
+  @@map("detalle_solicitud_compra")
+}
+
+model CompraRealizada {
+  idCompra     Int      @id @default(autoincrement()) @map("id_compra")
+  idSolicitud  Int      @map("id_solicitud")
+  fechaCompra  DateTime @map("fecha_compra") @db.Date
+  realizadaPor Int      @map("realizada_por")
+  totalReal    Decimal  @map("total_real")
+
+  solicitud  SolicitudCompra      @relation(fields: [idSolicitud], references: [idSolicitud])
+  realizador Usuario              @relation("RealizadaPor", fields: [realizadaPor], references: [idUsuario])
+  detalles   DetalleCompra[]
+  movimientos MovimientoInventario[]
+
+  @@map("compras_realizadas")
+}
+
+model DetalleCompra {
+  idDetalleCompra Int     @id @default(autoincrement()) @map("id_detalle_compra")
+  idCompra        Int     @map("id_compra")
+  idInsumo        Int     @map("id_insumo")
+  cantidadReal    Decimal @map("cantidad_real")
+  precioUnitario  Decimal @map("precio_unitario")
+  subtotal        Decimal
+
+  compra CompraRealizada @relation(fields: [idCompra], references: [idCompra])
+  insumo Insumo          @relation(fields: [idInsumo], references: [idInsumo])
+
+  @@map("detalle_compra")
+}
