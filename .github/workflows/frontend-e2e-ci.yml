@@ -1,0 +1,97 @@
+name: frontend-e2e-ci
+
+on:
+  push:
+    paths:
+      - 'Frontend/**'
+      - 'Backend/**'
+      - '.github/workflows/frontend-e2e-ci.yml'
+  pull_request:
+    paths:
+      - 'Frontend/**'
+      - 'Backend/**'
+      - '.github/workflows/frontend-e2e-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  test-frontend-e2e:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: siggab
+          POSTGRES_PASSWORD: siggab
+          POSTGRES_DB: siggab_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U siggab -d siggab_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://siggab:siggab@localhost:5432/siggab_test
+      JWT_SECRET: siggab_ci_secret_super_seguro_2026
+      JWT_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 7d
+      PORT: 3000
+      NODE_ENV: test
+      AUTO_BACKUP_ENABLED: false
+      E2E_ADMIN_USERNAME: admin
+      E2E_ADMIN_PASSWORD: SiggabAdmin2026!
+      E2E_BACKEND_PORT: 3000
+      E2E_FRONTEND_PORT: 4173
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.15.0
+          cache: 'npm'
+          cache-dependency-path: |
+            Backend/package-lock.json
+            Frontend/package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci
+        working-directory: Backend
+
+      - name: Prisma generate
+        run: npx prisma generate
+        working-directory: Backend
+
+      - name: Sync schema
+        run: npx prisma db push --accept-data-loss
+        working-directory: Backend
+
+      - name: Seed database
+        run: npm run seed
+        working-directory: Backend
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: Frontend
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+        working-directory: Frontend
+
+      - name: Run frontend E2E tests
+        run: npm run test:e2e
+        working-directory: Frontend
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            Frontend/playwright-report
+            Frontend/test-results
+          if-no-files-found: ignore
