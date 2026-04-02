@@ -19,3 +19,5 @@ Thumbs.db
 
 # ─── Cache ───
 .cache/
+playwright-report/
+test-results/

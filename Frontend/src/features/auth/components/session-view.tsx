@@ -1,8 +1,20 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../auth-context';
 import { Button } from '../../../shared/ui';
 
-export function SessionView() {
+interface SessionViewProps {
+  canManageUsers?: boolean;
+  onGoUsersAdmin?: () => void;
+  canViewGanado?: boolean;
+  onGoGanado?: () => void;
+}
+
+export function SessionView({
+  canManageUsers = false,
+  onGoUsersAdmin,
+  canViewGanado = false,
+  onGoGanado,
+}: SessionViewProps) {
   const { user, logout, refreshProfile, apiError } = useAuth();
   const [busyAction, setBusyAction] = useState<'me' | 'logout' | null>(null);
   const [lastCheck, setLastCheck] = useState('');
@@ -38,15 +50,31 @@ export function SessionView() {
         </p>
 
         <div className="session-card__actions">
-          <Button type="button" onClick={onRefresh} disabled={busyAction !== null}>
+          <Button type="button" onClick={onRefresh} disabled={busyAction !== null} data-testid="session-refresh-button">
             {busyAction === 'me' ? 'Verificando...' : 'Probar /auth/me'}
           </Button>
-          <Button type="button" variant="ghost" onClick={onLogout} disabled={busyAction !== null}>
+          {canManageUsers ? (
+            <Button type="button" variant="ghost" onClick={onGoUsersAdmin} data-testid="session-users-button">
+              Gestion usuarios
+            </Button>
+          ) : null}
+          {canViewGanado ? (
+            <Button type="button" variant="ghost" onClick={onGoGanado} data-testid="session-ganado-button">
+              Gestion ganado
+            </Button>
+          ) : null}
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onLogout}
+            disabled={busyAction !== null}
+            data-testid="session-logout-button"
+          >
             {busyAction === 'logout' ? 'Cerrando...' : 'Cerrar sesion'}
           </Button>
         </div>
 
-        {lastCheck ? <p className="success-banner">Perfil validado a las {lastCheck}</p> : null}
+        {lastCheck ? <p className="success-banner" data-testid="session-success-banner">Perfil validado a las {lastCheck}</p> : null}
         {apiError ? <p className="error-banner">{apiError}</p> : null}
       </article>
     </section>

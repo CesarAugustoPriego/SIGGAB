@@ -76,6 +76,8 @@ export function LoginView({ onGoRegister }: LoginViewProps) {
 
     try {
       await login({ username, password });
+    } catch {
+      // El error se refleja en `apiError` desde el contexto de autenticacion.
     } finally {
       setSubmitting(false);
     }
@@ -97,6 +99,7 @@ export function LoginView({ onGoRegister }: LoginViewProps) {
             id="login-username"
             label="Usuario"
             type="text"
+            data-testid="login-username-input"
             placeholder="admin o nombre@ejemplo.com"
             autoComplete="username"
             value={username}
@@ -108,6 +111,7 @@ export function LoginView({ onGoRegister }: LoginViewProps) {
           <TextField
             id="login-password"
             label="Contrasena"
+            data-testid="login-password-input"
             rightHint="Olvidaste tu contrasena?"
             type={showPassword ? 'text' : 'password'}
             placeholder="************"
@@ -128,12 +132,18 @@ export function LoginView({ onGoRegister }: LoginViewProps) {
             required
           />
 
-          <Button type="submit" fullWidth disabled={submitting || status === 'booting'} className="btn-login">
+          <Button
+            type="submit"
+            fullWidth
+            disabled={submitting || status === 'booting'}
+            className="btn-login"
+            data-testid="login-submit-button"
+          >
             {submitting ? 'Validando...' : 'Iniciar sesion'}
             <ArrowIcon />
           </Button>
 
-          {apiError ? <p className="error-banner">{apiError}</p> : null}
+          {apiError ? <p className="error-banner" data-testid="login-error-banner">{apiError}</p> : null}
 
           <p className="login-footer">
             No tienes cuenta?

@@ -1,45 +1,73 @@
-﻿# SIGGAB Frontend
+# SIGGAB Frontend
 
-## Checkpoint 1 (Auth)
-Frontend para validar login y sesion contra backend SIGGAB.
+Frontend web de SIGGAB con foco actual en autenticacion y gestion de usuarios/roles.
 
-## Arquitectura actual (base reusable)
-- `src/app/` orquestacion de la aplicacion.
-- `src/features/auth/` logica y vistas del modulo de autenticacion.
-- `src/shared/ui/` componentes reutilizables (`Button`, `TextField`).
-- `src/lib/` cliente HTTP y almacenamiento de sesion.
+## Estado actual
+- Auth implementado con backend real (`/auth/login`, `/auth/me`, `/auth/refresh`, `/auth/logout`).
+- Guardas de ruta activas sin librerias extra:
+  - Publicas: `#/auth/login`, `#/auth/register`
+  - Protegidas: `#/app`, `#/app/usuarios`
+- Manejo de errores mapeado por estado:
+  - `401`: credenciales invalidas o sesion expirada
+  - `403`: rol sin permisos
+  - `423`: cuenta bloqueada temporalmente
+- RF02 (Usuarios/Roles) conectado a backend real:
+  - `GET /usuarios/roles`
+  - `GET /usuarios`
+  - `POST /usuarios`
+  - `PATCH /usuarios/:id`
+  - `PATCH /usuarios/:id/estado`
+- Ganado (RF03/RF04 web/RF15 parcial) conectado a backend real:
+  - `GET /razas`
+  - `GET /animales`
+  - `GET /animales/arete/:numero`
+  - `GET /animales/arete/:numero/historial`
+  - `POST /animales`
+  - `PATCH /animales/:id`
+  - `PATCH /animales/:id/baja`
 
-### Requisitos
-- Backend corriendo en `http://localhost:3000`
-- Node.js 22.15.0
+## Arquitectura base reusable
+- `src/app/`: shell y enrutado/guardas.
+- `src/features/auth/`: contexto, API y pantallas de auth.
+- `src/features/users/`: modulo de gestion de usuarios y roles (Admin).
+- `src/shared/ui/`: componentes reutilizables (`Button`, `TextField`).
+- `src/lib/`: cliente HTTP + almacenamiento de sesion.
 
-### Configuracion
+## Requisitos
+- Backend en `http://localhost:3000`.
+- Node.js `22.15.0`.
+
+## Configuracion
 1. Copia `.env.example` a `.env`.
-2. Ajusta `VITE_API_BASE_URL` si tu backend usa otra URL.
+2. Ajusta `VITE_API_BASE_URL` si aplica.
 
-### Ejecucion
+## Ejecucion
 ```bash
 npm install
 npm run dev
 ```
 
-## Imagenes y placeholders
-- Hero login (internet): `public/images/auth-hero-register.jpg`
-- Hero registro (internet): `public/images/auth-hero-alt.jpg`
-- Placeholder para logo principal: `public/placeholders/logo-rancho-placeholder.svg`
+## Pruebas E2E de Frontend (Playwright)
+```bash
+npm run test:e2e
+```
 
-Para poner tu logo final de Rancho Los Alpes, reemplaza:
-- `public/placeholders/logo-rancho-placeholder.svg`
+Scripts utiles:
+- `npm run test:e2e:contract`: valida contrato de `data-testid` criticos.
+- `npm run test:e2e`: corre el suite E2E en headless.
+- `npm run test:e2e:headed`: corre E2E con navegador visible.
+- `npm run test:e2e:ui`: abre el panel interactivo de Playwright.
 
-## Prueba manual
-1. Inicia sesion con:
-- usuario: `admin`
-- contrasena: `SiggabAdmin2026!`
-2. Verifica que muestre usuario y rol.
-3. Pulsa `Probar /auth/me`.
-4. Pulsa `Cerrar sesion`.
-5. Intenta login con contrasena incorrecta y valida mensaje `401`.
-6. Intenta 5 veces malas para validar bloqueo `423`.
+Variables opcionales para pruebas:
+- `E2E_ADMIN_USERNAME` (default: `admin`)
+- `E2E_ADMIN_PASSWORD` (default: `SiggabAdmin2026!`)
+- `E2E_BACKEND_PORT` (default: `3000`)
+- `E2E_FRONTEND_PORT` (default: `4173`)
+- `E2E_API_BASE_URL` (default: `http://127.0.0.1:<backend>/api`)
 
-## Siguiente checkpoint
-- Usuarios y roles (CRUD administrativo) integrado en Front.
+## Evidencia de cierre Auth
+- Checklist y criterios: `docs/auth-done-checklist.md`
+- Prueba manual completa: `docs/auth-manual-test.md`
+- Acta de congelamiento: `docs/auth-module-freeze.md`
+- Contrato de selectores E2E: `docs/e2e-testid-contract.md`
+- Plan del siguiente checkpoint (Ganado): `docs/ganado-checkpoint-plan.md`
