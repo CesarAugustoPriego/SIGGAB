@@ -62,7 +62,7 @@ interface UiMessage {
   text: string;
 }
 
-const NAV_ITEMS = ['Dashboard', 'Ganado', 'Produccion', 'Inventario', 'Reportes', 'Aprobaciones', 'Auditoria', 'Usuarios', 'Respaldos'];
+const NAV_ITEMS = ['Dashboard', 'Ganado', 'Sanitario', 'Produccion', 'Inventario', 'Reportes', 'Aprobaciones', 'Auditoria', 'Usuarios', 'Respaldos'];
 
 const EMPTY_FORM: AnimalFormState = {
   numeroArete: '',

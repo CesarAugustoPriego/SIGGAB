@@ -2,8 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../features/auth/auth-context';
 import { AuthPage, SessionView, type AuthView } from '../features/auth/components';
 import { GanadoAdminPage } from '../features/ganado/components';
+import { SanitarioAdminPage } from '../features/sanitario/components';
 import { UsersAdminPage } from '../features/users/components';
 import { canViewGanado } from '../features/ganado/ganado-utils';
+import { canViewSanitario } from '../features/sanitario/sanitario-utils';
 import { isAdministratorRole } from '../features/users/users-utils';
 import {
   getAuthViewFromRoute,
@@ -22,6 +24,7 @@ export function AppShell() {
 
   const isAdmin = useMemo(() => isAdministratorRole(user?.rol), [user?.rol]);
   const hasGanadoAccess = useMemo(() => canViewGanado(user?.rol), [user?.rol]);
+  const hasSanitarioAccess = useMemo(() => canViewSanitario(user?.rol), [user?.rol]);
 
   const navigate = useCallback((nextRoute: AppRoute, replace = false) => {
     setRoute(nextRoute);
@@ -64,12 +67,22 @@ export function AppShell() {
 
     if (status === 'authenticated' && route === '/app/ganado' && !hasGanadoAccess) {
       navigate('/app', true);
+      return;
     }
-  }, [hasGanadoAccess, isAdmin, navigate, route, status]);
+
+    if (status === 'authenticated' && route === '/app/sanitario' && !hasSanitarioAccess) {
+      navigate('/app', true);
+    }
+  }, [hasGanadoAccess, hasSanitarioAccess, isAdmin, navigate, route, status]);
 
   const onNavigateModule = useCallback((moduleName: string) => {
     if (moduleName === 'Ganado') {
       navigate('/app/ganado');
+      return;
+    }
+
+    if (moduleName === 'Sanitario' && hasSanitarioAccess) {
+      navigate('/app/sanitario');
       return;
     }
 
@@ -79,7 +92,7 @@ export function AppShell() {
     }
 
     navigate('/app');
-  }, [isAdmin, navigate]);
+  }, [hasSanitarioAccess, isAdmin, navigate]);
 
   const authView = useMemo<AuthView>(() => getAuthViewFromRoute(route), [route]);
 
@@ -110,12 +123,20 @@ export function AppShell() {
           onGoUsersAdmin={isAdmin ? () => navigate('/app/usuarios') : undefined}
           onNavigateModule={onNavigateModule}
         />
+      ) : route === '/app/sanitario' ? (
+        <SanitarioAdminPage
+          onGoHome={() => navigate('/app')}
+          onGoUsersAdmin={isAdmin ? () => navigate('/app/usuarios') : undefined}
+          onNavigateModule={onNavigateModule}
+        />
       ) : route === '/app' ? (
         <SessionView
           canManageUsers={isAdmin}
           onGoUsersAdmin={() => navigate('/app/usuarios')}
           canViewGanado={hasGanadoAccess}
           onGoGanado={() => navigate('/app/ganado')}
+          canViewSanitario={hasSanitarioAccess}
+          onGoSanitario={() => navigate('/app/sanitario')}
         />
       ) : (
         <AuthPage view={authView} onChangeView={onAuthViewChange} />

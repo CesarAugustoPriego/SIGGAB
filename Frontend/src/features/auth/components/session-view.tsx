@@ -7,6 +7,8 @@ interface SessionViewProps {
   onGoUsersAdmin?: () => void;
   canViewGanado?: boolean;
   onGoGanado?: () => void;
+  canViewSanitario?: boolean;
+  onGoSanitario?: () => void;
 }
 
 export function SessionView({
@@ -14,6 +16,8 @@ export function SessionView({
   onGoUsersAdmin,
   canViewGanado = false,
   onGoGanado,
+  canViewSanitario = false,
+  onGoSanitario,
 }: SessionViewProps) {
   const { user, logout, refreshProfile, apiError } = useAuth();
   const [busyAction, setBusyAction] = useState<'me' | 'logout' | null>(null);
@@ -61,6 +65,11 @@ export function SessionView({
           {canViewGanado ? (
             <Button type="button" variant="ghost" onClick={onGoGanado} data-testid="session-ganado-button">
               Gestion ganado
+            </Button>
+          ) : null}
+          {canViewSanitario ? (
+            <Button type="button" variant="ghost" onClick={onGoSanitario} data-testid="session-sanitario-button">
+              Gestion sanitario
             </Button>
           ) : null}
           <Button

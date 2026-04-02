@@ -38,6 +38,7 @@ interface UiMessage {
 const NAV_ITEMS = [
   'Dashboard',
   'Ganado',
+  'Sanitario',
   'Produccion',
   'Inventario',
   'Reportes',
