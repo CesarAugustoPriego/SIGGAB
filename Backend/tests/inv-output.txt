@@ -1,0 +1,89 @@
+﻿ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  SIGGAB ΓÇö Test Suite: M├│dulo Inventario
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+≡ƒöÉ SETUP ΓÇö Autenticaci├│n
+  Γ£à Login como Administrador
+  Γ£à Usuario Almac├⌐n creado
+  Γ£à Login como Almac├⌐n
+  Γ£à Usuario Producci├│n creado
+  Γ£à Login como Producci├│n
+  Γ£à Usuario Veterinario creado
+  Γ£à Login como Veterinario
+
+≡ƒôï TIPOS DE INSUMO
+  Γ£à POST /insumos/tipos crea tipo (Admin)
+  Γ£à POST /insumos/tipos crea segundo tipo
+  Γ£à Tipo sin nombre ΓåÆ 400 (Zod)
+  Γ£à Tipo nombre < 2 chars ΓåÆ 400
+  Γ£à GET /insumos/tipos retorna lista
+  Γ£à PATCH /insumos/tipos/:id edita (Admin)
+  Γ£à Desactivar tipo
+  Γ£à Reactivar tipo
+  Γ¥î PATCH tipo inexistente ΓåÆ 404 
+  Γ£à Almac├⌐n ΓåÆ POST /insumos/tipos ΓåÆ 403
+  Γ£à Almac├⌐n ΓåÆ PATCH /insumos/tipos ΓåÆ 403
+  Γ£à Almac├⌐n puede GET /insumos/tipos
+
+≡ƒôª INSUMOS
+  Γ£à POST /insumos crea insumo (Admin)
+  Γ¥î POST /insumos crea insumo (Almac├⌐n) 
+  Γ£à Insumo sin campos ΓåÆ 400 (Zod)
+  Γ£à Insumo con tipo inexistente ΓåÆ 400
+  Γ£à GET /insumos retorna lista
+  Γ£à GET /insumos?idTipoInsumo filtra correctamente
+  Γ£à GET /insumos/:id retorna insumo
+  Γ£à GET insumo inexistente ΓåÆ 404
+  Γ£à PATCH /insumos/:id edita insumo
+  Γ£à Desactivar insumo
+  Γ£à Reactivar insumo
+  Γ£à Producci├│n ΓåÆ POST /insumos ΓåÆ 403
+  Γ£à Veterinario ΓåÆ POST /insumos ΓåÆ 403
+
+≡ƒöä MOVIMIENTOS DE INVENTARIO
+  Γ£à POST /insumos/movimientos registra SALIDA v├ílida
+  Γ¥î POST movimiento ENTRADA (Almac├⌐n) 
+  Γ£à Salida > stock ΓåÆ 400 (RN-09)
+  Γ£à Movimiento sin campos ΓåÆ 400 (Zod)
+  Γ£à Tipo movimiento inv├ílido ΓåÆ 400
+  Γ£à Cantidad negativa ΓåÆ 400
+  Γ£à Movimiento con insumo inexistente ΓåÆ 404
+  Γ£à GET /insumos/movimientos retorna lista
+  Γ£à GET /insumos/movimientos?idInsumo filtra
+  Γ£à GET /insumos/movimientos/:id retorna movimiento
+  Γ£à Producci├│n ΓåÆ POST /insumos/movimientos ΓåÆ 403
+  Γ£à Producci├│n ΓåÆ GET /insumos/movimientos ΓåÆ 403
+  Γ¥î Stock actualizado correctamente (100-25+50=125) 
+
+≡ƒ¢Æ SOLICITUDES DE COMPRA
+  Γ¥î POST segunda solicitud 
+  Γ£à Admin ΓåÆ POST /solicitudes-compra ΓåÆ 403 (RN-13)
+  Γ£à Producci├│n ΓåÆ POST /solicitudes-compra ΓåÆ 403
+  Γ¥î Solicitud sin detalles ΓåÆ 400 
+  Γ¥î Solicitud sin fecha ΓåÆ 400 
+  Γ£à GET /solicitudes-compra retorna lista
+  Γ£à GET /solicitudes-compra?estado=PENDIENTE filtra
+  Γ£à GET solicitud inexistente ΓåÆ 404
+
+≡ƒÆ│ COMPRAS REALIZADAS
+  Γ¥î Stock insumo1 incrementado por compra (75+45=120) 
+  Γ£à Compra sobre solicitud inexistente ΓåÆ 404
+  Γ£à GET /compras-realizadas retorna lista
+  Γ¥î Movimiento ENTRADA autom├ítico generado por compra 
+  Γ£à Almac├⌐n ΓåÆ POST /compras-realizadas ΓåÆ 403
+  Γ£à Almac├⌐n ΓåÆ GET /compras-realizadas ΓåÆ 403
+
+≡ƒÜ½ PERMISOS CRUZADOS
+  Γ£à GET /insumos sin token ΓåÆ 401
+  Γ£à GET /insumos/tipos sin token ΓåÆ 401
+  Γ£à GET /insumos/movimientos sin token ΓåÆ 401
+  Γ£à GET /solicitudes-compra sin token ΓåÆ 401
+  Γ£à GET /compras-realizadas sin token ΓåÆ 401
+  Γ£à Veterinario ΓåÆ GET /insumos/movimientos ΓåÆ 403
+  Γ£à Producci├│n ΓåÆ GET /solicitudes-compra ΓåÆ 403
+  Γ£à Producci├│n ΓåÆ GET /compras-realizadas ΓåÆ 403
+
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  RESULTADOS: 58 pasaron Γ£à | 9 fallaron Γ¥î
+  Total: 67 pruebas
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ

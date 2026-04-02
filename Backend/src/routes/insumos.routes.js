@@ -137,8 +137,8 @@ router.patch('/tipos/:id', requireRole('Administrador'), validate(updateTipoInsu
  *       400:
  *         description: Error de validacion o stock insuficiente
  */
-router.get('/movimientos', requireRole('Administrador', 'Almacen', 'Propietario'), ctrl.getAllMovimientos);
-router.post('/movimientos', requireRole('Administrador', 'Almacen'), validate(createMovimientoSchema), ctrl.registrarSalida);
+router.get('/movimientos', requireRole('Administrador', 'Almacén', 'Propietario'), ctrl.getAllMovimientos);
+router.post('/movimientos', requireRole('Administrador', 'Almacén'), validate(createMovimientoSchema), ctrl.registrarSalida);
 
 /**
  * @swagger
@@ -158,7 +158,7 @@ router.post('/movimientos', requireRole('Administrador', 'Almacen'), validate(cr
  *       404:
  *         description: Movimiento no encontrado
  */
-router.get('/movimientos/:id', requireRole('Administrador', 'Almacen', 'Propietario'), ctrl.getMovimientoById);
+router.get('/movimientos/:id', requireRole('Administrador', 'Almacén', 'Propietario'), ctrl.getMovimientoById);
 
 /**
  * @swagger
@@ -203,7 +203,7 @@ router.get('/movimientos/:id', requireRole('Administrador', 'Almacen', 'Propieta
  *         description: Error de validacion
  */
 router.get('/', ctrl.getAll);
-router.post('/', requireRole('Administrador', 'Almacen'), validate(createInsumoSchema), ctrl.create);
+router.post('/', requireRole('Administrador', 'Almacén'), validate(createInsumoSchema), ctrl.create);
 
 /**
  * @swagger
@@ -257,6 +257,6 @@ router.post('/', requireRole('Administrador', 'Almacen'), validate(createInsumoS
  *         description: Insumo no encontrado
  */
 router.get('/:id', ctrl.getById);
-router.patch('/:id', requireRole('Administrador', 'Almacen'), validate(updateInsumoSchema), ctrl.update);
+router.patch('/:id', requireRole('Administrador', 'Almacén'), validate(updateInsumoSchema), ctrl.update);
 
 module.exports = router;

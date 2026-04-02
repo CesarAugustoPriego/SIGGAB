@@ -1820,3 +1820,231 @@ select {
     border-bottom: none;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   MÓDULO: INVENTARIO Y COMPRAS
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Stock level indicators ── */
+.inventario-stock {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+
+.inventario-stock.is-stock-ok {
+  background: rgba(34, 139, 34, 0.12);
+  color: #19682c;
+}
+
+.inventario-stock.is-stock-low {
+  background: rgba(218, 165, 32, 0.14);
+  color: #8b6914;
+}
+
+.inventario-stock.is-stock-critical {
+  background: rgba(220, 53, 69, 0.12);
+  color: #a71d2a;
+}
+
+.inventario-stock.is-stock-empty {
+  background: rgba(220, 53, 69, 0.18);
+  color: #721c24;
+  font-weight: 700;
+}
+
+/* ── Movimiento type badges ── */
+.inventario-mov-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.4px;
+}
+
+.inventario-mov-badge.is-entrada {
+  background: rgba(34, 139, 34, 0.13);
+  color: #19682c;
+}
+
+.inventario-mov-badge.is-salida {
+  background: rgba(220, 53, 69, 0.12);
+  color: #a71d2a;
+}
+
+/* ── Reference badge (C#N) ── */
+.inventario-ref {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 8px;
+  background: rgba(105, 105, 255, 0.12);
+  color: #3730a3;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+/* ── Stock hint ── */
+.inventario-stock-hint {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 0.25rem 0 0.5rem;
+  padding: 0.35rem 0.75rem;
+  background: rgba(218, 165, 32, 0.08);
+  border-radius: 6px;
+  border-left: 3px solid #daa520;
+}
+
+/* ── Dynamic detail rows (solicitudes & compras) ── */
+.inventario-detalles-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(34, 139, 34, 0.12);
+  border-radius: 10px;
+}
+
+.inventario-detalles-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.inventario-detalle-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr auto auto;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid rgba(46, 139, 46, 0.08);
+}
+
+.inventario-detalle-row select,
+.inventario-detalle-row input {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #c8d6c8;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  background: #fff;
+}
+
+.inventario-detalle-row select:focus,
+.inventario-detalle-row input:focus {
+  border-color: #2e8b2e;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(46, 139, 46, 0.15);
+}
+
+.inventario-detalle-label {
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: #1f4b1f;
+}
+
+.inventario-detalle-subtotal {
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: #2e8b2e;
+  text-align: right;
+  min-width: 80px;
+}
+
+.inventario-detalles-total {
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 2px solid rgba(46, 139, 46, 0.18);
+  text-align: right;
+  font-size: 0.95rem;
+  color: #1f4b1f;
+}
+
+.inventario-detalles-total strong {
+  font-size: 1.1rem;
+  color: #2e8b2e;
+}
+
+/* ── Table value column ── */
+.productivo-table-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.productivo-table-value small {
+  font-weight: 400;
+  color: #6b7280;
+  margin-left: 2px;
+}
+
+.productivo-table-obs {
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #6b7280;
+  font-size: 0.82rem;
+}
+
+/* ── Immutable/processed badge ── */
+.productivo-immutable {
+  font-size: 0.78rem;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* ── Success/danger mini buttons ── */
+.users-btn-success {
+  background: rgba(34, 139, 34, 0.12);
+  color: #19682c;
+  border: 1px solid rgba(34, 139, 34, 0.2);
+  border-radius: 6px;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.users-btn-success:hover {
+  background: rgba(34, 139, 34, 0.22);
+}
+
+.users-btn-danger {
+  background: rgba(220, 53, 69, 0.1);
+  color: #a71d2a;
+  border: 1px solid rgba(220, 53, 69, 0.15);
+  border-radius: 6px;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.users-btn-danger:hover {
+  background: rgba(220, 53, 69, 0.2);
+}
+
+/* ── Subtitle helper ── */
+.productivo-subtitle {
+  font-size: 0.82rem;
+  color: #6b7280;
+  margin: -0.5rem 0 0.75rem;
+}
+
+/* ── Responsive: detail rows ── */
+@media (max-width: 768px) {
+  .inventario-detalle-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem;
+  }
+
+  .inventario-detalle-subtotal {
+    grid-column: 1 / -1;
+    text-align: left;
+  }
+}

@@ -72,14 +72,14 @@ async function getMovimientoById(id) {
 }
 
 /**
- * Registrar salida manual de inventario (RN-09, RN-10, RN-12).
+ * Registrar movimiento manual de inventario (ENTRADA o SALIDA) (RN-09, RN-10).
  */
 async function registrarSalida(data, idUsuario) {
   const insumo = await insumosRepository.findById(data.idInsumo);
   if (!insumo) throw Object.assign(new Error('Insumo no encontrado'), { statusCode: 404 });
 
   // RN-09: la salida no puede superar el stock actual
-  if (Number(insumo.stockActual) < data.cantidad) {
+  if (data.tipoMovimiento === 'SALIDA' && Number(insumo.stockActual) < data.cantidad) {
     throw Object.assign(
       new Error(`Stock insuficiente. Disponible: ${insumo.stockActual} ${insumo.unidadMedida}`),
       { statusCode: 400 }
@@ -92,22 +92,26 @@ async function registrarSalida(data, idUsuario) {
     const mov = await tx.movimientoInventario.create({
       data: {
         idInsumo: data.idInsumo,
-        tipoMovimiento: 'SALIDA',
+        tipoMovimiento: data.tipoMovimiento,
         cantidad: data.cantidad,
         fechaMovimiento: new Date(data.fechaMovimiento),
         registradoPor: idUsuario,
       },
       include: { insumo: true },
     });
+    
+    // Si es entrada se suma, si es salida se resta
+    const operation = data.tipoMovimiento === 'ENTRADA' ? { increment: data.cantidad } : { decrement: data.cantidad };
+    
     await tx.insumo.update({
       where: { idInsumo: data.idInsumo },
-      data: { stockActual: { decrement: data.cantidad } },
+      data: { stockActual: operation },
     });
     return mov;
   });
 
   await registrarAccion({
-    idUsuario, accion: 'SALIDA_INVENTARIO', tablaAfectada: 'movimientos_inventario',
+    idUsuario, accion: data.tipoMovimiento === 'ENTRADA' ? 'ENTRADA_INVENTARIO' : 'SALIDA_INVENTARIO', tablaAfectada: 'movimientos_inventario',
     idRegistro: movimiento.idMovimiento,
     detalles: { insumo: insumo.nombreInsumo, cantidad: data.cantidad, stockAntes: Number(insumo.stockActual) },
   });

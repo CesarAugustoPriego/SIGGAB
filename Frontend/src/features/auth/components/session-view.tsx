@@ -11,6 +11,8 @@ interface SessionViewProps {
   onGoSanitario?: () => void;
   canViewProductivo?: boolean;
   onGoProductivo?: () => void;
+  canViewInventario?: boolean;
+  onGoInventario?: () => void;
 }
 
 export function SessionView({
@@ -22,6 +24,8 @@ export function SessionView({
   onGoSanitario,
   canViewProductivo = false,
   onGoProductivo,
+  canViewInventario = false,
+  onGoInventario,
 }: SessionViewProps) {
   const { user, logout, refreshProfile, apiError } = useAuth();
   const [busyAction, setBusyAction] = useState<'me' | 'logout' | null>(null);
@@ -79,6 +83,11 @@ export function SessionView({
           {canViewProductivo ? (
             <Button type="button" variant="ghost" onClick={onGoProductivo} data-testid="session-productivo-button">
               Gestion productiva
+            </Button>
+          ) : null}
+          {canViewInventario ? (
+            <Button type="button" variant="ghost" onClick={onGoInventario} data-testid="session-inventario-button">
+              Gestion inventario
             </Button>
           ) : null}
           <Button

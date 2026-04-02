@@ -77,7 +77,7 @@ const logReporte = (tipo) => loggingMiddleware({
  */
 router.get(
   '/sanitario',
-  requireRole('Propietario', 'Administrador', 'Medico Veterinario', 'Almacen'),
+  requireRole('Propietario', 'Administrador', 'Medico Veterinario', 'Almacén'),
   validate(sanitarioReporteSchema, 'query'),
   logReporte('sanitario'),
   ctrl.getSanitario
@@ -177,7 +177,7 @@ router.get(
  */
 router.get(
   '/administrativo',
-  requireRole('Propietario', 'Administrador', 'Almacen'),
+  requireRole('Propietario', 'Administrador', 'Almacén'),
   validate(administrativoReporteSchema, 'query'),
   logReporte('administrativo'),
   ctrl.getAdministrativo

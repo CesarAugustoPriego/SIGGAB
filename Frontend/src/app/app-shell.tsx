@@ -5,9 +5,11 @@ import { GanadoAdminPage } from '../features/ganado/components';
 import { SanitarioAdminPage } from '../features/sanitario/components';
 import { UsersAdminPage } from '../features/users/components';
 import { ProductivoAdminPage } from '../features/productivo/components';
+import { InventarioAdminPage } from '../features/inventario/components';
 import { canViewGanado } from '../features/ganado/ganado-utils';
 import { canViewSanitario } from '../features/sanitario/sanitario-utils';
 import { canViewProductivo } from '../features/productivo/productivo-utils';
+import { canViewInventario } from '../features/inventario/inventario-utils';
 import { isAdministratorRole } from '../features/users/users-utils';
 import {
   getAuthViewFromRoute,
@@ -28,6 +30,7 @@ export function AppShell() {
   const hasGanadoAccess = useMemo(() => canViewGanado(user?.rol), [user?.rol]);
   const hasSanitarioAccess = useMemo(() => canViewSanitario(user?.rol), [user?.rol]);
   const hasProductivoAccess = useMemo(() => canViewProductivo(user?.rol), [user?.rol]);
+  const hasInventarioAccess = useMemo(() => canViewInventario(user?.rol), [user?.rol]);
 
   const navigate = useCallback((nextRoute: AppRoute, replace = false) => {
     setRoute(nextRoute);
@@ -80,7 +83,11 @@ export function AppShell() {
     if (status === 'authenticated' && route === '/app/productivo' && !hasProductivoAccess) {
       navigate('/app', true);
     }
-  }, [hasGanadoAccess, hasSanitarioAccess, hasProductivoAccess, isAdmin, navigate, route, status]);
+
+    if (status === 'authenticated' && route === '/app/inventario' && !hasInventarioAccess) {
+      navigate('/app', true);
+    }
+  }, [hasGanadoAccess, hasSanitarioAccess, hasProductivoAccess, hasInventarioAccess, isAdmin, navigate, route, status]);
 
   const onNavigateModule = useCallback((moduleName: string) => {
     if (moduleName === 'Ganado') {
@@ -98,13 +105,18 @@ export function AppShell() {
       return;
     }
 
+    if (moduleName === 'Inventario' && hasInventarioAccess) {
+      navigate('/app/inventario');
+      return;
+    }
+
     if (moduleName === 'Usuarios' && isAdmin) {
       navigate('/app/usuarios');
       return;
     }
 
     navigate('/app');
-  }, [hasSanitarioAccess, hasProductivoAccess, isAdmin, navigate]);
+  }, [hasSanitarioAccess, hasProductivoAccess, hasInventarioAccess, isAdmin, navigate]);
 
   const authView = useMemo<AuthView>(() => getAuthViewFromRoute(route), [route]);
 
@@ -147,6 +159,12 @@ export function AppShell() {
           onGoUsersAdmin={isAdmin ? () => navigate('/app/usuarios') : undefined}
           onNavigateModule={onNavigateModule}
         />
+      ) : route === '/app/inventario' ? (
+        <InventarioAdminPage
+          onGoHome={() => navigate('/app')}
+          onGoUsersAdmin={isAdmin ? () => navigate('/app/usuarios') : undefined}
+          onNavigateModule={onNavigateModule}
+        />
       ) : route === '/app' ? (
         <SessionView
           canManageUsers={isAdmin}
@@ -157,6 +175,8 @@ export function AppShell() {
           onGoSanitario={() => navigate('/app/sanitario')}
           canViewProductivo={hasProductivoAccess}
           onGoProductivo={() => navigate('/app/productivo')}
+          canViewInventario={hasInventarioAccess}
+          onGoInventario={() => navigate('/app/inventario')}
         />
       ) : (
         <AuthPage view={authView} onChangeView={onAuthViewChange} />

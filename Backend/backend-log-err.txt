@@ -1,0 +1,100 @@
+❌ Error: Tipo de insumo no encontrado
+Error: Tipo de insumo no encontrado
+    at Object.updateTipo (C:\Users\DME\Downloads\SIGGAB\Backend\src\services\insumos.service.js:19:39)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async updateTipo (C:\Users\DME\Downloads\SIGGAB\Backend\src\controllers\insumos.controller.js:20:29)
+❌ Error: Insumo no encontrado
+Error: Insumo no encontrado
+    at Object.getById (C:\Users\DME\Downloads\SIGGAB\Backend\src\services\insumos.service.js:35:36)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async getById (C:\Users\DME\Downloads\SIGGAB\Backend\src\controllers\insumos.controller.js:35:29)
+❌ Error: Stock insuficiente. Disponible: 25 ml
+Error: Stock insuficiente. Disponible: 25 ml
+    at Object.registrarSalida (C:\Users\DME\Downloads\SIGGAB\Backend\src\services\insumos.service.js:84:7)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async registrarSalida (C:\Users\DME\Downloads\SIGGAB\Backend\src\controllers\insumos.controller.js:69:29)
+❌ Error: Insumo no encontrado
+Error: Insumo no encontrado
+    at Object.registrarSalida (C:\Users\DME\Downloads\SIGGAB\Backend\src\services\insumos.service.js:79:36)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async registrarSalida (C:\Users\DME\Downloads\SIGGAB\Backend\src\controllers\insumos.controller.js:69:29)
+❌ Error: Solicitud de compra no encontrada
+Error: Solicitud de compra no encontrada
+    at Object.getById (C:\Users\DME\Downloads\SIGGAB\Backend\src\services\solicitudes-compra.service.js:10:39)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async getById (C:\Users\DME\Downloads\SIGGAB\Backend\src\controllers\solicitudes-compra.controller.js:14:29)
+❌ Error: La solicitud ya fue rechazada y no puede modificarse
+Error: La solicitud ya fue rechazada y no puede modificarse
+    at Object.aprobar (C:\Users\DME\Downloads\SIGGAB\Backend\src\services\solicitudes-compra.service.js:51:25)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async aprobar (C:\Users\DME\Downloads\SIGGAB\Backend\src\controllers\solicitudes-compra.controller.js:26:29)
+❌ Error: Solo se pueden aprobar/rechazar solicitudes en estado PENDIENTE
+Error: Solo se pueden aprobar/rechazar solicitudes en estado PENDIENTE
+    at Object.aprobar (C:\Users\DME\Downloads\SIGGAB\Backend\src\services\solicitudes-compra.service.js:60:25)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async aprobar (C:\Users\DME\Downloads\SIGGAB\Backend\src\controllers\solicitudes-compra.controller.js:26:29)
+❌ Error: Esta solicitud ya tiene una compra registrada
+Error: Esta solicitud ya tiene una compra registrada
+    at Object.create (C:\Users\DME\Downloads\SIGGAB\Backend\src\services\compras-realizadas.service.js:34:25)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async create (C:\Users\DME\Downloads\SIGGAB\Backend\src\controllers\compras-realizadas.controller.js:18:29)
+❌ Error: La solicitud debe estar APROBADA para ejecutar la compra (estado actual: RECHAZADA)
+Error: La solicitud debe estar APROBADA para ejecutar la compra (estado actual: RECHAZADA)
+    at Object.create (C:\Users\DME\Downloads\SIGGAB\Backend\src\services\compras-realizadas.service.js:27:7)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async create (C:\Users\DME\Downloads\SIGGAB\Backend\src\controllers\compras-realizadas.controller.js:18:29)
+❌ Error: Solicitud de compra no encontrada
+Error: Solicitud de compra no encontrada
+    at Object.create (C:\Users\DME\Downloads\SIGGAB\Backend\src\services\compras-realizadas.service.js:23:39)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async create (C:\Users\DME\Downloads\SIGGAB\Backend\src\controllers\compras-realizadas.controller.js:18:29)
+❌ Error: Tipo de insumo no encontrado
+Error: Tipo de insumo no encontrado
+    at Object.updateTipo (C:\Users\DME\Downloads\SIGGAB\Backend\src\services\insumos.service.js:19:39)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async updateTipo (C:\Users\DME\Downloads\SIGGAB\Backend\src\controllers\insumos.controller.js:20:29)
+❌ Error: Insumo no encontrado
+Error: Insumo no encontrado
+    at Object.getById (C:\Users\DME\Downloads\SIGGAB\Backend\src\services\insumos.service.js:35:36)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async getById (C:\Users\DME\Downloads\SIGGAB\Backend\src\controllers\insumos.controller.js:35:29)
+❌ Error: Stock insuficiente. Disponible: 25 ml
+Error: Stock insuficiente. Disponible: 25 ml
+    at Object.registrarSalida (C:\Users\DME\Downloads\SIGGAB\Backend\src\services\insumos.service.js:84:7)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async registrarSalida (C:\Users\DME\Downloads\SIGGAB\Backend\src\controllers\insumos.controller.js:69:29)
+❌ Error: Insumo no encontrado
+Error: Insumo no encontrado
+    at Object.registrarSalida (C:\Users\DME\Downloads\SIGGAB\Backend\src\services\insumos.service.js:79:36)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async registrarSalida (C:\Users\DME\Downloads\SIGGAB\Backend\src\controllers\insumos.controller.js:69:29)
+❌ Error: Solicitud de compra no encontrada
+Error: Solicitud de compra no encontrada
+    at Object.getById (C:\Users\DME\Downloads\SIGGAB\Backend\src\services\solicitudes-compra.service.js:10:39)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async getById (C:\Users\DME\Downloads\SIGGAB\Backend\src\controllers\solicitudes-compra.controller.js:14:29)
+❌ Error: La solicitud ya fue rechazada y no puede modificarse
+Error: La solicitud ya fue rechazada y no puede modificarse
+    at Object.aprobar (C:\Users\DME\Downloads\SIGGAB\Backend\src\services\solicitudes-compra.service.js:51:25)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async aprobar (C:\Users\DME\Downloads\SIGGAB\Backend\src\controllers\solicitudes-compra.controller.js:26:29)
+❌ Error: Solo se pueden aprobar/rechazar solicitudes en estado PENDIENTE
+Error: Solo se pueden aprobar/rechazar solicitudes en estado PENDIENTE
+    at Object.aprobar (C:\Users\DME\Downloads\SIGGAB\Backend\src\services\solicitudes-compra.service.js:60:25)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async aprobar (C:\Users\DME\Downloads\SIGGAB\Backend\src\controllers\solicitudes-compra.controller.js:26:29)
+❌ Error: Esta solicitud ya tiene una compra registrada
+Error: Esta solicitud ya tiene una compra registrada
+    at Object.create (C:\Users\DME\Downloads\SIGGAB\Backend\src\services\compras-realizadas.service.js:34:25)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async create (C:\Users\DME\Downloads\SIGGAB\Backend\src\controllers\compras-realizadas.controller.js:18:29)
+❌ Error: La solicitud debe estar APROBADA para ejecutar la compra (estado actual: RECHAZADA)
+Error: La solicitud debe estar APROBADA para ejecutar la compra (estado actual: RECHAZADA)
+    at Object.create (C:\Users\DME\Downloads\SIGGAB\Backend\src\services\compras-realizadas.service.js:27:7)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async create (C:\Users\DME\Downloads\SIGGAB\Backend\src\controllers\compras-realizadas.controller.js:18:29)
+❌ Error: Solicitud de compra no encontrada
+Error: Solicitud de compra no encontrada
+    at Object.create (C:\Users\DME\Downloads\SIGGAB\Backend\src\services\compras-realizadas.service.js:23:39)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async create (C:\Users\DME\Downloads\SIGGAB\Backend\src\controllers\compras-realizadas.controller.js:18:29)
