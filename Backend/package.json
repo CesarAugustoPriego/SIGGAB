@@ -12,6 +12,7 @@
     "test:e2e": "node tests/test-endpoints.js && node tests/test-fase3-hardening.js",
     "test:fase3-hardening": "node tests/test-fase3-hardening.js",
     "test:csrf": "node tests/test-csrf-protection.js",
+    "test:productivo": "node tests/test-productivo.js",
     "test": "node tests/test-endpoints.js && node tests/test-fase3-hardening.js",
     "backup:restore": "node scripts/restore-backup.js",
     "prisma:pull": "prisma db pull",

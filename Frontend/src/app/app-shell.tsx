@@ -4,8 +4,10 @@ import { AuthPage, SessionView, type AuthView } from '../features/auth/component
 import { GanadoAdminPage } from '../features/ganado/components';
 import { SanitarioAdminPage } from '../features/sanitario/components';
 import { UsersAdminPage } from '../features/users/components';
+import { ProductivoAdminPage } from '../features/productivo/components';
 import { canViewGanado } from '../features/ganado/ganado-utils';
 import { canViewSanitario } from '../features/sanitario/sanitario-utils';
+import { canViewProductivo } from '../features/productivo/productivo-utils';
 import { isAdministratorRole } from '../features/users/users-utils';
 import {
   getAuthViewFromRoute,
@@ -25,6 +27,7 @@ export function AppShell() {
   const isAdmin = useMemo(() => isAdministratorRole(user?.rol), [user?.rol]);
   const hasGanadoAccess = useMemo(() => canViewGanado(user?.rol), [user?.rol]);
   const hasSanitarioAccess = useMemo(() => canViewSanitario(user?.rol), [user?.rol]);
+  const hasProductivoAccess = useMemo(() => canViewProductivo(user?.rol), [user?.rol]);
 
   const navigate = useCallback((nextRoute: AppRoute, replace = false) => {
     setRoute(nextRoute);
@@ -73,11 +76,20 @@ export function AppShell() {
     if (status === 'authenticated' && route === '/app/sanitario' && !hasSanitarioAccess) {
       navigate('/app', true);
     }
-  }, [hasGanadoAccess, hasSanitarioAccess, isAdmin, navigate, route, status]);
+
+    if (status === 'authenticated' && route === '/app/productivo' && !hasProductivoAccess) {
+      navigate('/app', true);
+    }
+  }, [hasGanadoAccess, hasSanitarioAccess, hasProductivoAccess, isAdmin, navigate, route, status]);
 
   const onNavigateModule = useCallback((moduleName: string) => {
     if (moduleName === 'Ganado') {
       navigate('/app/ganado');
+      return;
+    }
+
+    if (moduleName === 'Produccion' && hasProductivoAccess) {
+      navigate('/app/productivo');
       return;
     }
 
@@ -92,7 +104,7 @@ export function AppShell() {
     }
 
     navigate('/app');
-  }, [hasSanitarioAccess, isAdmin, navigate]);
+  }, [hasSanitarioAccess, hasProductivoAccess, isAdmin, navigate]);
 
   const authView = useMemo<AuthView>(() => getAuthViewFromRoute(route), [route]);
 
@@ -129,6 +141,12 @@ export function AppShell() {
           onGoUsersAdmin={isAdmin ? () => navigate('/app/usuarios') : undefined}
           onNavigateModule={onNavigateModule}
         />
+      ) : route === '/app/productivo' ? (
+        <ProductivoAdminPage
+          onGoHome={() => navigate('/app')}
+          onGoUsersAdmin={isAdmin ? () => navigate('/app/usuarios') : undefined}
+          onNavigateModule={onNavigateModule}
+        />
       ) : route === '/app' ? (
         <SessionView
           canManageUsers={isAdmin}
@@ -137,6 +155,8 @@ export function AppShell() {
           onGoGanado={() => navigate('/app/ganado')}
           canViewSanitario={hasSanitarioAccess}
           onGoSanitario={() => navigate('/app/sanitario')}
+          canViewProductivo={hasProductivoAccess}
+          onGoProductivo={() => navigate('/app/productivo')}
         />
       ) : (
         <AuthPage view={authView} onChangeView={onAuthViewChange} />
