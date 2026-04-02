@@ -10,7 +10,11 @@ export function AuthTopBar({ view, onChangeView }: AuthTopBarProps) {
   return (
     <header className="auth-topbar">
       <div className="auth-topbar__brand">
-        <img src="/placeholders/logo-rancho-placeholder.svg" alt="Logo SIGGAB" />
+        <img
+          src="/branding/logo-rancho-los-alpes.png"
+          alt="Logo Rancho Los Alpes"
+          className="auth-topbar__brand-logo"
+        />
         <strong>SIGGAB</strong>
       </div>
 

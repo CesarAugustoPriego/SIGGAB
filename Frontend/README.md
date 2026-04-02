@@ -1,4 +1,4 @@
-# SIGGAB Frontend
+﻿# SIGGAB Frontend
 
 ## Checkpoint 1 (Auth)
 Frontend para validar login y sesion contra backend SIGGAB.
@@ -23,14 +23,15 @@ npm install
 npm run dev
 ```
 
-## Placeholders de imagen (reemplaza sin tocar codigo)
+## Imagenes y placeholders
+- Hero login (internet): `public/images/auth-hero-register.jpg`
+- Hero registro (internet): `public/images/auth-hero-alt.jpg`
+- Placeholder para logo principal: `public/placeholders/logo-rancho-placeholder.svg`
+
+Para poner tu logo final de Rancho Los Alpes, reemplaza:
 - `public/placeholders/logo-rancho-placeholder.svg`
-- `public/placeholders/login-hero-placeholder.svg`
-- `public/placeholders/register-side-placeholder.svg`
 
-Puedes reemplazar cada archivo con tu imagen final manteniendo el mismo nombre.
-
-## Prueba manual (orden recomendado)
+## Prueba manual
 1. Inicia sesion con:
 - usuario: `admin`
 - contrasena: `SiggabAdmin2026!`

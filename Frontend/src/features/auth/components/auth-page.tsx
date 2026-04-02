@@ -23,7 +23,7 @@ export function AuthPage() {
   }
 
   return (
-    <section className="auth-page">
+    <section className={`auth-page auth-page--${view}`}>
       <AuthTopBar view={view} onChangeView={setView} />
       <div className="auth-page__canvas">{authViewContent}</div>
     </section>

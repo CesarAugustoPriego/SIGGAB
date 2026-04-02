@@ -1,15 +1,21 @@
-﻿import type { InputHTMLAttributes } from 'react';
+import type { InputHTMLAttributes, ReactNode } from 'react';
 
 interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'children'> {
   label: string;
   rightHint?: string;
   rightHintAction?: () => void;
+  leftIcon?: ReactNode;
+  trailing?: ReactNode;
+  inputClassName?: string;
 }
 
 export function TextField({
   label,
   rightHint,
   rightHintAction,
+  leftIcon,
+  trailing,
+  inputClassName = '',
   className = '',
   id,
   ...inputProps
@@ -17,7 +23,7 @@ export function TextField({
   const inputId = id || `field-${label.toLowerCase().replace(/\s+/g, '-')}`;
 
   return (
-    <label className={`ui-field ${className}`} htmlFor={inputId}>
+    <label className={`ui-field ${className}`.trim()} htmlFor={inputId}>
       <span className="ui-field__head">
         <span className="ui-field__label">{label}</span>
         {rightHint ? (
@@ -35,7 +41,12 @@ export function TextField({
           )
         ) : null}
       </span>
-      <input id={inputId} {...inputProps} className="ui-field__input" />
+
+      <div className={`ui-field__input-wrap ${leftIcon ? 'has-icon' : ''}`.trim()}>
+        {leftIcon ? <span className="ui-field__icon">{leftIcon}</span> : null}
+        <input id={inputId} {...inputProps} className={`ui-field__input ${inputClassName}`.trim()} />
+        {trailing}
+      </div>
     </label>
   );
 }
