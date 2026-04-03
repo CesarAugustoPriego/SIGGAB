@@ -8,6 +8,8 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test:e2e:contract": "node scripts/verify-testids.js",
+    "test:e2e:dashboard": "npm run test:e2e:contract && playwright test tests/e2e/dashboard.endpoint.spec.ts",
+    "test:e2e:reportes": "npm run test:e2e:contract && playwright test tests/e2e/reportes.endpoint.spec.ts",
     "test:e2e": "npm run test:e2e:contract && playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed"

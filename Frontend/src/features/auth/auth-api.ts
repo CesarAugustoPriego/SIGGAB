@@ -27,6 +27,7 @@ interface MeResponse {
 
 interface RefreshResponse {
   accessToken: string;
+  refreshToken?: string;
 }
 
 export const authApi = {

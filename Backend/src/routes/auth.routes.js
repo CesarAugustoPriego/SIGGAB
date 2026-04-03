@@ -53,7 +53,7 @@ router.post('/login', validate(loginSchema), authController.login);
  * /auth/refresh:
  *   post:
  *     tags: [Auth]
- *     summary: Renovar access token
+ *     summary: Renovar access token y rotar refresh token
  *     security: []
  *     requestBody:
  *       required: true
@@ -63,7 +63,7 @@ router.post('/login', validate(loginSchema), authController.login);
  *             $ref: '#/components/schemas/RefreshTokenRequest'
  *     responses:
  *       200:
- *         description: Nuevo accessToken generado
+ *         description: Nuevo accessToken y refreshToken rotado
  *       401:
  *         description: Refresh token revocado o expirado
  *       423:

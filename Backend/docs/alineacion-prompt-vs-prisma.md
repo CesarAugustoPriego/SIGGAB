@@ -59,5 +59,32 @@ Congelar una fuente de verdad funcional antes del handoff completo a Front, sin 
 - Suite CSRF en modo protegido: `tests/test-csrf-protection.js`.
 - Pipeline: `.github/workflows/backend-ci.yml` ejecuta las tres validaciones (funcional + seguridad).
 
-## Pendiente de gobierno de datos (siguiente paso recomendado)
+## Cierre de inconsistencias (Abril 2026)
+1. Politica de refresh token definida y aplicada.
+- `/auth/refresh` ahora rota `refreshToken` y devuelve `accessToken + refreshToken`.
+- El token anterior queda revocado en la misma transaccion.
+- El frontend conserva compatibilidad y actualiza ambos tokens cuando recibe rotacion.
+
+2. RN-08 (bajas) formalizado sin cambios de modelo.
+- `animales` mantiene `estado_actual`, `motivo_baja` y `fecha_baja`.
+- El endpoint de baja exige causa + fecha y evita doble baja.
+
+3. Enumeraciones operativas consolidadas.
+- Prisma usa enums para `estado_*` y `tipo_movimiento`.
+- Las validaciones Zod siguen los mismos valores cerrados.
+
+4. Nombres de rol normalizados para permisos.
+- El middleware admite `Veterinario` y `Medico Veterinario` como equivalentes operativos.
+- Se conserva tolerancia para variantes de acentos/codificacion heredada.
+
+5. Estrategia de baja logica explicitada.
+- No se elimina fisicamente ganado ni usuarios en flujos de negocio.
+- Se prioriza `estado/activo` y estados de negocio (`VENDIDO`, `MUERTO`, `TRANSFERIDO`).
+
+6. Bitacora reforzada para autenticacion.
+- Login, refresh y logout registran metadatos de contexto (`ip`, `userAgent`).
+- Refresh y logout se registran sobre `refresh_tokens` con identificador de token afectado.
+
+## Pendientes de gobierno de datos (siguiente paso recomendado)
 - Versionar diccionario v2 para reflejar explicitamente las extensiones aprobadas.
+- Definir alcance formal de RN-06 (movilizacion) sin crear tablas fuera del prompt actual.

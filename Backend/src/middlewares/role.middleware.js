@@ -3,16 +3,12 @@ const { sendForbidden } = require('../utils/response');
 const ROLE_ALIASES = new Map([
   ['propietario', 'propietario'],
   ['administrador', 'administrador'],
+  ['veterinario', 'medico-veterinario'],
   ['medico veterinario', 'medico-veterinario'],
-  ['médico veterinario', 'medico-veterinario'],
-  ['mÃ©dico veterinario', 'medico-veterinario'],
+  ['medico-veterinario', 'medico-veterinario'],
   ['produccion', 'produccion'],
-  ['producción', 'produccion'],
-  ['producciÃ³n', 'produccion'],
   ['campo', 'campo'],
   ['almacen', 'almacen'],
-  ['almacén', 'almacen'],
-  ['almacÃ©n', 'almacen'],
 ]);
 
 function normalizeText(value) {
@@ -20,7 +16,10 @@ function normalizeText(value) {
     .trim()
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function canonicalRole(value) {
@@ -29,6 +28,11 @@ function canonicalRole(value) {
 
   const normalized = normalizeText(value);
   if (ROLE_ALIASES.has(normalized)) return ROLE_ALIASES.get(normalized);
+
+  // Tolerancia ante variaciones de acentos/codificacion heredada.
+  if (normalized.includes('veterinario')) return 'medico-veterinario';
+  if (normalized.includes('produc')) return 'produccion';
+  if (normalized.includes('almac')) return 'almacen';
 
   return normalized;
 }

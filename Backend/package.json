@@ -9,6 +9,8 @@
     "openapi:generate": "node scripts/generate-openapi.js",
     "openapi:validate": "node scripts/validate-openapi.js",
     "test:checkpoint:auth": "node tests/test-checkpoint-auth.js",
+    "test:unit:dashboard": "node --test tests/unit/dashboard.service.unit.test.js tests/unit/dashboard.controller.unit.test.js",
+    "test:unit:reportes": "node --test tests/unit/reportes.service.unit.test.js tests/unit/reportes.controller.unit.test.js",
     "test:e2e": "node tests/test-endpoints.js && node tests/test-fase3-hardening.js",
     "test:fase3-hardening": "node tests/test-fase3-hardening.js",
     "test:csrf": "node tests/test-csrf-protection.js",

@@ -89,16 +89,58 @@ async function findRefreshToken(token) {
   });
 }
 
-async function revokeRefreshToken(token) {
-  return prisma.refreshToken.update({
-    where: { token },
+async function rotateRefreshToken({
+  idRefreshToken,
+  idUsuario,
+  token,
+  fechaExpiracion,
+  ipOrigen = null,
+  userAgent = null,
+}) {
+  return prisma.$transaction(async (tx) => {
+    await tx.refreshToken.update({
+      where: { idRefreshToken },
+      data: { revocado: true },
+    });
+
+    return tx.refreshToken.create({
+      data: {
+        idUsuario,
+        token,
+        fechaExpiracion,
+        ipOrigen,
+        userAgent,
+      },
+    });
+  });
+}
+
+async function revokeRefreshToken(token, idUsuario = null) {
+  const result = await prisma.refreshToken.updateMany({
+    where: {
+      token,
+      ...(idUsuario ? { idUsuario } : {}),
+    },
     data: { revocado: true },
   });
+
+  return result.count > 0;
 }
 
 async function revokeAllUserTokens(idUsuario) {
   return prisma.refreshToken.updateMany({
     where: { idUsuario, revocado: false },
+    data: { revocado: true },
+  });
+}
+
+async function revokeExpiredTokens(idUsuario) {
+  return prisma.refreshToken.updateMany({
+    where: {
+      idUsuario,
+      revocado: false,
+      fechaExpiracion: { lte: new Date() },
+    },
     data: { revocado: true },
   });
 }
@@ -113,6 +155,8 @@ module.exports = {
   clearFailedLoginState,
   createRefreshToken,
   findRefreshToken,
+  rotateRefreshToken,
   revokeRefreshToken,
   revokeAllUserTokens,
+  revokeExpiredTokens,
 };

@@ -92,6 +92,10 @@ async function main() {
     `POST /auth/refresh esperado 200, recibido ${res.status}`
   );
 
+  if (res.payload?.data?.refreshToken) {
+    refreshToken = res.payload.data.refreshToken;
+  }
+
   const refreshedAccessToken = res.payload?.data?.accessToken || accessToken;
 
   // 5) Logout y revocacion de refresh

@@ -7,6 +7,11 @@ const JSON_CONTENT_TYPE = 'application/json';
 const AUTH_PATHS_WITHOUT_BEARER = new Set(['/auth/login', '/auth/refresh']);
 const DEFAULT_TIMEOUT_MS = 15000;
 
+interface RefreshTokens {
+  accessToken: string;
+  refreshToken?: string;
+}
+
 interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
@@ -32,7 +37,7 @@ async function parseJsonResponse(response: Response): Promise<ApiEnvelope<unknow
   }
 }
 
-async function fetchNewAccessToken(refreshToken: string): Promise<string | null> {
+async function fetchNewAccessToken(refreshToken: string): Promise<RefreshTokens | null> {
   const response = await fetch(`${env.apiBaseUrl}/auth/refresh`, {
     method: 'POST',
     headers: {
@@ -47,8 +52,16 @@ async function fetchNewAccessToken(refreshToken: string): Promise<string | null>
     return null;
   }
 
-  const accessToken = (payload.data as { accessToken?: string }).accessToken;
-  return accessToken || null;
+  const tokenData = payload.data as { accessToken?: string; refreshToken?: string };
+
+  if (!tokenData.accessToken) {
+    return null;
+  }
+
+  return {
+    accessToken: tokenData.accessToken,
+    refreshToken: tokenData.refreshToken,
+  };
 }
 
 function buildHeaders(path: string, withAuth: boolean, accessToken: string | undefined, customHeaders?: Record<string, string>) {
@@ -106,12 +119,13 @@ async function executeRequest<T>(path: string, options: RequestOptions = {}): Pr
       && session?.refreshToken
       && !AUTH_PATHS_WITHOUT_BEARER.has(path)
     ) {
-      const newAccessToken = await fetchNewAccessToken(session.refreshToken);
+      const refreshedTokens = await fetchNewAccessToken(session.refreshToken);
 
-      if (newAccessToken) {
+      if (refreshedTokens?.accessToken) {
         writeSession({
           ...session,
-          accessToken: newAccessToken,
+          accessToken: refreshedTokens.accessToken,
+          refreshToken: refreshedTokens.refreshToken || session.refreshToken,
         });
 
         return executeRequest<T>(path, {

@@ -80,6 +80,7 @@ async function main() {
   res = await request('POST', '/auth/refresh', { refreshToken });
   test('Refresh token exitoso', res.status === 200 && res.data.data.accessToken);
   if (res.data.data?.accessToken) accessToken = res.data.data.accessToken;
+  if (res.data.data?.refreshToken) refreshToken = res.data.data.refreshToken;
 
   console.log(results.slice(-7).join('\n'));
   results.length = 0;

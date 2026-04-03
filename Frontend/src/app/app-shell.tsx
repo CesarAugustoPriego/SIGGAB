@@ -6,10 +6,14 @@ import { SanitarioAdminPage } from '../features/sanitario/components';
 import { UsersAdminPage } from '../features/users/components';
 import { ProductivoAdminPage } from '../features/productivo/components';
 import { InventarioAdminPage } from '../features/inventario/components';
+import { DashboardPage } from '../features/dashboard/components';
+import { ReportesPage } from '../features/reportes/components';
 import { canViewGanado } from '../features/ganado/ganado-utils';
 import { canViewSanitario } from '../features/sanitario/sanitario-utils';
 import { canViewProductivo } from '../features/productivo/productivo-utils';
 import { canViewInventario } from '../features/inventario/inventario-utils';
+import { canViewDashboard } from '../features/dashboard/dashboard-utils';
+import { canViewReportes } from '../features/reportes/reportes-utils';
 import { isAdministratorRole } from '../features/users/users-utils';
 import {
   getAuthViewFromRoute,
@@ -31,6 +35,8 @@ export function AppShell() {
   const hasSanitarioAccess = useMemo(() => canViewSanitario(user?.rol), [user?.rol]);
   const hasProductivoAccess = useMemo(() => canViewProductivo(user?.rol), [user?.rol]);
   const hasInventarioAccess = useMemo(() => canViewInventario(user?.rol), [user?.rol]);
+  const hasDashboardAccess = useMemo(() => canViewDashboard(user?.rol), [user?.rol]);
+  const hasReportesAccess = useMemo(() => canViewReportes(user?.rol), [user?.rol]);
 
   const navigate = useCallback((nextRoute: AppRoute, replace = false) => {
     setRoute(nextRoute);
@@ -87,7 +93,14 @@ export function AppShell() {
     if (status === 'authenticated' && route === '/app/inventario' && !hasInventarioAccess) {
       navigate('/app', true);
     }
-  }, [hasGanadoAccess, hasSanitarioAccess, hasProductivoAccess, hasInventarioAccess, isAdmin, navigate, route, status]);
+
+    if (status === 'authenticated' && route === '/app/dashboard' && !hasDashboardAccess) {
+      navigate('/app', true);
+    }
+    if (status === 'authenticated' && route === '/app/reportes' && !hasReportesAccess) {
+      navigate('/app', true);
+    }
+  }, [hasGanadoAccess, hasSanitarioAccess, hasProductivoAccess, hasInventarioAccess, hasDashboardAccess, hasReportesAccess, isAdmin, navigate, route, status]);
 
   const onNavigateModule = useCallback((moduleName: string) => {
     if (moduleName === 'Ganado') {
@@ -110,13 +123,23 @@ export function AppShell() {
       return;
     }
 
+    if (moduleName === 'Dashboard' && hasDashboardAccess) {
+      navigate('/app/dashboard');
+      return;
+    }
+
+    if (moduleName === 'Reportes' && hasReportesAccess) {
+      navigate('/app/reportes');
+      return;
+    }
+
     if (moduleName === 'Usuarios' && isAdmin) {
       navigate('/app/usuarios');
       return;
     }
 
     navigate('/app');
-  }, [hasSanitarioAccess, hasProductivoAccess, hasInventarioAccess, isAdmin, navigate]);
+  }, [hasSanitarioAccess, hasProductivoAccess, hasInventarioAccess, hasDashboardAccess, hasReportesAccess, isAdmin, navigate]);
 
   const authView = useMemo<AuthView>(() => getAuthViewFromRoute(route), [route]);
 
@@ -165,6 +188,18 @@ export function AppShell() {
           onGoUsersAdmin={isAdmin ? () => navigate('/app/usuarios') : undefined}
           onNavigateModule={onNavigateModule}
         />
+      ) : route === '/app/dashboard' ? (
+        <DashboardPage
+          onGoHome={() => navigate('/app')}
+          onGoUsersAdmin={isAdmin ? () => navigate('/app/usuarios') : undefined}
+          onNavigateModule={onNavigateModule}
+        />
+      ) : route === '/app/reportes' ? (
+        <ReportesPage
+          onGoHome={() => navigate('/app')}
+          onGoUsersAdmin={isAdmin ? () => navigate('/app/usuarios') : undefined}
+          onNavigateModule={onNavigateModule}
+        />
       ) : route === '/app' ? (
         <SessionView
           canManageUsers={isAdmin}
@@ -177,6 +212,10 @@ export function AppShell() {
           onGoProductivo={() => navigate('/app/productivo')}
           canViewInventario={hasInventarioAccess}
           onGoInventario={() => navigate('/app/inventario')}
+          canViewDashboard={hasDashboardAccess}
+          onGoDashboard={() => navigate('/app/dashboard')}
+          canViewReportes={hasReportesAccess}
+          onGoReportes={() => navigate('/app/reportes')}
         />
       ) : (
         <AuthPage view={authView} onChangeView={onAuthViewChange} />

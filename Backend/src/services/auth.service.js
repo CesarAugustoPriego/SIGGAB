@@ -79,6 +79,9 @@ async function login(username, password, { ip, userAgent }) {
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken({ idUsuario: usuario.idUsuario });
 
+  // Higiene: revocar tokens expirados antiguos del usuario.
+  await usuariosRepository.revokeExpiredTokens(usuario.idUsuario);
+
   // Guardar refresh token en BD
   await usuariosRepository.createRefreshToken({
     idUsuario: usuario.idUsuario,
@@ -93,6 +96,10 @@ async function login(username, password, { ip, userAgent }) {
     accion: 'LOGIN',
     tablaAfectada: 'usuarios',
     idRegistro: usuario.idUsuario,
+    detalles: {
+      ip: ip || null,
+      userAgent: userAgent || null,
+    },
   });
 
   return {
@@ -110,7 +117,7 @@ async function login(username, password, { ip, userAgent }) {
 /**
  * Refrescar access token usando un refresh token valido.
  */
-async function refresh(refreshTokenStr) {
+async function refresh(refreshTokenStr, { ip, userAgent } = {}) {
   let decoded;
   try {
     decoded = verifyToken(refreshTokenStr);
@@ -122,6 +129,10 @@ async function refresh(refreshTokenStr) {
 
   if (!tokenRecord || tokenRecord.revocado) {
     throw Object.assign(new Error('Refresh token revocado o inexistente'), { statusCode: 401 });
+  }
+
+  if (decoded.idUsuario !== tokenRecord.idUsuario) {
+    throw Object.assign(new Error('Refresh token invalido para el usuario actual'), { statusCode: 401 });
   }
 
   if (new Date() > tokenRecord.fechaExpiracion) {
@@ -149,28 +160,60 @@ async function refresh(refreshTokenStr) {
   };
 
   const newAccessToken = generateAccessToken(payload);
+  const newRefreshToken = generateRefreshToken({ idUsuario: usuario.idUsuario });
+
+  const rotated = await usuariosRepository.rotateRefreshToken({
+    idRefreshToken: tokenRecord.idRefreshToken,
+    idUsuario: usuario.idUsuario,
+    token: newRefreshToken,
+    fechaExpiracion: getExpirationDate(env.JWT_REFRESH_EXPIRES_IN),
+    ipOrigen: ip || tokenRecord.ipOrigen || null,
+    userAgent: userAgent || tokenRecord.userAgent || null,
+  });
 
   await registrarAccion({
     idUsuario: usuario.idUsuario,
     accion: 'REFRESH_TOKEN',
     tablaAfectada: 'refresh_tokens',
-    idRegistro: tokenRecord.idRefreshToken,
+    idRegistro: rotated.idRefreshToken,
+    detalles: {
+      tokenAnteriorId: tokenRecord.idRefreshToken,
+      tokenNuevoId: rotated.idRefreshToken,
+      ip: ip || null,
+      userAgent: userAgent || null,
+    },
   });
 
-  return { accessToken: newAccessToken };
+  return {
+    accessToken: newAccessToken,
+    refreshToken: newRefreshToken,
+  };
 }
 
 /**
  * Cerrar sesion: revocar el refresh token.
  */
-async function logout(refreshTokenStr, idUsuario) {
-  await usuariosRepository.revokeRefreshToken(refreshTokenStr);
+async function logout(refreshTokenStr, idUsuario, { ip, userAgent } = {}) {
+  const tokenRecord = await usuariosRepository.findRefreshToken(refreshTokenStr);
+  if (!tokenRecord || tokenRecord.idUsuario !== idUsuario) {
+    throw Object.assign(new Error('Refresh token invalido para cerrar sesion'), { statusCode: 401 });
+  }
+
+  const revoked = await usuariosRepository.revokeRefreshToken(refreshTokenStr, idUsuario);
+  if (!revoked) {
+    throw Object.assign(new Error('No se pudo revocar el refresh token'), { statusCode: 401 });
+  }
 
   await registrarAccion({
     idUsuario,
     accion: 'LOGOUT',
-    tablaAfectada: 'usuarios',
-    idRegistro: idUsuario,
+    tablaAfectada: 'refresh_tokens',
+    idRegistro: tokenRecord.idRefreshToken,
+    detalles: {
+      ip: ip || null,
+      userAgent: userAgent || null,
+      revocado: true,
+    },
   });
 }
 

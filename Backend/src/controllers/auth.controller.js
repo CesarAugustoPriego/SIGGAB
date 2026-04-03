@@ -1,5 +1,5 @@
 const authService = require('../services/auth.service');
-const { sendSuccess, sendCreated } = require('../utils/response');
+const { sendSuccess } = require('../utils/response');
 
 async function login(req, res, next) {
   try {
@@ -17,7 +17,10 @@ async function login(req, res, next) {
 async function refresh(req, res, next) {
   try {
     const { refreshToken } = req.body;
-    const result = await authService.refresh(refreshToken);
+    const result = await authService.refresh(refreshToken, {
+      ip: req.ip,
+      userAgent: req.get('User-Agent'),
+    });
     return sendSuccess(res, result, 'Token renovado exitosamente');
   } catch (error) {
     next(error);
@@ -27,7 +30,10 @@ async function refresh(req, res, next) {
 async function logout(req, res, next) {
   try {
     const { refreshToken } = req.body;
-    await authService.logout(refreshToken, req.user.idUsuario);
+    await authService.logout(refreshToken, req.user.idUsuario, {
+      ip: req.ip,
+      userAgent: req.get('User-Agent'),
+    });
     return sendSuccess(res, null, 'Sesión cerrada exitosamente');
   } catch (error) {
     next(error);
