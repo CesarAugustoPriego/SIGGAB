@@ -35,6 +35,27 @@ export function canViewGanado(roleName: string | undefined) {
   ]);
 }
 
+export function canCreateAnimal(roleName: string | undefined) {
+  return hasRole(roleName, [
+    'administrador',
+    'medico veterinario',
+    'produccion',
+    'campo',
+  ]);
+}
+
+export function canEditAnimal(roleName: string | undefined) {
+  return hasRole(roleName, ['administrador']);
+}
+
+export function canBajaAnimal(roleName: string | undefined) {
+  return hasRole(roleName, ['administrador']);
+}
+
+export function canViewAnimalHistorial(roleName: string | undefined) {
+  return canViewGanado(roleName);
+}
+
 export function canViewSanitario(roleName: string | undefined) {
   return hasRole(roleName, [
     'propietario',

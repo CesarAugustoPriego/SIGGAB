@@ -2,6 +2,7 @@ import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider } from '@/src/features/auth/auth-context';
 
@@ -18,15 +19,17 @@ const siggabTheme = {
 
 export default function RootLayout() {
   return (
-    <ThemeProvider value={siggabTheme}>
-      <AuthProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(app)" />
-        </Stack>
-      </AuthProvider>
-      <StatusBar style="dark" />
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider value={siggabTheme}>
+        <AuthProvider>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(app)" />
+          </Stack>
+        </AuthProvider>
+        <StatusBar style="dark" translucent={false} />
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

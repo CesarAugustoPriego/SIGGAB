@@ -7,7 +7,7 @@ export default function AppLayout() {
   const { status } = useAuth();
 
   if (status === 'booting') {
-    return <LoadingScreen label="Preparando aplicación..." />;
+    return <LoadingScreen label="Preparando aplicacion..." />;
   }
 
   if (status === 'unauthenticated') {
@@ -17,6 +17,9 @@ export default function AppLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="home" />
+      <Stack.Screen name="ganado/index" />
+      <Stack.Screen name="ganado/registrar" />
+      <Stack.Screen name="ganado/[id]" />
     </Stack>
   );
 }

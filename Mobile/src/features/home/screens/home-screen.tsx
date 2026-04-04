@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useRouter } from 'expo-router';
 import {
   ActivityIndicator,
   Alert,
@@ -14,6 +15,7 @@ import { useAuth } from '@/src/features/auth/auth-context';
 import { getVisibleModulesForRole } from '@/src/features/auth/role-permissions';
 
 export function HomeScreen() {
+  const router = useRouter();
   const { user, logout, refreshProfile } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -40,10 +42,15 @@ export function HomeScreen() {
     }
   };
 
-  const onPressModule = (title: string) => {
+  const onPressModule = (moduleKey: string, title: string) => {
+    if (moduleKey === 'ganado') {
+      router.push('/(app)/ganado');
+      return;
+    }
+
     Alert.alert(
-      `${title} (Próximamente)`,
-      'Este módulo quedará habilitado en la siguiente iteración móvil conectada al backend.'
+      `${title} (Proximamente)`,
+      'Este modulo quedara habilitado en la siguiente iteracion movil conectada al backend.'
     );
   };
 
@@ -52,11 +59,11 @@ export function HomeScreen() {
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>SIGGAB</Text>
-          <Text style={styles.subtitle}>Panel móvil por rol</Text>
+          <Text style={styles.subtitle}>Panel movil por rol</Text>
         </View>
 
         <View style={styles.profileCard}>
-          <Text style={styles.profileName}>{user?.nombreCompleto || 'Usuario sin sesión'}</Text>
+          <Text style={styles.profileName}>{user?.nombreCompleto || 'Usuario sin sesion'}</Text>
           <Text style={styles.profileMeta}>@{user?.username || 'sin_usuario'}</Text>
           <Text style={styles.roleChip}>{user?.rol || 'Sin rol asignado'}</Text>
 
@@ -76,27 +83,27 @@ export function HomeScreen() {
               style={({ pressed }) => [styles.dangerButton, pressed ? styles.pressed : null]}>
               {loggingOut
                 ? <ActivityIndicator color="#FFFFFF" />
-                : <Text style={styles.dangerButtonText}>Cerrar sesión</Text>}
+                : <Text style={styles.dangerButtonText}>Cerrar sesion</Text>}
             </Pressable>
           </View>
         </View>
 
         <View style={styles.modulesBlock}>
-          <Text style={styles.modulesTitle}>Módulos disponibles</Text>
+          <Text style={styles.modulesTitle}>Modulos disponibles</Text>
           <Text style={styles.modulesHint}>
-            La visibilidad está filtrada según la matriz de permisos oficial del proyecto.
+            La visibilidad esta filtrada segun la matriz de permisos oficial del proyecto.
           </Text>
 
           {visibleModules.length === 0 ? (
             <View style={styles.emptyCard}>
-              <Text style={styles.emptyTitle}>Sin módulos habilitados</Text>
-              <Text style={styles.emptyText}>Tu rol actual no tiene permisos móviles habilitados.</Text>
+              <Text style={styles.emptyTitle}>Sin modulos habilitados</Text>
+              <Text style={styles.emptyText}>Tu rol actual no tiene permisos moviles habilitados.</Text>
             </View>
           ) : (
             visibleModules.map((module) => (
               <Pressable
                 key={module.key}
-                onPress={() => onPressModule(module.title)}
+                onPress={() => onPressModule(module.key, module.title)}
                 style={({ pressed }) => [styles.moduleCard, pressed ? styles.pressed : null]}>
                 <Text style={styles.moduleTitle}>{module.title}</Text>
                 <Text style={styles.moduleDescription}>{module.description}</Text>
