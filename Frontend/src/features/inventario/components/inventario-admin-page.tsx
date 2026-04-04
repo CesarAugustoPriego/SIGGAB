@@ -237,7 +237,7 @@ export function InventarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
       const c = await inventarioApi.createSolicitud({ fechaSolicitud: solForm.fechaSolicitud, observaciones: solForm.observaciones || undefined, detalles });
       setSolicitudes(prev => [c, ...prev]);
       setSolForm({ fechaSolicitud: '', observaciones: '' }); setSolDetalles([]);
-      setMsg({ type: 'success', text: 'Solicitud de compra creada — pendiente de aprobacion.' });
+      setMsg({ type: 'success', text: 'Solicitud de compra creada - pendiente de aprobacion.' });
     } catch (e) { await handleErr(e); } finally { setSavingSol(false); }
   };
 
@@ -357,7 +357,7 @@ export function InventarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
                       <table className="productivo-table">
                         <thead><tr><th>ID</th><th>Nombre</th><th>Tipo</th><th>Unidad</th><th>Stock</th><th>Estado</th>{canIns ? <th>Acciones</th> : null}</tr></thead>
                         <tbody>
-                          {insumos.length === 0 ? <tr><td colSpan={canIns ? 7 : 6} className="productivo-table-empty">No hay insumos.</td></tr> : insumos.map(i => (
+                          {insumos.length === 0 ? <tr><td colSpan={canIns ? 7 : 6} className="productivo-table-empty">No hay registros para mostrar.</td></tr> : insumos.map(i => (
                             <tr key={i.idInsumo}>
                               <td className="productivo-table-id">#{i.idInsumo}</td>
                               <td><strong>{i.nombreInsumo}</strong>{i.descripcion ? <><br /><small style={{ color: '#6b7280' }}>{i.descripcion}</small></> : null}</td>
@@ -402,11 +402,11 @@ export function InventarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
                       <table className="productivo-table">
                         <thead><tr><th>ID</th><th>Nombre</th><th>Descripcion</th><th>Activo</th>{canTip ? <th>Acciones</th> : null}</tr></thead>
                         <tbody>
-                          {tipos.length === 0 ? <tr><td colSpan={canTip ? 5 : 4} className="productivo-table-empty">No hay tipos.</td></tr> : tipos.map(t => (
+                          {tipos.length === 0 ? <tr><td colSpan={canTip ? 5 : 4} className="productivo-table-empty">No hay registros para mostrar.</td></tr> : tipos.map(t => (
                             <tr key={t.idTipoInsumo}>
                               <td className="productivo-table-id">#{t.idTipoInsumo}</td>
                               <td><strong>{t.nombreTipo}</strong></td>
-                              <td style={{ color: '#6b7280' }}>{t.descripcion || '—'}</td>
+                              <td style={{ color: '#6b7280' }}>{t.descripcion || '-'}</td>
                               <td><span className={`productivo-status ${t.activo ? 'is-approved' : 'is-rejected'}`}>{t.activo ? 'SI' : 'NO'}</span></td>
                               {canTip ? (
                                 <td>
@@ -466,14 +466,14 @@ export function InventarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
                         <table className="productivo-table">
                           <thead><tr><th>ID</th><th>Insumo</th><th>Tipo</th><th>Cantidad</th><th>Fecha</th><th>Ref.</th><th>Registrado por</th></tr></thead>
                           <tbody>
-                            {movimientos.length === 0 ? <tr><td colSpan={7} className="productivo-table-empty">No hay movimientos.</td></tr> : movimientos.map(m => (
+                            {movimientos.length === 0 ? <tr><td colSpan={7} className="productivo-table-empty">No hay registros para mostrar.</td></tr> : movimientos.map(m => (
                               <tr key={m.idMovimiento}>
                                 <td className="productivo-table-id">#{m.idMovimiento}</td>
                                 <td>{m.insumo?.nombreInsumo || 'N/A'}</td>
                                 <td><span className={`inventario-mov-badge ${getMovimientoClass(m.tipoMovimiento)}`}>{m.tipoMovimiento}</span></td>
                                 <td className="productivo-table-value">{toNum(m.cantidad)} <small>{m.insumo?.unidadMedida || ''}</small></td>
                                 <td>{toInputDate(m.fechaMovimiento)}</td>
-                                <td>{m.referenciaCompra ? <span className="inventario-ref">C#{m.referenciaCompra}</span> : '—'}</td>
+                                <td>{m.referenciaCompra ? <span className="inventario-ref">C#{m.referenciaCompra}</span> : '-'}</td>
                                 <td>{m.registrador?.nombreCompleto || 'N/A'}</td>
                               </tr>
                             ))}
@@ -529,13 +529,13 @@ export function InventarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
                         <table className="productivo-table">
                           <thead><tr><th>ID</th><th>Fecha</th><th>Solicitante</th><th>Items</th><th>Observaciones</th><th>Estado</th><th>Acciones</th></tr></thead>
                           <tbody>
-                            {solicitudes.length === 0 ? <tr><td colSpan={7} className="productivo-table-empty">No hay solicitudes.</td></tr> : solicitudes.map(s => (
+                            {solicitudes.length === 0 ? <tr><td colSpan={7} className="productivo-table-empty">No hay registros para mostrar.</td></tr> : solicitudes.map(s => (
                               <tr key={s.idSolicitud}>
                                 <td className="productivo-table-id">S#{s.idSolicitud}</td>
                                 <td>{toInputDate(s.fechaSolicitud)}</td>
                                 <td>{s.solicitante?.nombreCompleto || 'N/A'}</td>
                                 <td>{s.detalles?.length || 0}</td>
-                                <td className="productivo-table-obs">{s.observaciones || '—'}</td>
+                                <td className="productivo-table-obs">{s.observaciones || '-'}</td>
                                 <td><span className={`productivo-status ${getEstadoSolicitudClass(s.estadoSolicitud)}`}>{s.estadoSolicitud}</span></td>
                                 <td>
                                   {s.estadoSolicitud === 'PENDIENTE' && canApr ? (
@@ -566,7 +566,7 @@ export function InventarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
                         <label className="productivo-field"><span>Solicitud aprobada</span>
                           <select value={compraForm.idSolicitud} onChange={e => onSelectSolicitudForCompra(e.target.value)} data-testid="compra-solicitud">
                             <option value="">Selecciona solicitud</option>
-                            {solicitudesAprobadas.map(s => <option key={s.idSolicitud} value={s.idSolicitud}>S#{s.idSolicitud} — {toInputDate(s.fechaSolicitud)}</option>)}
+                            {solicitudesAprobadas.map(s => <option key={s.idSolicitud} value={s.idSolicitud}>S#{s.idSolicitud} - {toInputDate(s.fechaSolicitud)}</option>)}
                           </select>
                         </label>
                         <label className="productivo-field"><span>Fecha de compra</span><input type="date" value={compraForm.fechaCompra} onChange={e => setCompraForm(p => ({ ...p, fechaCompra: e.target.value }))} data-testid="compra-fecha" /></label>
@@ -600,7 +600,7 @@ export function InventarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
                         <table className="productivo-table">
                           <thead><tr><th>ID</th><th>Solicitud</th><th>Fecha</th><th>Total</th><th>Realizada por</th></tr></thead>
                           <tbody>
-                            {compras.length === 0 ? <tr><td colSpan={5} className="productivo-table-empty">No hay compras.</td></tr> : compras.map(c => (
+                            {compras.length === 0 ? <tr><td colSpan={5} className="productivo-table-empty">No hay registros para mostrar.</td></tr> : compras.map(c => (
                               <tr key={c.idCompra}>
                                 <td className="productivo-table-id">C#{c.idCompra}</td>
                                 <td>S#{c.idSolicitud}</td>

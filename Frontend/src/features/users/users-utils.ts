@@ -1,4 +1,5 @@
 import { ApiClientError } from '../../types/api';
+import { getApiErrorMessage } from '../../shared/errors/api-error-messages';
 
 type UsersFieldErrorKey = 'nombreCompleto' | 'username' | 'idRol' | 'password';
 
@@ -67,15 +68,11 @@ export function getUsersErrorMessage(error: unknown) {
     if (error.status === 400 && issues.length > 0) {
       return issues[0].mensaje || 'Datos invalidos para guardar el usuario.';
     }
-
-    if (error.status === 401) return 'Sesion expirada. Inicia sesion nuevamente.';
-    if (error.status === 403) return 'No tienes permisos para gestionar usuarios.';
-    if (error.status === 409) return error.message || 'El username ya existe.';
-    if (error.status === 400) return error.message || 'Datos invalidos para guardar el usuario.';
-    if (error.status === 404) return 'El usuario no existe o ya fue eliminado.';
-    if (error.status === 0) return 'No hay conexion con el backend.';
-    return error.message;
   }
-
-  return 'Ocurrio un error inesperado.';
+  return getApiErrorMessage(error, {
+    badRequest: 'Datos invalidos para guardar el usuario.',
+    forbidden: 'No tienes permisos para gestionar usuarios.',
+    notFound: 'El usuario no existe o ya fue eliminado.',
+    conflict: 'El username ya existe.',
+  });
 }

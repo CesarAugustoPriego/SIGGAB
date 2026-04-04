@@ -1,4 +1,5 @@
 import { ApiClientError } from '../../types/api';
+import { getApiErrorMessage } from '../../shared/errors/api-error-messages';
 import type { EstadoSolicitud, TipoMovimiento } from './inventario-types';
 
 // ─── Role helpers ─────────────────────────────────────────────────────────────
@@ -92,11 +93,10 @@ export function getInventarioErrorMessage(error: unknown) {
       const first = issues[0];
       return String((first as { mensaje?: string }).mensaje || 'Datos invalidos.');
     }
-    if (error.status === 401) return 'Sesion expirada. Inicia sesion nuevamente.';
-    if (error.status === 403) return 'No tienes permisos para esta accion.';
-    if (error.status === 404) return error.message || 'Registro no encontrado.';
-    if (error.status === 0) return 'No hay conexion con el backend.';
-    return error.message;
   }
-  return 'Ocurrio un error inesperado.';
+  return getApiErrorMessage(error, {
+    badRequest: 'Datos invalidos.',
+    forbidden: 'No tienes permisos para esta accion.',
+    notFound: 'Registro no encontrado.',
+  });
 }

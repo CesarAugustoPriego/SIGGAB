@@ -1,4 +1,4 @@
-import { ApiClientError } from '../../types/api';
+import { getApiErrorMessage } from '../../shared/errors/api-error-messages';
 
 // ─── Role helpers ─────────────────────────────────────────────────────────────
 
@@ -42,13 +42,13 @@ export function canViewBitacora(roleName: string | undefined) {
 // ─── Formatters ───────────────────────────────────────────────────────────────
 
 export function fmtDate(v: string | null | undefined) {
-  if (!v) return '—';
+  if (!v) return '-';
   const d = new Date(v);
   return d.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 export function fmtDateTime(v: string | null | undefined) {
-  if (!v) return '—';
+  if (!v) return '-';
   const d = new Date(v);
   return d.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
@@ -112,11 +112,7 @@ export function getReproColor(tipo: string) {
 // ─── Error handling ───────────────────────────────────────────────────────────
 
 export function getDashboardErrorMessage(error: unknown) {
-  if (error instanceof ApiClientError) {
-    if (error.status === 401) return 'Sesion expirada. Inicia sesion nuevamente.';
-    if (error.status === 403) return 'No tienes permisos para esta seccion.';
-    if (error.status === 0) return 'No hay conexion con el backend.';
-    return error.message;
-  }
-  return 'Ocurrio un error inesperado.';
+  return getApiErrorMessage(error, {
+    forbidden: 'No tienes permisos para esta seccion.',
+  });
 }

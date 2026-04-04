@@ -1,4 +1,5 @@
 import { ApiClientError } from '../../types/api';
+import { getApiErrorMessage } from '../../shared/errors/api-error-messages';
 import type { Animal, EstadoAnimal } from './ganado-types';
 
 type GanadoFieldErrorKey =
@@ -110,16 +111,13 @@ export function getGanadoErrorMessage(error: unknown) {
     if (error.status === 400 && issues.length > 0) {
       return issues[0].mensaje || 'Datos invalidos en el formulario de ganado.';
     }
-
-    if (error.status === 401) return 'Sesion expirada. Inicia sesion nuevamente.';
-    if (error.status === 403) return 'No tienes permisos para esta accion en ganado.';
-    if (error.status === 404) return error.message || 'No se encontro el animal solicitado.';
-    if (error.status === 409) return error.message || 'El numero de arete ya existe.';
-    if (error.status === 0) return 'No hay conexion con el backend.';
-    return error.message;
   }
-
-  return 'Ocurrio un error inesperado.';
+  return getApiErrorMessage(error, {
+    badRequest: 'Datos invalidos en el formulario de ganado.',
+    forbidden: 'No tienes permisos para esta accion en ganado.',
+    notFound: 'No se encontro el animal solicitado.',
+    conflict: 'El numero de arete ya existe.',
+  });
 }
 
 export function formatEstadoAnimal(estado: EstadoAnimal) {

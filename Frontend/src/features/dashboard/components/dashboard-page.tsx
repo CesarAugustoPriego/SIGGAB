@@ -279,7 +279,7 @@ export function DashboardPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Pr
                         <span className="dash-bar-count">{r._count.idAnimal}</span>
                       </div>
                     ))}
-                    {ganado.porRaza.length === 0 && <p className="dash-empty">Sin datos de razas</p>}
+                    {ganado.porRaza.length === 0 && <p className="dash-empty">No hay registros para mostrar.</p>}
                   </div>
 
                   {/* Recientes */}
@@ -290,8 +290,8 @@ export function DashboardPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Pr
                       {ganado.recienIngresados.map(a => (
                         <tr key={a.idAnimal}>
                           <td><strong>{a.numeroArete}</strong></td>
-                          <td>{a.nombre || '—'}</td>
-                          <td>{a.raza?.nombreRaza || '—'}</td>
+                          <td>{a.nombre || '-'}</td>
+                          <td>{a.raza?.nombreRaza || '-'}</td>
                           <td>{fmtDate(a.fechaIngreso)}</td>
                         </tr>
                       ))}
@@ -341,7 +341,7 @@ export function DashboardPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Pr
                         {ev.tipoEvento} <strong>{ev._count.idEventoReproductivo}</strong>
                       </span>
                     ))}
-                    {produccion.eventosReproductivos.length === 0 && <p className="dash-empty">Sin eventos</p>}
+                    {produccion.eventosReproductivos.length === 0 && <p className="dash-empty">No hay registros para mostrar.</p>}
                   </div>
 
                   <Button type="button" variant="ghost" onClick={() => nav('Produccion')}>Ir a Productivo →</Button>
@@ -390,7 +390,7 @@ export function DashboardPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Pr
                       {sanitario.pendientesAprobacion.map(ev => (
                         <div key={ev.idEventoSanitario} className="dash-pending-item">
                           <span className="productivo-status is-pending">PENDIENTE</span>
-                          <span>{ev.animal.numeroArete} — {ev.tipoEvento.nombreTipo}</span>
+                          <span>{ev.animal.numeroArete} - {ev.tipoEvento.nombreTipo}</span>
                           <span className="dash-date-sm">{fmtDate(ev.fechaEvento)}</span>
                         </div>
                       ))}
@@ -460,7 +460,7 @@ export function DashboardPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Pr
                         </tr>
                       ))}
                       {inventario.movimientosRecientes.length === 0 && (
-                        <tr><td colSpan={4} className="dash-empty">Sin movimientos recientes</td></tr>
+                        <tr><td colSpan={4} className="dash-empty">No hay registros para mostrar.</td></tr>
                       )}
                     </tbody>
                   </table>
@@ -527,12 +527,12 @@ export function DashboardPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Pr
                           <td>{b.tablaAfectada}</td>
                           <td>#{b.idRegistro}</td>
                           <td className="productivo-table-obs">
-                            {b.detalles ? JSON.stringify(b.detalles).slice(0, 60) : '—'}
+                            {b.detalles ? JSON.stringify(b.detalles).slice(0, 60) : '-'}
                           </td>
                         </tr>
                       ))}
                       {filteredBitacora.length === 0 && (
-                        <tr><td colSpan={6} className="dash-empty">Sin registros</td></tr>
+                        <tr><td colSpan={6} className="dash-empty">No hay registros para mostrar.</td></tr>
                       )}
                     </tbody>
                   </table>

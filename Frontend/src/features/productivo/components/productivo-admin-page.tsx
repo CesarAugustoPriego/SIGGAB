@@ -196,7 +196,7 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
       const created = await productivoApi.createLote({ fechaInicio: loteForm.fechaInicio, fechaFin: loteForm.fechaFin });
       setLotes((prev) => [created, ...prev]);
       setLoteForm({ fechaInicio: '', fechaFin: '' });
-      setMessage({ type: 'success', text: 'Lote creado exitosamente — en espera de aprobacion.' });
+      setMessage({ type: 'success', text: 'Lote creado exitosamente - en espera de aprobacion.' });
     } catch (error) { await handleApiError(error); }
     finally { setSavingLote(false); }
   };
@@ -238,7 +238,7 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
       const created = await productivoApi.createRegistroPeso({ idAnimal: Number(pesoForm.idAnimal), idLote: Number(pesoForm.idLote), peso, fechaRegistro: pesoForm.fechaRegistro });
       setPesos((prev) => [created, ...prev]);
       resetPesoForm();
-      setMessage({ type: 'success', text: 'Peso registrado — pendiente de aprobacion.' });
+      setMessage({ type: 'success', text: 'Peso registrado - pendiente de aprobacion.' });
     } catch (error) { await handleApiError(error); }
     finally { setSavingPeso(false); }
   };
@@ -279,7 +279,7 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
       const created = await productivoApi.createProduccionLeche({ idAnimal: Number(lecheForm.idAnimal), idLote: Number(lecheForm.idLote), litrosProducidos: litros, fechaRegistro: lecheForm.fechaRegistro });
       setLeches((prev) => [created, ...prev]);
       resetLecheForm();
-      setMessage({ type: 'success', text: 'Produccion registrada — pendiente de aprobacion.' });
+      setMessage({ type: 'success', text: 'Produccion registrada - pendiente de aprobacion.' });
     } catch (error) { await handleApiError(error); }
     finally { setSavingLeche(false); }
   };
@@ -325,7 +325,7 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
       });
       setEventos((prev) => [created, ...prev]);
       resetEventoForm();
-      setMessage({ type: 'success', text: 'Evento registrado — pendiente de aprobacion.' });
+      setMessage({ type: 'success', text: 'Evento registrado - pendiente de aprobacion.' });
     } catch (error) { await handleApiError(error); }
     finally { setSavingEvento(false); }
   };
@@ -482,7 +482,7 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
                         <label className="productivo-field"><span>Animal</span>
                           <select value={pesoForm.idAnimal} onChange={(e) => setPesoForm((p) => ({ ...p, idAnimal: e.target.value }))} disabled={!!editingPesoId} data-testid="peso-animal">
                             <option value="">Selecciona un animal</option>
-                            {animales.map((a) => <option key={a.idAnimal} value={a.idAnimal}>{a.numeroArete} — {a.nombreRaza}</option>)}
+                            {animales.map((a) => <option key={a.idAnimal} value={a.idAnimal}>{a.numeroArete} - {a.nombreRaza}</option>)}
                           </select>
                         </label>
                         <label className="productivo-field"><span>Lote de validacion</span>
@@ -513,7 +513,7 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
                         <table className="productivo-table">
                           <thead><tr><th>Arete</th><th>Lote</th><th>Peso</th><th>Fecha</th><th>Registrado por</th><th>Estado</th><th>Acciones</th></tr></thead>
                           <tbody>
-                            {pesos.length === 0 ? <tr><td colSpan={7} className="productivo-table-empty">No hay registros.</td></tr> : pesos.map((r) => (
+                            {pesos.length === 0 ? <tr><td colSpan={7} className="productivo-table-empty">No hay registros para mostrar.</td></tr> : pesos.map((r) => (
                               <tr key={r.idRegistroPeso}>
                                 <td className="productivo-table-id">{r.animal?.numeroArete || 'N/A'}</td>
                                 <td>#{r.idLote}</td>
@@ -551,7 +551,7 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
                         <label className="productivo-field"><span>Animal</span>
                           <select value={lecheForm.idAnimal} onChange={(e) => setLecheForm((p) => ({ ...p, idAnimal: e.target.value }))} disabled={!!editingLecheId} data-testid="leche-animal">
                             <option value="">Selecciona un animal</option>
-                            {animales.map((a) => <option key={a.idAnimal} value={a.idAnimal}>{a.numeroArete} — {a.nombreRaza}</option>)}
+                            {animales.map((a) => <option key={a.idAnimal} value={a.idAnimal}>{a.numeroArete} - {a.nombreRaza}</option>)}
                           </select>
                         </label>
                         <label className="productivo-field"><span>Lote de validacion</span>
@@ -582,7 +582,7 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
                         <table className="productivo-table">
                           <thead><tr><th>Arete</th><th>Lote</th><th>Litros</th><th>Fecha</th><th>Registrado por</th><th>Estado</th><th>Acciones</th></tr></thead>
                           <tbody>
-                            {leches.length === 0 ? <tr><td colSpan={7} className="productivo-table-empty">No hay registros.</td></tr> : leches.map((r) => (
+                            {leches.length === 0 ? <tr><td colSpan={7} className="productivo-table-empty">No hay registros para mostrar.</td></tr> : leches.map((r) => (
                               <tr key={r.idProduccion}>
                                 <td className="productivo-table-id">{r.animal?.numeroArete || 'N/A'}</td>
                                 <td>#{r.idLote}</td>
@@ -620,7 +620,7 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
                         <label className="productivo-field"><span>Animal</span>
                           <select value={eventoForm.idAnimal} onChange={(e) => setEventoForm((p) => ({ ...p, idAnimal: e.target.value }))} disabled={!!editingEventoId} data-testid="evento-animal">
                             <option value="">Selecciona un animal</option>
-                            {animales.map((a) => <option key={a.idAnimal} value={a.idAnimal}>{a.numeroArete} — {a.nombreRaza}</option>)}
+                            {animales.map((a) => <option key={a.idAnimal} value={a.idAnimal}>{a.numeroArete} - {a.nombreRaza}</option>)}
                           </select>
                         </label>
                         <label className="productivo-field"><span>Lote de validacion</span>
@@ -658,13 +658,13 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
                         <table className="productivo-table">
                           <thead><tr><th>Arete</th><th>Lote</th><th>Tipo</th><th>Fecha</th><th>Observaciones</th><th>Registrado por</th><th>Estado</th><th>Acciones</th></tr></thead>
                           <tbody>
-                            {eventos.length === 0 ? <tr><td colSpan={8} className="productivo-table-empty">No hay eventos.</td></tr> : eventos.map((e) => (
+                            {eventos.length === 0 ? <tr><td colSpan={8} className="productivo-table-empty">No hay registros para mostrar.</td></tr> : eventos.map((e) => (
                               <tr key={e.idEventoReproductivo}>
                                 <td className="productivo-table-id">{e.animal?.numeroArete || 'N/A'}</td>
                                 <td>#{e.idLote}</td>
                                 <td><span className={`productivo-tipo ${getTipoEventoClass(e.tipoEvento)}`}>{e.tipoEvento}</span></td>
                                 <td>{toInputDate(e.fechaEvento)}</td>
-                                <td className="productivo-table-obs">{e.observaciones || '—'}</td>
+                                <td className="productivo-table-obs">{e.observaciones || '-'}</td>
                                 <td>{e.registrador?.nombreCompleto || 'N/A'}</td>
                                 <td><span className={`productivo-status ${getEstadoClass(e.estadoValidacion)}`}>{e.estadoValidacion}</span></td>
                                 <td>

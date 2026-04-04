@@ -337,7 +337,7 @@ export function AprobacionesPage({ onGoHome, onGoUsersAdmin, onNavigateModule }:
                                   <td className="productivo-table-id">{r.animal?.numeroArete || 'N/A'}</td>
                                   <td>#{r.idLote}</td>
                                   <td><span className="productivo-tipo">{r.tipoEvento}</span></td>
-                                  <td>{r.observaciones || '—'}</td>
+                                  <td>{r.observaciones || '-'}</td>
                                   <td>{fmtDate(r.fechaEvento)}</td>
                                   <td>
                                     <div className="productivo-table-actions">
@@ -370,7 +370,7 @@ export function AprobacionesPage({ onGoHome, onGoUsersAdmin, onNavigateModule }:
                             <tr key={s.idSolicitud}>
                               <td className="productivo-table-id">#{s.idSolicitud}</td>
                               <td>{s.solicitante?.nombreCompleto || 'N/A'}</td>
-                              <td>{s.observaciones || '—'}</td>
+                              <td>{s.observaciones || '-'}</td>
                               <td>{s.detalles?.length || 0}</td>
                               <td>{fmtDate(s.fechaSolicitud)}</td>
                               <td>

@@ -1,4 +1,4 @@
-import { ApiClientError } from '../../types/api';
+import { getApiErrorMessage } from '../../shared/errors/api-error-messages';
 import type { BackupSource } from './respaldos-types';
 
 function normalizeRole(value: string | undefined) {
@@ -43,13 +43,10 @@ export function formatBackupSource(source: BackupSource | null | undefined) {
 }
 
 export function getRespaldosErrorMessage(error: unknown) {
-  if (error instanceof ApiClientError) {
-    if (error.status === 401) return 'Sesion expirada. Inicia sesion nuevamente.';
-    if (error.status === 403) return 'No tienes permisos para administrar respaldos.';
-    if (error.status === 0) return 'No hay conexion con el backend.';
-    return error.message || 'No fue posible completar la operacion de respaldo.';
-  }
-  return 'Ocurrio un error inesperado en el modulo de respaldos.';
+  return getApiErrorMessage(error, {
+    forbidden: 'No tienes permisos para administrar respaldos.',
+    fallback: 'No fue posible completar la operacion de respaldo.',
+  });
 }
 
 function sanitizeFileName(fileName: string) {

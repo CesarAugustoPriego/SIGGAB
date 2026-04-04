@@ -2,6 +2,7 @@
  * SIGGAB - Aprobaciones utilities.
  * Role-based access control and formatting helpers.
  */
+import { getApiErrorMessage } from '../../shared/errors/api-error-messages';
 
 function normalizeRole(value: string | undefined) {
   return String(value || '')
@@ -33,8 +34,10 @@ export function canApproveSolicitudes(rol?: string): boolean {
 }
 
 export function getAprobacionesErrorMessage(err: unknown): string {
-  if (err instanceof Error) return err.message;
-  return 'Error desconocido al cargar aprobaciones.';
+  return getApiErrorMessage(err, {
+    forbidden: 'No tienes permisos para consultar o aprobar registros.',
+    fallback: 'No fue posible cargar los registros de aprobacion.',
+  });
 }
 
 export function fmtDate(dateStr: string | null | undefined): string {

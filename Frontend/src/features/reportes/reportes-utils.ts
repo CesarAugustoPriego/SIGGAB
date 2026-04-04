@@ -1,4 +1,5 @@
 import { ApiClientError } from '../../types/api';
+import { getApiErrorMessage } from '../../shared/errors/api-error-messages';
 
 function normalizeRole(value: string | undefined) {
   return String(value || '')
@@ -132,14 +133,13 @@ export function saveBlobAsFile(blob: Blob, fileName: string) {
 }
 
 export function getReportesErrorMessage(error: unknown) {
-  if (error instanceof ApiClientError) {
-    if (error.status === 400) return error.message || 'Filtros invalidos para generar el reporte.';
-    if (error.status === 401) return 'Sesion expirada. Inicia sesion nuevamente.';
-    if (error.status === 403) return 'No tienes permisos para consultar este reporte.';
-    if (error.status === 404) return 'No se encontraron datos para el reporte solicitado.';
-    if (error.status === 0) return 'No hay conexion con el backend.';
-    return error.message;
+  if (error instanceof ApiClientError && error.status === 404) {
+    return 'No se encontraron datos para el reporte solicitado.';
   }
-
-  return 'Ocurrio un error inesperado al consultar reportes.';
+  return getApiErrorMessage(error, {
+    badRequest: 'Filtros invalidos para generar el reporte.',
+    forbidden: 'No tienes permisos para consultar este reporte.',
+    notFound: 'No se encontraron datos para el reporte solicitado.',
+    fallback: 'Ocurrio un error inesperado al consultar reportes.',
+  });
 }

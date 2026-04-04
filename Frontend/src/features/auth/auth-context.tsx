@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import { ApiClientError } from '../../types/api';
+import { getApiErrorMessage } from '../../shared/errors/api-error-messages';
 import { authApi, type LoginInput } from './auth-api';
 import {
   clearSession,
@@ -44,14 +45,12 @@ function toSessionUserFromMe(me: Awaited<ReturnType<typeof authApi.me>>): Sessio
 function getErrorMessage(error: unknown) {
   if (error instanceof ApiClientError) {
     if (error.status === 423) return 'Cuenta bloqueada temporalmente por seguridad. Intenta mas tarde.';
-    if (error.status === 401) return 'Credenciales invalidas o sesion expirada.';
-    if (error.status === 403) return 'Tu rol no tiene permisos para esta accion.';
     if (error.status === 400) return 'Datos incompletos o invalidos.';
-    if (error.status === 0) return 'No hay conexion con el backend.';
-    return error.message;
+    if (error.status === 401) return 'Credenciales invalidas o sesion expirada.';
   }
-
-  return 'Ocurrio un error inesperado.';
+  return getApiErrorMessage(error, {
+    forbidden: 'Tu rol no tiene permisos para esta accion.',
+  });
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {

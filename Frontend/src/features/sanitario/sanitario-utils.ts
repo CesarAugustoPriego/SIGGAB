@@ -1,4 +1,5 @@
 import { ApiClientError } from '../../types/api';
+import { getApiErrorMessage } from '../../shared/errors/api-error-messages';
 import type {
   EstadoAprobacionSanitaria,
   EstadoCalendarioSanitario,
@@ -129,16 +130,13 @@ export function getSanitarioErrorMessage(error: unknown) {
     if (error.status === 400 && issues.length > 0) {
       return issues[0].mensaje || 'Datos invalidos para modulo sanitario.';
     }
-
-    if (error.status === 401) return 'Sesion expirada. Inicia sesion nuevamente.';
-    if (error.status === 403) return 'No tienes permisos para esta accion sanitaria.';
-    if (error.status === 404) return error.message || 'No se encontro el registro sanitario solicitado.';
-    if (error.status === 409) return error.message || 'Conflicto de datos en modulo sanitario.';
-    if (error.status === 0) return 'No hay conexion con el backend.';
-    return error.message;
   }
-
-  return 'Ocurrio un error inesperado.';
+  return getApiErrorMessage(error, {
+    badRequest: 'Datos invalidos para modulo sanitario.',
+    forbidden: 'No tienes permisos para esta accion sanitaria.',
+    notFound: 'No se encontro el registro sanitario solicitado.',
+    conflict: 'Conflicto de datos en modulo sanitario.',
+  });
 }
 
 export function toInputDate(value: string | null | undefined) {

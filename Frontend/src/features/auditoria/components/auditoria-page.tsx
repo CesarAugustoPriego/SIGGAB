@@ -181,12 +181,12 @@ export function AuditoriaPage({ onNavigateModule }: AuditoriaPageProps) {
                         </td>
                         <td className="productivo-table-id">#{b.idRegistro}</td>
                         <td className="productivo-table-obs">
-                          {b.detalles ? JSON.stringify(b.detalles).slice(0, 60) : '—'}
+                          {b.detalles ? JSON.stringify(b.detalles).slice(0, 60) : '-'}
                         </td>
                       </tr>
                     ))}
                     {filtered.length === 0 && (
-                      <tr><td colSpan={7} className="productivo-empty">Sin registros de auditoría encontrados.</td></tr>
+                      <tr><td colSpan={7} className="productivo-empty">No hay registros para mostrar.</td></tr>
                     )}
                   </tbody>
                 </table>

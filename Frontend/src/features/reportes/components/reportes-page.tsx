@@ -452,7 +452,7 @@ export function ReportesPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Rep
                           <table className="productivo-table">
                             <thead><tr><th>Fecha</th><th>Arete</th><th>Tipo</th><th>Estado</th><th>Diagnostico</th></tr></thead>
                             <tbody>
-                              {sanitarioReport.registros.length === 0 ? <tr><td colSpan={5} className="productivo-table-empty">Sin datos</td></tr> : sanitarioReport.registros.slice(0, 25).map((item) => (
+                              {sanitarioReport.registros.length === 0 ? <tr><td colSpan={5} className="productivo-table-empty">No hay registros para mostrar.</td></tr> : sanitarioReport.registros.slice(0, 25).map((item) => (
                                 <tr key={item.idEvento}>
                                   <td>{formatDate(item.fechaEvento)}</td>
                                   <td className="productivo-table-id">{item.animal.numeroArete}</td>
@@ -514,7 +514,7 @@ export function ReportesPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Rep
                           <table className="productivo-table">
                             <thead><tr><th>Fecha</th><th>Arete</th><th>Lote</th><th>Tipo</th><th>Valor</th><th>Estado</th></tr></thead>
                             <tbody>
-                              {productivoRows.length === 0 ? <tr><td colSpan={6} className="productivo-table-empty">Sin datos</td></tr> : productivoRows.map((item) => (
+                              {productivoRows.length === 0 ? <tr><td colSpan={6} className="productivo-table-empty">No hay registros para mostrar.</td></tr> : productivoRows.map((item) => (
                                 <tr key={item.id}>
                                   <td>{formatDate(item.fecha)}</td>
                                   <td className="productivo-table-id">{item.arete}</td>
