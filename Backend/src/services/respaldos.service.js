@@ -174,6 +174,51 @@ async function listBackups() {
   return filesWithStats.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 }
 
+function validateBackupFileName(fileName) {
+  const sanitized = String(fileName || '').trim();
+  const safeNamePattern = /^siggab-backup-[A-Za-z0-9._-]+\.json$/;
+
+  if (!safeNamePattern.test(sanitized)) {
+    throw Object.assign(new Error('Nombre de archivo de respaldo invalido'), { statusCode: 400 });
+  }
+
+  if (path.basename(sanitized) !== sanitized) {
+    throw Object.assign(new Error('Nombre de archivo de respaldo invalido'), { statusCode: 400 });
+  }
+
+  return sanitized;
+}
+
+async function getBackupForDownload(fileName) {
+  await ensureBackupDir();
+  const safeFileName = validateBackupFileName(fileName);
+  const backupDir = getBackupDir();
+  const fullPath = path.resolve(backupDir, safeFileName);
+
+  if (!fullPath.startsWith(`${backupDir}${path.sep}`)) {
+    throw Object.assign(new Error('Ruta de respaldo invalida'), { statusCode: 400 });
+  }
+
+  let stats;
+  try {
+    stats = await fs.stat(fullPath);
+  } catch (_error) {
+    throw Object.assign(new Error('Respaldo no encontrado'), { statusCode: 404 });
+  }
+
+  if (!stats.isFile()) {
+    throw Object.assign(new Error('Respaldo no encontrado'), { statusCode: 404 });
+  }
+
+  return {
+    fileName: safeFileName,
+    filePath: fullPath,
+    sizeBytes: stats.size,
+    createdAt: stats.birthtime.toISOString(),
+    modifiedAt: stats.mtime.toISOString(),
+  };
+}
+
 async function triggerManualBackup(idUsuario) {
   return runBackup({ executedBy: idUsuario, source: 'MANUAL' });
 }
@@ -205,6 +250,7 @@ module.exports = {
   runBackup,
   triggerManualBackup,
   listBackups,
+  getBackupForDownload,
   startAutoBackupScheduler,
   stopAutoBackupScheduler,
 };

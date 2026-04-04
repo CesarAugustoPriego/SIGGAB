@@ -1,4 +1,12 @@
+function normalizeRole(value: string | undefined) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
 export function canViewAuditoria(rol?: string): boolean {
-  if (!rol) return false;
-  return rol.toUpperCase().includes('ADMIN');
+  const normalized = normalizeRole(rol);
+  return normalized === 'administrador' || normalized === 'propietario';
 }

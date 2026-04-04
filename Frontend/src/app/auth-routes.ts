@@ -1,6 +1,6 @@
 export type AuthRouteView = 'login' | 'register';
 
-export type AppRoute = '/auth/login' | '/auth/register' | '/app' | '/app/usuarios' | '/app/ganado' | '/app/sanitario' | '/app/productivo' | '/app/inventario' | '/app/dashboard' | '/app/reportes' | '/app/aprobaciones' | '/app/auditoria';
+export type AppRoute = '/auth/login' | '/auth/register' | '/app' | '/app/usuarios' | '/app/ganado' | '/app/sanitario' | '/app/productivo' | '/app/inventario' | '/app/dashboard' | '/app/reportes' | '/app/aprobaciones' | '/app/auditoria' | '/app/respaldos';
 
 const DEFAULT_PUBLIC_ROUTE: AppRoute = '/auth/login';
 const DEFAULT_PROTECTED_ROUTE: AppRoute = '/app';
@@ -18,6 +18,7 @@ export function parseRouteFromHash(hash: string): AppRoute {
   if (normalized === '/app/reportes') return '/app/reportes';
   if (normalized === '/app/aprobaciones') return '/app/aprobaciones';
   if (normalized === '/app/auditoria') return '/app/auditoria';
+  if (normalized === '/app/respaldos') return '/app/respaldos';
   if (normalized === '/app') return '/app';
   return '/auth/login';
 }

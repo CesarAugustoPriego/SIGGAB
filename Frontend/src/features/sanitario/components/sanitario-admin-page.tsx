@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/auth-context';
+import { getVisibleNavItemsForRole } from '../../auth/navigation-utils';
 import type { Animal } from '../../ganado/ganado-types';
 import { Button, NAV_ITEMS, LogOut, Save, Plus, X, Calendar } from '../../../shared/ui';
 import { ApiClientError } from '../../../types/api';
@@ -109,6 +110,7 @@ function toCalendarioClass(estado: EstadoCalendarioSanitario) {
 
 export function SanitarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: SanitarioAdminPageProps) {
   const { user, logout } = useAuth();
+  const visibleNavItems = useMemo(() => getVisibleNavItemsForRole(user?.rol, NAV_ITEMS), [user?.rol]);
 
   const [animales, setAnimales] = useState<Animal[]>([]);
   const [tiposEvento, setTiposEvento] = useState<TipoEventoSanitario[]>([]);
@@ -450,7 +452,7 @@ export function SanitarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule 
         </div>
 
         <nav className="users-admin-sidebar__nav" aria-label="Navegacion de modulos">
-          {NAV_ITEMS.map((item) => {
+          {visibleNavItems.map((item) => {
             const Icon = item.icon;
             return (
             <button

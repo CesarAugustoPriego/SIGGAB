@@ -25,6 +25,7 @@
 ## 4. Endpoints de Fase 3
 - Dashboard tiempo real:
   - `GET /dashboard/stream` (SSE, roles Propietario/Administrador).
+  - `GET /dashboard/bitacora` (roles Propietario/Administrador).
 - Reportes configurables:
   - `GET /reportes/sanitario?fechaInicio&fechaFin&formato=json|csv|pdf`
   - `GET /reportes/productivo?fechaInicio&fechaFin&idAnimal&idLote&formato=json|csv|pdf`
@@ -33,6 +34,7 @@
 - Respaldos:
   - `GET /respaldos` (Administrador)
   - `POST /respaldos/ejecutar` (Administrador)
+  - `GET /respaldos/{fileName}/descargar` (Administrador)
 
 ## 5. Codigos de error funcionales esperados
 - `400`: validacion Zod o regla de negocio.
@@ -57,6 +59,7 @@
 
 ## 8. Operacion de respaldos para soporte
 - Runbook: `docs/operacion-respaldos.md`.
+- Politica vigente: restauracion **solo por CLI** (sin endpoint HTTP de restore en esta fase).
 - Restauracion CLI:
   - Preview sin cambios: `npm run backup:restore -- <archivo> preview`
   - Ejecucion real: `npm run backup:restore -- <archivo> force`

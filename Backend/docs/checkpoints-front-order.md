@@ -62,7 +62,7 @@ con validacion del backend antes de avanzar de bloque.
   - `GET /dashboard/produccion`
   - `GET /dashboard/sanitario`
   - `GET /dashboard/inventario`
-  - `GET /dashboard/bitacora` (admin)
+  - `GET /dashboard/bitacora` (Administrador / Propietario)
 
 ## Checkpoint 6 - Productivo operativo
 - Endpoints:

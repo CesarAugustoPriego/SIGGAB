@@ -866,7 +866,7 @@
         "tags": [
           "Auth"
         ],
-        "summary": "Renovar access token",
+        "summary": "Renovar access token y rotar refresh token",
         "security": [],
         "requestBody": {
           "required": true,
@@ -880,7 +880,7 @@
         },
         "responses": {
           "200": {
-            "description": "Nuevo accessToken generado"
+            "description": "Nuevo accessToken y refreshToken rotado"
           },
           "401": {
             "description": "Refresh token revocado o expirado"
@@ -1400,7 +1400,7 @@
         "tags": [
           "Dashboard"
         ],
-        "summary": "Bitácora de auditoría (solo Admin)",
+        "summary": "Bitácora de auditoría (Administrador y Propietario)",
         "parameters": [
           {
             "in": "query",
@@ -1418,7 +1418,7 @@
             "description": "Últimas acciones registradas en el sistema"
           },
           "403": {
-            "description": "Solo accesible por Administrador"
+            "description": "Solo accesible por Administrador o Propietario"
           }
         }
       }
@@ -3302,6 +3302,51 @@
           },
           "500": {
             "description": "Error de ejecucion"
+          }
+        }
+      }
+    },
+    "/respaldos/{fileName}/descargar": {
+      "get": {
+        "tags": [
+          "Respaldos"
+        ],
+        "summary": "Descargar archivo de respaldo",
+        "description": "Descarga un respaldo existente por nombre de archivo.\n**Nota:** la restauracion de respaldos se mantiene como operacion de soporte via CLI.\n",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fileName",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "siggab-backup-2026-04-04T16-20-10-120Z.json"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Archivo de respaldo descargado",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Nombre de archivo invalido"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Sin permisos"
+          },
+          "404": {
+            "description": "Archivo no encontrado"
           }
         }
       }

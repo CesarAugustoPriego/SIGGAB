@@ -19,4 +19,24 @@ async function ejecutar(req, res, next) {
   }
 }
 
-module.exports = { list, ejecutar };
+async function descargar(req, res, next) {
+  try {
+    let fileName;
+    try {
+      fileName = decodeURIComponent(req.params.fileName || '');
+    } catch (_error) {
+      throw Object.assign(new Error('Nombre de archivo de respaldo invalido'), { statusCode: 400 });
+    }
+    const backup = await respaldosService.getBackupForDownload(fileName);
+
+    return res.download(backup.filePath, backup.fileName, (error) => {
+      if (error && !res.headersSent) {
+        next(error);
+      }
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+module.exports = { list, ejecutar, descargar };

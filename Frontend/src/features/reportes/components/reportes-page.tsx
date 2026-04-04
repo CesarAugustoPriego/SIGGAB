@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/auth-context';
+import { getVisibleNavItemsForRole } from '../../auth/navigation-utils';
 import { sanitarioApi } from '../../sanitario/sanitario-api';
 import { productivoApi } from '../../productivo/productivo-api';
 import { Button, NAV_ITEMS, LogOut } from '../../../shared/ui';
@@ -77,6 +78,7 @@ function formatMetricValue(value: number | string | undefined) {
 
 export function ReportesPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: ReportesPageProps) {
   const { user, logout } = useAuth();
+  const visibleNavItems = useMemo(() => getVisibleNavItemsForRole(user?.rol, NAV_ITEMS), [user?.rol]);
 
   const canView = useMemo(() => canViewReportes(user?.rol), [user?.rol]);
   const canSanitario = useMemo(() => canViewReporteSanitario(user?.rol), [user?.rol]);
@@ -353,7 +355,7 @@ export function ReportesPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Rep
           <img src="/branding/logo-rancho-los-alpes.png" alt="Logo Rancho Los Alpes" />
         </div>
         <nav className="users-admin-sidebar__nav" aria-label="Navegacion de modulos">
-          {NAV_ITEMS.map((item) => {
+          {visibleNavItems.map((item) => {
             const Icon = item.icon;
             return (
             <button

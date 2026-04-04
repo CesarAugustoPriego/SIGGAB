@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../../auth/auth-context';
+import { getVisibleNavItemsForRole } from '../../auth/navigation-utils';
 import { Button, NAV_ITEMS, LogOut, Beef, Syringe, Scale, Bell, ShoppingCart, AlertTriangle, Package, BarChart3, HeartPulse, ScrollText, RefreshCw } from '../../../shared/ui';
 import type { LucideIcon } from '../../../shared/ui';
 import { dashboardApi } from '../dashboard-api';
@@ -24,6 +25,7 @@ interface Props {
 export function DashboardPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Props) {
   const { user, logout } = useAuth();
   const rol = user?.rol;
+  const visibleNavItems = useMemo(() => getVisibleNavItemsForRole(rol, NAV_ITEMS), [rol]);
 
   const showResumen = useMemo(() => canViewResumen(rol), [rol]);
   const showProduccion = useMemo(() => canViewProduccion(rol), [rol]);
@@ -170,7 +172,7 @@ export function DashboardPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Pr
       <aside className="users-admin-sidebar">
         <div className="users-admin-sidebar__logo"><img src="/branding/logo-rancho-los-alpes.png" alt="Logo Rancho Los Alpes" /></div>
         <nav className="users-admin-sidebar__nav" aria-label="Navegacion de modulos">
-          {NAV_ITEMS.map((item) => {
+          {visibleNavItems.map((item) => {
             const Icon = item.icon;
             return (
             <button key={item.label} type="button" data-testid={`dash-nav-${item.label.toLowerCase()}`}

@@ -33,6 +33,7 @@ const requiredOperations = [
   ['get', '/reportes/comparativo'],
   ['get', '/respaldos'],
   ['post', '/respaldos/ejecutar'],
+  ['get', '/respaldos/{fileName}/descargar'],
 ];
 
 function fail(message) {

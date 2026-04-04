@@ -1,28 +1,35 @@
 /**
- * SIGGAB — Aprobaciones utilities.
+ * SIGGAB - Aprobaciones utilities.
  * Role-based access control and formatting helpers.
  */
 
-const ROLES_VIEW_APROBACIONES = ['ADMINISTRADOR', 'MEDICO VETERINARIO', 'VETERINARIO', 'MÉDICO VETERINARIO', 'ADMIN', 'ADMINISTRATOR'];
+function normalizeRole(value: string | undefined) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
 
 export function canViewAprobaciones(rol?: string): boolean {
-  if (!rol) return false;
-  return ROLES_VIEW_APROBACIONES.includes(rol.toUpperCase());
+  const role = normalizeRole(rol);
+  return role === 'administrador' || role === 'medico veterinario' || role === 'veterinario';
 }
 
+// Backend: PATCH /eventos-sanitarios/:id/aprobar requiere Medico Veterinario.
 export function canApproveSanitario(rol?: string): boolean {
-  if (!rol) return false;
-  return ['ADMINISTRADOR', 'MEDICO VETERINARIO', 'VETERINARIO', 'MÉDICO VETERINARIO'].includes(rol.toUpperCase());
+  const role = normalizeRole(rol);
+  return role === 'medico veterinario' || role === 'veterinario';
 }
 
+// Backend: validaciones productivas requieren Administrador.
 export function canApproveProductivo(rol?: string): boolean {
-  if (!rol) return false;
-  return rol.toUpperCase().includes('ADMIN');
+  return normalizeRole(rol) === 'administrador';
 }
 
+// Backend: /solicitudes-compra/:id/aprobar requiere Administrador.
 export function canApproveSolicitudes(rol?: string): boolean {
-  if (!rol) return false;
-  return rol.toUpperCase().includes('ADMIN');
+  return normalizeRole(rol) === 'administrador';
 }
 
 export function getAprobacionesErrorMessage(err: unknown): string {
@@ -31,7 +38,7 @@ export function getAprobacionesErrorMessage(err: unknown): string {
 }
 
 export function fmtDate(dateStr: string | null | undefined): string {
-  if (!dateStr) return '—';
+  if (!dateStr) return '-';
   try {
     const d = new Date(dateStr);
     return d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });

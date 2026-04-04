@@ -74,6 +74,23 @@ const checks = [
       'aprobaciones-header'
     ],
   },
+  {
+    file: 'src/features/auditoria/components/auditoria-page.tsx',
+    testIds: [
+      'auditoria-page',
+      'auditoria-header',
+    ],
+  },
+  {
+    file: 'src/features/respaldos/components/respaldos-page.tsx',
+    testIds: [
+      'respaldos-header',
+      'respaldos-run-manual',
+      'respaldos-refresh-list',
+      'respaldos-history-list',
+      'respaldos-download-',
+    ],
+  },
 ];
 
 const missing = [];

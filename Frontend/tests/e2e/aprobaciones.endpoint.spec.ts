@@ -112,12 +112,11 @@ test('Aprobaciones: consume endpoints y renderiza todos los pendientes', async (
   await expect(page.getByTestId('aprobaciones-header')).toBeVisible();
 
   // Tabs should display items
-  await expect(page.locator('.productivo-tab', { hasText: 'Sanitarios' })).toBeVisible();
+  await expect(page.locator('.productivo-tab', { hasText: 'Sanitarios' })).toHaveCount(0);
   await expect(page.locator('.productivo-tab', { hasText: 'Productivos' })).toBeVisible();
   await expect(page.locator('.productivo-tab', { hasText: 'Compras' })).toBeVisible();
 
   // Content should contain specific mocked text without brittle exact spacing
-  await expect(page.getByText('Tratamiento')).toBeVisible(); 
   await expect(page.getByText('450.5 kg')).toBeVisible(); 
   await expect(page.getByText('22.4 L')).toBeVisible(); 
   await expect(page.locator('.productivo-tipo').filter({ hasText: /^PARTO$/ })).toBeVisible();
@@ -131,7 +130,7 @@ test('Aprobaciones: renderiza estado vacío cuando no hay pendientes', async ({ 
   await page.goto('/#/app/aprobaciones');
   await expect(page.getByTestId('aprobaciones-header')).toBeVisible();
   
-  await expect.poll(() => calls.sanitario).toBeGreaterThan(0);
+  await expect.poll(() => calls.peso).toBeGreaterThan(0);
   await expect.poll(() => calls.compra).toBeGreaterThan(0);
 
   await expect(page.getByText('Todo al día')).toBeVisible();

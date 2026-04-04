@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/auth-context';
+import { getVisibleNavItemsForRole } from '../../auth/navigation-utils';
 import { Button, NAV_ITEMS, Pencil, Save, X, LogOut, Plus, Check, XCircle } from '../../../shared/ui';
 import { usersApi } from '../users-api';
 import type { Rol, Usuario } from '../users-types';
@@ -121,6 +122,7 @@ export function UsersAdminPage({ onGoHome, onNavigateModule }: UsersAdminPagePro
   const [message, setMessage] = useState<UiMessage | null>(null);
 
   const canManageUsers = useMemo(() => isAdministratorRole(user?.rol), [user?.rol]);
+  const visibleNavItems = useMemo(() => getVisibleNavItemsForRole(user?.rol, NAV_ITEMS), [user?.rol]);
 
   const handleApiError = useCallback(async (error: unknown) => {
     const nextMessage = getUsersErrorMessage(error);
@@ -263,7 +265,7 @@ export function UsersAdminPage({ onGoHome, onNavigateModule }: UsersAdminPagePro
         </div>
 
         <nav className="users-admin-sidebar__nav" aria-label="Navegacion de modulos">
-          {NAV_ITEMS.map((item) => {
+          {visibleNavItems.map((item) => {
             const Icon = item.icon;
             return (
             <button

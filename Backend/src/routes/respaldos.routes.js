@@ -67,4 +67,48 @@ router.post(
   ctrl.ejecutar
 );
 
+/**
+ * @swagger
+ * /respaldos/{fileName}/descargar:
+ *   get:
+ *     tags: [Respaldos]
+ *     summary: Descargar archivo de respaldo
+ *     description: |
+ *       Descarga un respaldo existente por nombre de archivo.
+ *       **Nota:** la restauracion de respaldos se mantiene como operacion de soporte via CLI.
+ *     parameters:
+ *       - in: path
+ *         name: fileName
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: siggab-backup-2026-04-04T16-20-10-120Z.json
+ *     responses:
+ *       200:
+ *         description: Archivo de respaldo descargado
+ *         content:
+ *           application/octet-stream:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       400:
+ *         description: Nombre de archivo invalido
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: Sin permisos
+ *       404:
+ *         description: Archivo no encontrado
+ */
+router.get(
+  '/:fileName/descargar',
+  loggingMiddleware({
+    accion: 'DESCARGAR_RESPALDO',
+    tablaAfectada: 'respaldos',
+    getIdRegistro: () => 0,
+    getDetalles: (req) => ({ fileName: req.params.fileName || null }),
+  }),
+  ctrl.descargar
+);
+
 module.exports = router;

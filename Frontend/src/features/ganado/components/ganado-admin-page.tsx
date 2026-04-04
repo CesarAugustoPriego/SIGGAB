@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/auth-context';
+import { getVisibleNavItemsForRole } from '../../auth/navigation-utils';
 import { Button, NAV_ITEMS, LogOut, Pencil, Save, Plus, X, Search, FilterX, History, UserMinus, Check } from '../../../shared/ui';
 import { ApiClientError } from '../../../types/api';
 import { ganadoApi } from '../ganado-api';
@@ -123,6 +124,7 @@ function getEstadoClass(estadoActual: EstadoAnimal) {
 
 export function GanadoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: GanadoAdminPageProps) {
   const { user, logout } = useAuth();
+  const visibleNavItems = useMemo(() => getVisibleNavItemsForRole(user?.rol, NAV_ITEMS), [user?.rol]);
 
   const [razas, setRazas] = useState<Raza[]>([]);
   const [animales, setAnimales] = useState<Animal[]>([]);
@@ -321,7 +323,7 @@ export function GanadoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: 
       <aside className="users-admin-sidebar">
         <div className="users-admin-sidebar__logo"><img src="/branding/logo-rancho-los-alpes.png" alt="Logo Rancho Los Alpes" /></div>
         <nav className="users-admin-sidebar__nav" aria-label="Navegacion de modulos">
-          {NAV_ITEMS.map((item) => {
+          {visibleNavItems.map((item) => {
             const Icon = item.icon;
             return (
             <button

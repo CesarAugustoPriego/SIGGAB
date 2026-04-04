@@ -100,6 +100,7 @@ async function main() {
 
   // 2.3 Crear usuario (username único por corrida)
   const vetUsername = `vet_${RUN_ID}`;
+  const ownerUsername = `prop_${RUN_ID}`;
   res = await request('POST', '/usuarios', {
     nombreCompleto: 'Dr. Veterinario Test',
     username: vetUsername,
@@ -108,6 +109,14 @@ async function main() {
   }, accessToken);
   test('POST /usuarios crea usuario', res.status === 201 && res.data.data?.username === vetUsername);
   createdUserId = res.data.data?.idUsuario;
+
+  res = await request('POST', '/usuarios', {
+    nombreCompleto: 'Propietario Test',
+    username: ownerUsername,
+    password: 'TestPassword123!',
+    idRol: 1, // Propietario
+  }, accessToken);
+  test('POST /usuarios crea propietario', res.status === 201 && res.data.data?.username === ownerUsername);
 
   // 2.4 Obtener usuario creado
   if (createdUserId) {
@@ -154,11 +163,18 @@ async function main() {
 
   // Login con veterinario creado en este run
   let vetToken = null;
+  let ownerToken = null;
   const vetLogin = await request('POST', '/auth/login', { username: vetUsername, password: 'TestPassword123!' });
   if (vetLogin.status === 200) {
     vetToken = vetLogin.data.data.accessToken;
   }
   test('Login como Veterinario exitoso', vetLogin.status === 200);
+
+  const ownerLogin = await request('POST', '/auth/login', { username: ownerUsername, password: 'TestPassword123!' });
+  if (ownerLogin.status === 200) {
+    ownerToken = ownerLogin.data.data.accessToken;
+  }
+  test('Login como Propietario exitoso', ownerLogin.status === 200);
 
   // Veterinario intenta acceder a usuarios → 403
   if (vetToken) {
@@ -175,6 +191,12 @@ async function main() {
       idRol: 2,
     }, vetToken);
     test('Veterinario → POST /usuarios → 403', res.status === 403);
+  }
+
+  // Propietario no puede acceder a usuarios → 403
+  if (ownerToken) {
+    res = await request('GET', '/usuarios', null, ownerToken);
+    test('Propietario → GET /usuarios → 403', res.status === 403);
   }
 
   console.log(results.join('\n'));
@@ -854,7 +876,12 @@ async function main() {
   test('GET /dashboard/inventario responde 200', res.status === 200 && res.data.data?.agotados !== undefined);
 
   res = await request('GET', '/dashboard/bitacora', null, accessToken);
-  test('GET /dashboard/bitacora responde 200 (solo Admin)', res.status === 200 && Array.isArray(res.data.data));
+  test('GET /dashboard/bitacora responde 200 (Administrador/Propietario)', res.status === 200 && Array.isArray(res.data.data));
+
+  if (ownerToken) {
+    res = await request('GET', '/dashboard/bitacora', null, ownerToken);
+    test('Propietario → GET /dashboard/bitacora → 200', res.status === 200 && Array.isArray(res.data.data));
+  }
 
   // Veterinario no puede ver dashboard resumen → 403
   if (vetToken) {

@@ -115,5 +115,10 @@ export interface BitacoraEntry {
   idRegistro: number;
   fechaHora: string;
   detalles: Record<string, unknown> | null;
-  usuario: { idUsuario: number; nombreCompleto: string; username: string };
+  usuario: {
+    idUsuario: number;
+    nombreCompleto: string;
+    username: string;
+    rol?: { idRol: number; nombreRol: string } | null;
+  };
 }

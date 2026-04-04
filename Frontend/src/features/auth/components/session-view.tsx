@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../auth-context';
-import { Button, Users, Beef, HeartPulse, BarChart3, Package, LayoutDashboard, FileText, LogOut, RefreshCw, CheckCircle, Shield } from '../../../shared/ui';
+import { Button, Users, Beef, HeartPulse, BarChart3, Package, LayoutDashboard, FileText, LogOut, RefreshCw, CheckCircle, Shield, Database } from '../../../shared/ui';
 
 interface SessionViewProps {
   canManageUsers?: boolean;
@@ -21,6 +21,8 @@ interface SessionViewProps {
   onGoAprobaciones?: () => void;
   canViewAuditoria?: boolean;
   onGoAuditoria?: () => void;
+  canViewRespaldos?: boolean;
+  onGoRespaldos?: () => void;
 }
 
 export function SessionView({
@@ -42,6 +44,8 @@ export function SessionView({
   onGoAprobaciones,
   canViewAuditoria = false,
   onGoAuditoria,
+  canViewRespaldos = false,
+  onGoRespaldos,
 }: SessionViewProps) {
   const { user, logout, refreshProfile, apiError } = useAuth();
   const [busyAction, setBusyAction] = useState<'me' | 'logout' | null>(null);
@@ -125,6 +129,11 @@ export function SessionView({
           {canViewAuditoria ? (
             <Button type="button" variant="ghost" onClick={onGoAuditoria} data-testid="session-auditoria-button">
               <Shield size={15} aria-hidden /> Auditoria
+            </Button>
+          ) : null}
+          {canViewRespaldos ? (
+            <Button type="button" variant="ghost" onClick={onGoRespaldos} data-testid="session-respaldos-button">
+              <Database size={15} aria-hidden /> Respaldos
             </Button>
           ) : null}
           <Button

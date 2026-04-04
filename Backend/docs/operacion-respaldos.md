@@ -27,6 +27,10 @@ Endpoint:
 Retorna archivos ordenados por fecha descendente.
 
 ## 4. Restaurar respaldo (script CLI)
+Politica vigente:
+- La restauracion se realiza **solo por CLI** como operacion de soporte controlada.
+- No existe endpoint HTTP de restauracion en esta fase.
+
 Comando:
 
 ```bash

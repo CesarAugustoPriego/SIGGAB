@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/auth-context';
+import { getVisibleNavItemsForRole } from '../../auth/navigation-utils';
 import { dashboardApi } from '../../dashboard/dashboard-api';
 import type { BitacoraEntry } from '../../dashboard/dashboard-types';
 import { Button, LogOut, Shield, Search, RefreshCw } from '../../../shared/ui';
@@ -29,6 +30,7 @@ interface AuditoriaPageProps {
 
 export function AuditoriaPage({ onNavigateModule }: AuditoriaPageProps) {
   const { user, logout } = useAuth();
+  const visibleNavItems = useMemo(() => getVisibleNavItemsForRole(user?.rol, NAV_ITEMS), [user?.rol]);
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,6 +62,7 @@ export function AuditoriaPage({ onNavigateModule }: AuditoriaPageProps) {
     return bitacora.filter(b => 
       b.usuario.nombreCompleto.toLowerCase().includes(term) ||
       b.usuario.username.toLowerCase().includes(term) ||
+      (b.usuario.rol?.nombreRol || '').toLowerCase().includes(term) ||
       b.accion.toLowerCase().includes(term) ||
       b.tablaAfectada.toLowerCase().includes(term)
     );
@@ -73,7 +76,7 @@ export function AuditoriaPage({ onNavigateModule }: AuditoriaPageProps) {
           <img src="/branding/logo-rancho-los-alpes.png" alt="Logo Rancho Los Alpes" />
         </div>
         <nav className="users-admin-sidebar__nav" aria-label="Navegación principal">
-          {NAV_ITEMS.map((item) => {
+          {visibleNavItems.map((item) => {
             const Icon = item.icon;
             return (
               <button
@@ -167,8 +170,8 @@ export function AuditoriaPage({ onNavigateModule }: AuditoriaPageProps) {
                           <br />
                           <small className="dash-username">@{b.usuario.username}</small>
                         </td>
-                        <td>{/* No viene rol en el dashboard-types pero lo mostramos si estuviera */}
-                            <span className="user-role-badge">Admin {/* hardcodeado provisional pero debe venir en back */}</span>
+                        <td>
+                          <span className="user-role-badge">{b.usuario.rol?.nombreRol || 'Sin rol'}</span>
                         </td>
                         <td>{b.tablaAfectada}</td>
                         <td>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/auth-context';
+import { getVisibleNavItemsForRole } from '../../auth/navigation-utils';
 import { Button, NAV_ITEMS, LogOut, Package, Tags, ArrowLeftRight, ShoppingCart, Receipt, AlertTriangle, X } from '../../../shared/ui';
 import { ApiClientError } from '../../../types/api';
 import { inventarioApi } from '../inventario-api';
@@ -25,6 +26,7 @@ type Tab = 'insumos' | 'tipos' | 'movimientos' | 'solicitudes' | 'compras';
 
 export function InventarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Props) {
   const { user, logout } = useAuth();
+  const visibleNavItems = useMemo(() => getVisibleNavItemsForRole(user?.rol, NAV_ITEMS), [user?.rol]);
   const [tab, setTab] = useState<Tab>('insumos');
   const [initLoading, setInitLoading] = useState(true);
   const [msg, setMsg] = useState<Msg | null>(null);
@@ -281,7 +283,7 @@ export function InventarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
       <aside className="users-admin-sidebar">
         <div className="users-admin-sidebar__logo"><img src="/branding/logo-rancho-los-alpes.png" alt="Logo" /></div>
         <nav className="users-admin-sidebar__nav" aria-label="Modulos">
-          {NAV_ITEMS.map(item => {
+          {visibleNavItems.map(item => {
             const Icon = item.icon;
             return (
             <button key={item.label} type="button" data-testid={`inventario-nav-${item.label.toLowerCase()}`}

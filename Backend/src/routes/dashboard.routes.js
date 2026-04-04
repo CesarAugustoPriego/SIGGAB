@@ -102,7 +102,7 @@ router.get('/stream', requireRole('Propietario', 'Administrador'), ctrl.getStrea
  * /dashboard/bitacora:
  *   get:
  *     tags: [Dashboard]
- *     summary: Bitácora de auditoría (solo Admin)
+ *     summary: Bitácora de auditoría (Administrador y Propietario)
  *     parameters:
  *       - in: query
  *         name: limit
@@ -115,8 +115,8 @@ router.get('/stream', requireRole('Propietario', 'Administrador'), ctrl.getStrea
  *       200:
  *         description: Últimas acciones registradas en el sistema
  *       403:
- *         description: Solo accesible por Administrador
+ *         description: Solo accesible por Administrador o Propietario
  */
-router.get('/bitacora', requireRole('Administrador'), ctrl.getBitacora);
+router.get('/bitacora', requireRole('Administrador', 'Propietario'), ctrl.getBitacora);
 
 module.exports = router;

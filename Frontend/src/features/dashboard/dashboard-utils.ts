@@ -11,7 +11,7 @@ function hasRole(roleName: string | undefined, list: string[]) {
 
 /** Puede ver la pantalla Dashboard */
 export function canViewDashboard(roleName: string | undefined) {
-  return hasRole(roleName, ['propietario', 'administrador', 'medico veterinario', 'produccion', 'almacen']);
+  return hasRole(roleName, ['propietario', 'administrador']);
 }
 
 /** Puede ver KPIs + Ganado + Stream SSE */
@@ -36,7 +36,7 @@ export function canViewInventarioDash(roleName: string | undefined) {
 
 /** Puede ver bitácora */
 export function canViewBitacora(roleName: string | undefined) {
-  return hasRole(roleName, ['administrador']);
+  return hasRole(roleName, ['administrador', 'propietario']);
 }
 
 // ─── Formatters ───────────────────────────────────────────────────────────────

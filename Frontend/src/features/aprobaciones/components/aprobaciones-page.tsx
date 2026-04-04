@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/auth-context';
+import { getVisibleNavItemsForRole } from '../../auth/navigation-utils';
 import { Button, NAV_ITEMS, LogOut, CheckCircle, HeartPulse, BarChart3, ShoppingCart, Check, X, RefreshCw } from '../../../shared/ui';
 import { ApiClientError } from '../../../types/api';
 import { sanitarioApi } from '../../sanitario/sanitario-api';
@@ -28,6 +29,7 @@ interface Msg { type: 'error' | 'success'; text: string; }
 export function AprobacionesPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Props) {
   const { user, logout } = useAuth();
   const rol = user?.rol;
+  const visibleNavItems = useMemo(() => getVisibleNavItemsForRole(rol, NAV_ITEMS), [rol]);
 
   const canView = useMemo(() => canViewAprobaciones(rol), [rol]);
   const canSan = useMemo(() => canApproveSanitario(rol), [rol]);
@@ -163,7 +165,7 @@ export function AprobacionesPage({ onGoHome, onGoUsersAdmin, onNavigateModule }:
       <aside className="users-admin-sidebar">
         <div className="users-admin-sidebar__logo"><img src="/branding/logo-rancho-los-alpes.png" alt="Logo" /></div>
         <nav className="users-admin-sidebar__nav" aria-label="Navegacion de modulos">
-          {NAV_ITEMS.map(item => {
+          {visibleNavItems.map(item => {
             const Icon = item.icon;
             return (
             <button key={item.label} type="button" data-testid={`aprob-nav-${item.label.toLowerCase()}`}

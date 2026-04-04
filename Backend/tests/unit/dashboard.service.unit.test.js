@@ -184,7 +184,14 @@ test('dashboard.service.getBitacora respeta limite maximo de 500', async () => {
     assert.equal(calls[1].take, 50);
     assert.deepEqual(calls[0].orderBy, { fechaHora: 'desc' });
     assert.deepEqual(calls[0].include, {
-      usuario: { select: { idUsuario: true, nombreCompleto: true, username: true } },
+      usuario: {
+        select: {
+          idUsuario: true,
+          nombreCompleto: true,
+          username: true,
+          rol: { select: { idRol: true, nombreRol: true } },
+        },
+      },
     });
   } finally {
     restore();

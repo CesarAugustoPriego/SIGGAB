@@ -210,7 +210,16 @@ async function getBitacora(limit = 100) {
   return prisma.bitacora.findMany({
     orderBy: { fechaHora: 'desc' },
     take: Math.min(limit, 500),
-    include: { usuario: { select: { idUsuario: true, nombreCompleto: true, username: true } } },
+    include: {
+      usuario: {
+        select: {
+          idUsuario: true,
+          nombreCompleto: true,
+          username: true,
+          rol: { select: { idRol: true, nombreRol: true } },
+        },
+      },
+    },
   });
 }
 

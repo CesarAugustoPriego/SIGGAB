@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/auth-context';
+import { getVisibleNavItemsForRole } from '../../auth/navigation-utils';
 import { Button, NAV_ITEMS, LogOut, Layers, Scale, Milk, Baby } from '../../../shared/ui';
 import { ApiClientError } from '../../../types/api';
 import { productivoApi } from '../productivo-api';
@@ -54,6 +55,7 @@ const TIPOS_EVENTO: TipoEventoReproductivo[] = ['CELO', 'MONTA', 'PREÑEZ', 'PAR
 
 export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: ProductivoAdminPageProps) {
   const { user, logout } = useAuth();
+  const visibleNavItems = useMemo(() => getVisibleNavItemsForRole(user?.rol, NAV_ITEMS), [user?.rol]);
 
   const [activeTab, setActiveTab] = useState<Tab>('lotes');
   const [loadingInit, setLoadingInit] = useState(true);
@@ -350,7 +352,7 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
       <aside className="users-admin-sidebar">
         <div className="users-admin-sidebar__logo"><img src="/branding/logo-rancho-los-alpes.png" alt="Logo Rancho Los Alpes" /></div>
         <nav className="users-admin-sidebar__nav" aria-label="Navegacion de modulos">
-          {NAV_ITEMS.map((item) => {
+          {visibleNavItems.map((item) => {
             const Icon = item.icon;
             return (
             <button key={item.label} type="button" data-testid={`productivo-nav-${item.label.toLowerCase()}`}

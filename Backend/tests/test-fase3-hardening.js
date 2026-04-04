@@ -27,26 +27,38 @@ function printSection(title) {
   console.log(`\n==== ${title} ====`);
 }
 
-async function request(method, route, { body, token, headers = {} } = {}) {
+async function request(method, route, { body, token, headers = {} } = {}, attempt = 1) {
   const finalHeaders = { ...headers };
   if (token) finalHeaders.Authorization = `Bearer ${token}`;
   if (body !== undefined && body !== null) finalHeaders['Content-Type'] = 'application/json';
 
-  const res = await fetch(`${BASE}${route}`, {
-    method,
-    headers: finalHeaders,
-    body: body !== undefined && body !== null ? JSON.stringify(body) : undefined,
-  });
+  try {
+    const res = await fetch(`${BASE}${route}`, {
+      method,
+      headers: finalHeaders,
+      body: body !== undefined && body !== null ? JSON.stringify(body) : undefined,
+    });
 
-  const contentType = res.headers.get('content-type') || '';
-  let data;
-  if (contentType.includes('application/json')) {
-    data = await res.json();
-  } else {
-    data = await res.text();
+    const contentType = res.headers.get('content-type') || '';
+    let data;
+    if (contentType.includes('application/json')) {
+      data = await res.json();
+    } else {
+      data = await res.text();
+    }
+
+    return { status: res.status, headers: res.headers, data };
+  } catch (error) {
+    const code = error?.cause?.code;
+    const retryable = ['ECONNREFUSED', 'ECONNRESET', 'ETIMEDOUT'].includes(code);
+
+    if (retryable && attempt < 4) {
+      await new Promise((resolve) => setTimeout(resolve, attempt * 600));
+      return request(method, route, { body, token, headers }, attempt + 1);
+    }
+
+    throw error;
   }
-
-  return { status: res.status, headers: res.headers, data };
 }
 
 async function login(username, password, extraHeaders = {}) {
@@ -116,6 +128,7 @@ async function main() {
   console.log('==============================================');
 
   let adminToken;
+  let propietarioToken;
   let produccionToken;
   let veterinarioToken;
   let almacenToken;
@@ -133,8 +146,15 @@ async function main() {
   const prodUsername = `prod_f3_${RUN_ID}`;
   const vetUsername = `vet_f3_${RUN_ID}`;
   const almUsername = `alm_f3_${RUN_ID}`;
+  const propUsername = `prop_f3_${RUN_ID}`;
   const testPassword = 'TestPassword123!';
 
+  await createUser(adminToken, {
+    nombreCompleto: 'Propietario Fase 3',
+    username: propUsername,
+    password: testPassword,
+    idRol: 1,
+  });
   await createUser(adminToken, {
     nombreCompleto: 'Produccion Fase 3',
     username: prodUsername,
@@ -153,7 +173,11 @@ async function main() {
     password: testPassword,
     idRol: 6,
   });
-  test('Usuarios de prueba creados (Produccion, Veterinario, Almacen)', true);
+  test('Usuarios de prueba creados (Propietario, Produccion, Veterinario, Almacen)', true);
+
+  res = await login(propUsername, testPassword);
+  test('Login Propietario', res.status === 200, `status=${res.status}`);
+  propietarioToken = res.data?.data?.accessToken;
 
   res = await login(prodUsername, testPassword);
   test('Login Produccion', res.status === 200, `status=${res.status}`);
@@ -415,6 +439,9 @@ async function main() {
     res.status === 200 && tieneAccionReporte && tieneAccionRespaldo,
     `status=${res.status}`
   );
+
+  res = await request('GET', '/dashboard/bitacora?limit=50', { token: propietarioToken });
+  test('Propietario puede consultar bitacora (RF14)', res.status === 200 && Array.isArray(res.data?.data), `status=${res.status}`);
 
   printSection('6) Dashboard en tiempo real (SSE)');
   await testDashboardSse(adminToken);
