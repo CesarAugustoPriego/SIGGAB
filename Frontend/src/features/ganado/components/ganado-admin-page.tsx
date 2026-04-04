@@ -1,6 +1,6 @@
-﻿import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/auth-context';
-import { Button } from '../../../shared/ui';
+import { Button, NAV_ITEMS, LogOut, Pencil, Save, Plus, X, Search, FilterX, History, UserMinus, Check } from '../../../shared/ui';
 import { ApiClientError } from '../../../types/api';
 import { ganadoApi } from '../ganado-api';
 import type {
@@ -62,7 +62,7 @@ interface UiMessage {
   text: string;
 }
 
-const NAV_ITEMS = ['Dashboard', 'Ganado', 'Sanitario', 'Produccion', 'Inventario', 'Reportes', 'Aprobaciones', 'Auditoria', 'Usuarios', 'Respaldos'];
+
 
 const EMPTY_FORM: AnimalFormState = {
   numeroArete: '',
@@ -321,22 +321,25 @@ export function GanadoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: 
       <aside className="users-admin-sidebar">
         <div className="users-admin-sidebar__logo"><img src="/branding/logo-rancho-los-alpes.png" alt="Logo Rancho Los Alpes" /></div>
         <nav className="users-admin-sidebar__nav" aria-label="Navegacion de modulos">
-          {NAV_ITEMS.map((item) => (
+          {NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            return (
             <button
-              key={item}
+              key={item.label}
               type="button"
-              data-testid={`ganado-nav-${item.toLowerCase()}`}
-              className={`users-admin-sidebar__nav-item ${item === 'Ganado' ? 'is-active' : ''}`}
-              onClick={item === 'Ganado' ? undefined : () => onNavigate(item)}
+              data-testid={`ganado-nav-${item.label.toLowerCase()}`}
+              className={`users-admin-sidebar__nav-item ${item.label === 'Ganado' ? 'is-active' : ''}`}
+              onClick={item.label === 'Ganado' ? undefined : () => onNavigate(item.label)}
             >
-              {item}
+              <Icon size={18} aria-hidden /> {item.label}
             </button>
-          ))}
+            );
+          })}
         </nav>
         <footer className="users-admin-sidebar__footer">
           <p>{user?.nombreCompleto || 'Usuario'}</p>
           <small>{user?.rol || 'Sin rol'}</small>
-          <Button type="button" className="users-admin-sidebar__logout" onClick={logout} data-testid="ganado-sidebar-logout-button">Cerrar sesion</Button>
+          <Button type="button" className="users-admin-sidebar__logout" onClick={logout} data-testid="ganado-sidebar-logout-button"><LogOut size={15} aria-hidden /> Cerrar sesion</Button>
         </footer>
       </aside>
 
@@ -353,7 +356,7 @@ export function GanadoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: 
           ) : (
             <div className="ganado-grid">
               <article className="ganado-card">
-                <div className="users-admin-card__title"><h2>{isEditing ? 'Editar animal' : 'Alta de ganado'}</h2>{isEditing ? <Button type="button" variant="ghost" onClick={resetForm}>Cancelar</Button> : null}</div>
+                <div className="users-admin-card__title"><h2>{isEditing ? 'Editar animal' : 'Alta de ganado'}</h2>{isEditing ? <Button type="button" variant="ghost" onClick={resetForm}><X size={15} aria-hidden /> Cancelar</Button> : null}</div>
                 {!canCreate && !canEdit ? <p className="ganado-helper-message">Tu rol solo puede consultar.</p> : (
                   <>
                     <label className="ganado-field"><span>Numero de arete</span><input data-testid="input-arete" value={form.numeroArete} onChange={(e)=>setForm((p)=>({...p,numeroArete:e.target.value}))} readOnly={isEditing} placeholder="MX-AGS-1001" />{formErrors.numeroArete ? <small data-testid="arete-error">{formErrors.numeroArete}</small> : null}</label>
@@ -365,23 +368,23 @@ export function GanadoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: 
                     <label className="ganado-field"><span>Raza</span><select data-testid="select-raza" value={form.idRaza} onChange={(e)=>setForm((p)=>({...p,idRaza:e.target.value}))}><option value="">Selecciona una raza</option>{razas.map((r)=><option key={r.idRaza} value={r.idRaza}>{r.nombreRaza}</option>)}</select>{formErrors.idRaza ? <small data-testid="raza-error">{formErrors.idRaza}</small> : null}</label>
                     <label className="ganado-field"><span>Procedencia</span><input data-testid="input-procedencia" value={form.procedencia} onChange={(e)=>setForm((p)=>({...p,procedencia:e.target.value}))} />{formErrors.procedencia ? <small data-testid="procedencia-error">{formErrors.procedencia}</small> : null}</label>
                     <label className="ganado-field"><span>Estado sanitario inicial</span><textarea data-testid="input-sanitario" rows={3} value={form.estadoSanitarioInicial} onChange={(e)=>setForm((p)=>({...p,estadoSanitarioInicial:e.target.value}))} />{formErrors.estadoSanitarioInicial ? <small data-testid="sanitario-error">{formErrors.estadoSanitarioInicial}</small> : null}</label>
-                    <Button type="button" fullWidth disabled={saving} onClick={onSave} data-testid="btn-submit">{saving ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Registrar animal'}</Button>
+                    <Button type="button" fullWidth disabled={saving} onClick={onSave} data-testid="btn-submit">{saving ? 'Guardando...' : isEditing ? <><Save size={15} aria-hidden /> Guardar cambios</> : <><Plus size={15} aria-hidden /> Registrar animal</>}</Button>
                   </>
                 )}
                 {message ? <p className={`users-message users-message--${message.type}`} data-testid="ganado-form-message">{message.text}</p> : null}
               </article>
 
               <article className="ganado-card">
-                <label className="ganado-search"><span>Busqueda por arete</span><div className="ganado-search__controls"><input data-testid="input-buscar-arete" value={searchArete} onChange={(e)=>setSearchArete(e.target.value)} placeholder="MX-AGS-1001" /><Button type="button" onClick={onSearchByArete} disabled={searching} data-testid="btn-buscar">{searching ? 'Buscando...' : 'Buscar'}</Button></div></label>
+                <label className="ganado-search"><span>Busqueda por arete</span><div className="ganado-search__controls"><input data-testid="input-buscar-arete" value={searchArete} onChange={(e)=>setSearchArete(e.target.value)} placeholder="MX-AGS-1001" /><Button type="button" onClick={onSearchByArete} disabled={searching} data-testid="btn-buscar"><Search size={15} aria-hidden /> {searching ? 'Buscando...' : 'Buscar'}</Button></div></label>
                 {searchResult ? (
-                  <article className="ganado-search-result"><div><strong>{searchResult.numeroArete}</strong><p>{searchResult.raza?.nombreRaza || 'Sin raza'} · {toNumeric(searchResult.pesoInicial)} kg · {searchResult.edadEstimada} meses</p></div><div className="ganado-search-result__actions">{canHistorial ? <Button type="button" variant="ghost" onClick={()=>void onOpenHistorial(searchResult)}>Ver historial</Button> : null}{canEdit && searchResult.estadoActual==='ACTIVO' ? <Button type="button" variant="ghost" onClick={()=>{setEditingAnimalId(searchResult.idAnimal);setForm(toFormState(searchResult));}}>Editar</Button> : null}</div></article>
+                  <article className="ganado-search-result"><div><strong>{searchResult.numeroArete}</strong><p>{searchResult.raza?.nombreRaza || 'Sin raza'} · {toNumeric(searchResult.pesoInicial)} kg · {searchResult.edadEstimada} meses</p></div><div className="ganado-search-result__actions">{canHistorial ? <Button type="button" variant="ghost" onClick={()=>void onOpenHistorial(searchResult)}><History size={14} aria-hidden /> Ver historial</Button> : null}{canEdit && searchResult.estadoActual==='ACTIVO' ? <Button type="button" variant="ghost" onClick={()=>{setEditingAnimalId(searchResult.idAnimal);setForm(toFormState(searchResult));}}><Pencil size={14} aria-hidden /> Editar</Button> : null}</div></article>
                 ) : null}
 
                 <div className="ganado-filters">
                   <label className="ganado-field"><span>Estado</span><select data-testid="filter-estado" value={filters.estadoActual} onChange={(e)=>setFilters((p)=>({...p,estadoActual:e.target.value as EstadoAnimal|'TODOS'}))}><option value="ACTIVO">Activo</option><option value="TODOS">Todos</option><option value="VENDIDO">Vendido</option><option value="MUERTO">Muerto</option><option value="TRANSFERIDO">Transferido</option></select></label>
                   <label className="ganado-field"><span>Raza</span><select data-testid="filter-raza" value={filters.idRaza} onChange={(e)=>setFilters((p)=>({...p,idRaza:e.target.value}))}><option value="">Todas</option>{razas.map((r)=><option key={r.idRaza} value={r.idRaza}>{r.nombreRaza}</option>)}</select></label>
                   <label className="ganado-field"><span>Arete</span><input data-testid="filter-arete" value={filters.arete} onChange={(e)=>setFilters((p)=>({...p,arete:e.target.value}))} placeholder="Buscar por arete"/></label>
-                  <Button type="button" variant="ghost" data-testid="btn-limpiar-filtros" onClick={()=>setFilters({estadoActual:'ACTIVO',idRaza:'',arete:''})}>Limpiar</Button>
+                  <Button type="button" variant="ghost" data-testid="btn-limpiar-filtros" onClick={()=>setFilters({estadoActual:'ACTIVO',idRaza:'',arete:''})}><FilterX size={14} aria-hidden /> Limpiar</Button>
                 </div>
 
                 <div className="ganado-list">
@@ -392,9 +395,9 @@ export function GanadoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: 
                       <p>Ingreso: {toInputDate(a.fechaIngreso)} · Procedencia: {a.procedencia}</p>
                       {a.motivoBaja ? <p>Baja: {a.motivoBaja} ({toInputDate(a.fechaBaja)})</p> : null}
                       <div className="ganado-item__actions">
-                        {canHistorial ? <Button type="button" variant="ghost" data-testid={`btn-historial-${a.numeroArete}`} onClick={()=>void onOpenHistorial(a)}>Historial</Button> : null}
-                        {canEdit && a.estadoActual==='ACTIVO' ? <Button type="button" variant="ghost" data-testid={`btn-editar-${a.numeroArete}`} onClick={()=>{setEditingAnimalId(a.idAnimal);setForm(toFormState(a));}}>Editar</Button> : null}
-                        {canBaja && a.estadoActual==='ACTIVO' ? <Button type="button" variant="ghost" className="users-btn-danger" data-testid={`btn-baja-${a.numeroArete}`} onClick={()=>onOpenBaja(a)}>Dar baja</Button> : null}
+                        {canHistorial ? <Button type="button" variant="ghost" data-testid={`btn-historial-${a.numeroArete}`} onClick={()=>void onOpenHistorial(a)}><History size={14} aria-hidden /> Historial</Button> : null}
+                        {canEdit && a.estadoActual==='ACTIVO' ? <Button type="button" variant="ghost" data-testid={`btn-editar-${a.numeroArete}`} onClick={()=>{setEditingAnimalId(a.idAnimal);setForm(toFormState(a));}}><Pencil size={14} aria-hidden /> Editar</Button> : null}
+                        {canBaja && a.estadoActual==='ACTIVO' ? <Button type="button" variant="ghost" className="users-btn-danger" data-testid={`btn-baja-${a.numeroArete}`} onClick={()=>onOpenBaja(a)}><UserMinus size={14} aria-hidden /> Dar baja</Button> : null}
                       </div>
                     </article>
                   ))}
@@ -412,7 +415,7 @@ export function GanadoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: 
             <label className="ganado-field"><span>Estado de baja</span><select data-testid="select-motivo" value={bajaForm.estadoActual} onChange={(e)=>setBajaForm((p)=>({...p,estadoActual:e.target.value as Exclude<EstadoAnimal,'ACTIVO'>}))}><option value="VENDIDO">Vendido</option><option value="MUERTO">Muerto</option><option value="TRANSFERIDO">Transferido</option></select></label>
             <label className="ganado-field"><span>Motivo de baja</span><textarea data-testid="input-baja-motivo" rows={3} value={bajaForm.motivoBaja} onChange={(e)=>{setBajaForm((p)=>({...p,motivoBaja:e.target.value}));setBajaErrors((p)=>({...p,motivoBaja:undefined}));}} />{bajaErrors.motivoBaja ? <small data-testid="baja-motivo-error">{bajaErrors.motivoBaja}</small> : null}</label>
             <label className="ganado-field"><span>Fecha de baja</span><input data-testid="input-baja-fecha" type="date" value={bajaForm.fechaBaja} onChange={(e)=>{setBajaForm((p)=>({...p,fechaBaja:e.target.value}));setBajaErrors((p)=>({...p,fechaBaja:undefined}));}} />{bajaErrors.fechaBaja ? <small>{bajaErrors.fechaBaja}</small> : null}</label>
-            <div className="ganado-modal__actions"><Button type="button" variant="ghost" onClick={()=>setBajaTarget(null)}>Cancelar</Button><Button type="button" className="users-btn-danger" onClick={onConfirmBaja} disabled={submittingBaja} data-testid="btn-confirmar-baja">{submittingBaja ? 'Procesando...' : 'Confirmar baja'}</Button></div>
+            <div className="ganado-modal__actions"><Button type="button" variant="ghost" onClick={()=>setBajaTarget(null)}><X size={14} aria-hidden /> Cancelar</Button><Button type="button" className="users-btn-danger" onClick={onConfirmBaja} disabled={submittingBaja} data-testid="btn-confirmar-baja">{submittingBaja ? 'Procesando...' : <><Check size={14} aria-hidden /> Confirmar baja</>}</Button></div>
           </article>
         </div>
       ) : null}

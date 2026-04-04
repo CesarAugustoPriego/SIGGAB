@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/auth-context';
-import { Button } from '../../../shared/ui';
+import { Button, NAV_ITEMS, LogOut, Package, Tags, ArrowLeftRight, ShoppingCart, Receipt, AlertTriangle, X } from '../../../shared/ui';
 import { ApiClientError } from '../../../types/api';
 import { inventarioApi } from '../inventario-api';
 import type {
@@ -21,7 +21,7 @@ interface Props { onGoHome: () => void; onGoUsersAdmin?: () => void; onNavigateM
 interface Msg { type: 'error' | 'success' | 'warn'; text: string; }
 type Tab = 'insumos' | 'tipos' | 'movimientos' | 'solicitudes' | 'compras';
 
-const NAV_ITEMS = ['Dashboard', 'Ganado', 'Sanitario', 'Produccion', 'Inventario', 'Reportes', 'Aprobaciones', 'Auditoria', 'Usuarios', 'Respaldos'];
+
 
 export function InventarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Props) {
   const { user, logout } = useAuth();
@@ -281,15 +281,18 @@ export function InventarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
       <aside className="users-admin-sidebar">
         <div className="users-admin-sidebar__logo"><img src="/branding/logo-rancho-los-alpes.png" alt="Logo" /></div>
         <nav className="users-admin-sidebar__nav" aria-label="Modulos">
-          {NAV_ITEMS.map(item => (
-            <button key={item} type="button" data-testid={`inventario-nav-${item.toLowerCase()}`}
-              className={`users-admin-sidebar__nav-item ${item === 'Inventario' ? 'is-active' : ''}`}
-              onClick={item === 'Inventario' ? undefined : () => onNav(item)}>{item}</button>
-          ))}
+          {NAV_ITEMS.map(item => {
+            const Icon = item.icon;
+            return (
+            <button key={item.label} type="button" data-testid={`inventario-nav-${item.label.toLowerCase()}`}
+              className={`users-admin-sidebar__nav-item ${item.label === 'Inventario' ? 'is-active' : ''}`}
+              onClick={item.label === 'Inventario' ? undefined : () => onNav(item.label)}><Icon size={18} aria-hidden /> {item.label}</button>
+            );
+          })}
         </nav>
         <footer className="users-admin-sidebar__footer">
           <p>{user?.nombreCompleto || 'Usuario'}</p><small>{user?.rol || 'Sin rol'}</small>
-          <Button type="button" className="users-admin-sidebar__logout" onClick={logout} data-testid="inventario-sidebar-logout-button">Cerrar sesion</Button>
+          <Button type="button" className="users-admin-sidebar__logout" onClick={logout} data-testid="inventario-sidebar-logout-button"><LogOut size={15} aria-hidden /> Cerrar sesion</Button>
         </footer>
       </aside>
 
@@ -307,11 +310,11 @@ export function InventarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
             <div className="productivo-content">
               {/* ── TABS ── */}
               <div className="productivo-tabs" data-testid="inventario-tabs">
-                <button type="button" className={`productivo-tab ${tab === 'insumos' ? 'is-active' : ''}`} onClick={() => setTab('insumos')} data-testid="tab-insumos">📦 Insumos</button>
-                <button type="button" className={`productivo-tab ${tab === 'tipos' ? 'is-active' : ''}`} onClick={() => setTab('tipos')} data-testid="tab-tipos">📋 Tipos</button>
-                <button type="button" className={`productivo-tab ${tab === 'movimientos' ? 'is-active' : ''}`} onClick={() => setTab('movimientos')} data-testid="tab-movimientos">🔄 Movimientos</button>
-                <button type="button" className={`productivo-tab ${tab === 'solicitudes' ? 'is-active' : ''}`} onClick={() => setTab('solicitudes')} data-testid="tab-solicitudes">🛒 Solicitudes</button>
-                {canCom ? <button type="button" className={`productivo-tab ${tab === 'compras' ? 'is-active' : ''}`} onClick={() => setTab('compras')} data-testid="tab-compras">💳 Compras</button> : null}
+                <button type="button" className={`productivo-tab ${tab === 'insumos' ? 'is-active' : ''}`} onClick={() => setTab('insumos')} data-testid="tab-insumos"><Package size={16} aria-hidden /> Insumos</button>
+                <button type="button" className={`productivo-tab ${tab === 'tipos' ? 'is-active' : ''}`} onClick={() => setTab('tipos')} data-testid="tab-tipos"><Tags size={16} aria-hidden /> Tipos</button>
+                <button type="button" className={`productivo-tab ${tab === 'movimientos' ? 'is-active' : ''}`} onClick={() => setTab('movimientos')} data-testid="tab-movimientos"><ArrowLeftRight size={16} aria-hidden /> Movimientos</button>
+                <button type="button" className={`productivo-tab ${tab === 'solicitudes' ? 'is-active' : ''}`} onClick={() => setTab('solicitudes')} data-testid="tab-solicitudes"><ShoppingCart size={16} aria-hidden /> Solicitudes</button>
+                {canCom ? <button type="button" className={`productivo-tab ${tab === 'compras' ? 'is-active' : ''}`} onClick={() => setTab('compras')} data-testid="tab-compras"><Receipt size={16} aria-hidden /> Compras</button> : null}
               </div>
 
               {msg ? <p className={`users-message users-message--${msg.type}`} data-testid="inventario-message">{msg.text}</p> : null}
@@ -502,7 +505,7 @@ export function InventarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
                             <input type="number" min="0.1" step="0.1" placeholder="Cant." value={d.cantidad} onChange={e => updateSolDetalle(i, 'cantidad', e.target.value)} data-testid={`sol-det-cant-${i}`} />
                             <input type="number" min="0.01" step="0.01" placeholder="Precio est." value={d.precioEstimado} onChange={e => updateSolDetalle(i, 'precioEstimado', e.target.value)} data-testid={`sol-det-precio-${i}`} />
                             <span className="inventario-detalle-subtotal">{fmtCurrency((Number(d.cantidad) || 0) * (Number(d.precioEstimado) || 0))}</span>
-                            <Button type="button" className="users-btn-danger" onClick={() => removeSolDetalle(i)}>✕</Button>
+                            <Button type="button" className="users-btn-danger" onClick={() => removeSolDetalle(i)}><X size={14} aria-hidden /></Button>
                           </div>
                         ))}
                         {solDetalles.length > 0 ? <div className="inventario-detalles-total">Total estimado: <strong>{fmtCurrency(solTotal)}</strong></div> : null}
@@ -556,7 +559,7 @@ export function InventarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
                   {canComCreate ? (
                     <article className="productivo-card">
                       <div className="users-admin-card__title"><h2>Registrar compra realizada</h2></div>
-                      <p className="productivo-subtitle">⚠️ Al confirmar, el stock se actualizara automaticamente (RN-16)</p>
+                      <p className="productivo-subtitle"><AlertTriangle size={14} aria-hidden /> Al confirmar, el stock se actualizara automaticamente (RN-16)</p>
                       <div className="productivo-field-row">
                         <label className="productivo-field"><span>Solicitud aprobada</span>
                           <select value={compraForm.idSolicitud} onChange={e => onSelectSolicitudForCompra(e.target.value)} data-testid="compra-solicitud">

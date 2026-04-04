@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/auth-context';
 import { sanitarioApi } from '../../sanitario/sanitario-api';
 import { productivoApi } from '../../productivo/productivo-api';
-import { Button } from '../../../shared/ui';
+import { Button, NAV_ITEMS, LogOut } from '../../../shared/ui';
 import { ApiClientError } from '../../../types/api';
 import { reportesApi } from '../reportes-api';
 import type {
@@ -52,7 +52,7 @@ interface TabConfig {
   label: string;
 }
 
-const NAV_ITEMS = ['Dashboard', 'Ganado', 'Sanitario', 'Produccion', 'Inventario', 'Reportes', 'Aprobaciones', 'Auditoria', 'Usuarios', 'Respaldos'];
+
 
 const DEFAULT_FECHA_FIN = getTodayInputDate();
 const DEFAULT_FECHA_INICIO = getDaysAgoInputDate(30);
@@ -353,23 +353,26 @@ export function ReportesPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Rep
           <img src="/branding/logo-rancho-los-alpes.png" alt="Logo Rancho Los Alpes" />
         </div>
         <nav className="users-admin-sidebar__nav" aria-label="Navegacion de modulos">
-          {NAV_ITEMS.map((item) => (
+          {NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            return (
             <button
-              key={item}
+              key={item.label}
               type="button"
-              data-testid={`reportes-nav-${item.toLowerCase()}`}
-              className={`users-admin-sidebar__nav-item ${item === 'Reportes' ? 'is-active' : ''}`}
-              onClick={item === 'Reportes' ? undefined : () => onNavigate(item)}
+              data-testid={`reportes-nav-${item.label.toLowerCase()}`}
+              className={`users-admin-sidebar__nav-item ${item.label === 'Reportes' ? 'is-active' : ''}`}
+              onClick={item.label === 'Reportes' ? undefined : () => onNavigate(item.label)}
             >
-              {item}
+              <Icon size={18} aria-hidden /> {item.label}
             </button>
-          ))}
+            );
+          })}
         </nav>
         <footer className="users-admin-sidebar__footer">
           <p>{user?.nombreCompleto || 'Usuario'}</p>
           <small>{user?.rol || 'Sin rol'}</small>
           <Button type="button" className="users-admin-sidebar__logout" onClick={() => void logout()} data-testid="reportes-sidebar-logout">
-            Cerrar sesion
+            <LogOut size={15} aria-hidden /> Cerrar sesion
           </Button>
         </footer>
       </aside>

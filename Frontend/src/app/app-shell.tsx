@@ -8,12 +8,16 @@ import { ProductivoAdminPage } from '../features/productivo/components';
 import { InventarioAdminPage } from '../features/inventario/components';
 import { DashboardPage } from '../features/dashboard/components';
 import { ReportesPage } from '../features/reportes/components';
+import { AprobacionesPage } from '../features/aprobaciones/components';
+import { AuditoriaPage } from '../features/auditoria/components';
 import { canViewGanado } from '../features/ganado/ganado-utils';
 import { canViewSanitario } from '../features/sanitario/sanitario-utils';
 import { canViewProductivo } from '../features/productivo/productivo-utils';
 import { canViewInventario } from '../features/inventario/inventario-utils';
 import { canViewDashboard } from '../features/dashboard/dashboard-utils';
 import { canViewReportes } from '../features/reportes/reportes-utils';
+import { canViewAprobaciones } from '../features/aprobaciones/aprobaciones-utils';
+import { canViewAuditoria } from '../features/auditoria/auditoria-utils';
 import { isAdministratorRole } from '../features/users/users-utils';
 import {
   getAuthViewFromRoute,
@@ -37,6 +41,8 @@ export function AppShell() {
   const hasInventarioAccess = useMemo(() => canViewInventario(user?.rol), [user?.rol]);
   const hasDashboardAccess = useMemo(() => canViewDashboard(user?.rol), [user?.rol]);
   const hasReportesAccess = useMemo(() => canViewReportes(user?.rol), [user?.rol]);
+  const hasAprobacionesAccess = useMemo(() => canViewAprobaciones(user?.rol), [user?.rol]);
+  const hasAuditoriaAccess = useMemo(() => canViewAuditoria(user?.rol), [user?.rol]);
 
   const navigate = useCallback((nextRoute: AppRoute, replace = false) => {
     setRoute(nextRoute);
@@ -99,8 +105,17 @@ export function AppShell() {
     }
     if (status === 'authenticated' && route === '/app/reportes' && !hasReportesAccess) {
       navigate('/app', true);
+      return;
     }
-  }, [hasGanadoAccess, hasSanitarioAccess, hasProductivoAccess, hasInventarioAccess, hasDashboardAccess, hasReportesAccess, isAdmin, navigate, route, status]);
+    if (status === 'authenticated' && route === '/app/aprobaciones' && !hasAprobacionesAccess) {
+      navigate('/app', true);
+      return;
+    }
+    if (status === 'authenticated' && route === '/app/auditoria' && !hasAuditoriaAccess) {
+      navigate('/app', true);
+      return;
+    }
+  }, [hasGanadoAccess, hasSanitarioAccess, hasProductivoAccess, hasInventarioAccess, hasDashboardAccess, hasReportesAccess, hasAprobacionesAccess, hasAuditoriaAccess, isAdmin, navigate, route, status]);
 
   const onNavigateModule = useCallback((moduleName: string) => {
     if (moduleName === 'Ganado') {
@@ -133,13 +148,23 @@ export function AppShell() {
       return;
     }
 
+    if (moduleName === 'Aprobaciones' && hasAprobacionesAccess) {
+      navigate('/app/aprobaciones');
+      return;
+    }
+
+    if (moduleName === 'Auditoria' && hasAuditoriaAccess) {
+      navigate('/app/auditoria');
+      return;
+    }
+
     if (moduleName === 'Usuarios' && isAdmin) {
       navigate('/app/usuarios');
       return;
     }
 
     navigate('/app');
-  }, [hasSanitarioAccess, hasProductivoAccess, hasInventarioAccess, hasDashboardAccess, hasReportesAccess, isAdmin, navigate]);
+  }, [hasSanitarioAccess, hasProductivoAccess, hasInventarioAccess, hasDashboardAccess, hasReportesAccess, hasAprobacionesAccess, hasAuditoriaAccess, isAdmin, navigate]);
 
   const authView = useMemo<AuthView>(() => getAuthViewFromRoute(route), [route]);
 
@@ -200,6 +225,18 @@ export function AppShell() {
           onGoUsersAdmin={isAdmin ? () => navigate('/app/usuarios') : undefined}
           onNavigateModule={onNavigateModule}
         />
+      ) : route === '/app/aprobaciones' ? (
+        <AprobacionesPage
+          onGoHome={() => navigate('/app')}
+          onGoUsersAdmin={isAdmin ? () => navigate('/app/usuarios') : undefined}
+          onNavigateModule={onNavigateModule}
+        />
+      ) : route === '/app/auditoria' ? (
+        <AuditoriaPage
+          onGoHome={() => navigate('/app')}
+          onGoUsersAdmin={isAdmin ? () => navigate('/app/usuarios') : undefined}
+          onNavigateModule={onNavigateModule}
+        />
       ) : route === '/app' ? (
         <SessionView
           canManageUsers={isAdmin}
@@ -216,6 +253,10 @@ export function AppShell() {
           onGoDashboard={() => navigate('/app/dashboard')}
           canViewReportes={hasReportesAccess}
           onGoReportes={() => navigate('/app/reportes')}
+          canViewAprobaciones={hasAprobacionesAccess}
+          onGoAprobaciones={() => navigate('/app/aprobaciones')}
+          canViewAuditoria={hasAuditoriaAccess}
+          onGoAuditoria={() => navigate('/app/auditoria')}
         />
       ) : (
         <AuthPage view={authView} onChangeView={onAuthViewChange} />

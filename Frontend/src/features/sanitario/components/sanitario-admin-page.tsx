@@ -1,7 +1,7 @@
-﻿import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/auth-context';
 import type { Animal } from '../../ganado/ganado-types';
-import { Button } from '../../../shared/ui';
+import { Button, NAV_ITEMS, LogOut, Save, Plus, X, Calendar } from '../../../shared/ui';
 import { ApiClientError } from '../../../types/api';
 import { sanitarioApi } from '../sanitario-api';
 import type {
@@ -53,7 +53,7 @@ interface CalendarioFormState {
   fechaAlerta: string;
 }
 
-const NAV_ITEMS = ['Dashboard', 'Ganado', 'Sanitario', 'Produccion', 'Inventario', 'Reportes', 'Aprobaciones', 'Auditoria', 'Usuarios', 'Respaldos'];
+
 
 const EMPTY_EVENTO_FORM: EventoFormState = {
   idAnimal: '',
@@ -450,24 +450,27 @@ export function SanitarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule 
         </div>
 
         <nav className="users-admin-sidebar__nav" aria-label="Navegacion de modulos">
-          {NAV_ITEMS.map((item) => (
+          {NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            return (
             <button
-              key={item}
+              key={item.label}
               type="button"
-              data-testid={`sanitario-nav-${item.toLowerCase()}`}
-              className={`users-admin-sidebar__nav-item ${item === 'Sanitario' ? 'is-active' : ''}`}
-              onClick={item === 'Sanitario' ? undefined : () => onNavigate(item)}
+              data-testid={`sanitario-nav-${item.label.toLowerCase()}`}
+              className={`users-admin-sidebar__nav-item ${item.label === 'Sanitario' ? 'is-active' : ''}`}
+              onClick={item.label === 'Sanitario' ? undefined : () => onNavigate(item.label)}
             >
-              {item}
+              <Icon size={18} aria-hidden /> {item.label}
             </button>
-          ))}
+            );
+          })}
         </nav>
 
         <footer className="users-admin-sidebar__footer">
           <p>{user?.nombreCompleto || 'Usuario'}</p>
           <small>{user?.rol || 'Sin rol'}</small>
           <Button type="button" className="users-admin-sidebar__logout" onClick={logout} data-testid="sanitario-sidebar-logout-button">
-            Cerrar sesion
+            <LogOut size={15} aria-hidden /> Cerrar sesion
           </Button>
         </footer>
       </aside>
@@ -490,7 +493,7 @@ export function SanitarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule 
                 <article className="sanitario-card" data-testid="sanitario-evento-form-card">
                   <div className="users-admin-card__title">
                     <h2>{editingEventoId ? 'Editar evento sanitario' : 'Registrar evento sanitario'}</h2>
-                    {editingEventoId ? <Button type="button" variant="ghost" onClick={() => { setEditingEventoId(null); setEventoForm(EMPTY_EVENTO_FORM); }}>Cancelar</Button> : null}
+                    {editingEventoId ? <Button type="button" variant="ghost" onClick={() => { setEditingEventoId(null); setEventoForm(EMPTY_EVENTO_FORM); }}><X size={14} aria-hidden /> Cancelar</Button> : null}
                   </div>
 
                   {!canCreate ? (
@@ -505,7 +508,7 @@ export function SanitarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule 
                         <label className="sanitario-field"><span>Medicamento</span><input type="text" data-testid="sanitario-form-medicamento" value={eventoForm.medicamento} onChange={(event) => setEventoForm((prev) => ({ ...prev, medicamento: event.target.value }))} /></label>
                         <label className="sanitario-field"><span>Dosis</span><input type="text" data-testid="sanitario-form-dosis" value={eventoForm.dosis} onChange={(event) => setEventoForm((prev) => ({ ...prev, dosis: event.target.value }))} /></label>
                       </div>
-                      <Button type="button" fullWidth disabled={savingEvento} onClick={onSaveEvento} data-testid="sanitario-form-save-evento">{savingEvento ? 'Guardando...' : editingEventoId ? 'Guardar cambios' : 'Registrar evento'}</Button>
+                      <Button type="button" fullWidth disabled={savingEvento} onClick={onSaveEvento} data-testid="sanitario-form-save-evento">{savingEvento ? 'Guardando...' : editingEventoId ? <><Save size={15} aria-hidden /> Guardar cambios</> : <><Plus size={15} aria-hidden /> Registrar evento</>}</Button>
                     </>
                   )}
                 </article>
@@ -513,7 +516,7 @@ export function SanitarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule 
                 <article className="sanitario-card" data-testid="sanitario-calendario-form-card">
                   <div className="users-admin-card__title">
                     <h2>{editingCalendarioId ? 'Editar calendario sanitario' : 'Programar calendario sanitario'}</h2>
-                    {editingCalendarioId ? <Button type="button" variant="ghost" onClick={() => { setEditingCalendarioId(null); setCalendarioForm(EMPTY_CALENDARIO_FORM); }}>Cancelar</Button> : null}
+                    {editingCalendarioId ? <Button type="button" variant="ghost" onClick={() => { setEditingCalendarioId(null); setCalendarioForm(EMPTY_CALENDARIO_FORM); }}><X size={14} aria-hidden /> Cancelar</Button> : null}
                   </div>
 
                   {!canManageCalendario ? (
@@ -526,7 +529,7 @@ export function SanitarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule 
                         <label className="sanitario-field"><span>Fecha programada</span><input type="date" data-testid="sanitario-cal-form-fecha-programada" value={calendarioForm.fechaProgramada} onChange={(event) => { setCalendarioForm((prev) => ({ ...prev, fechaProgramada: event.target.value })); setCalendarioErrors((prev) => ({ ...prev, fechaProgramada: undefined })); }} />{calendarioErrors.fechaProgramada ? <small>{calendarioErrors.fechaProgramada}</small> : null}</label>
                         <label className="sanitario-field"><span>Fecha alerta</span><input type="date" data-testid="sanitario-cal-form-fecha-alerta" value={calendarioForm.fechaAlerta} onChange={(event) => { setCalendarioForm((prev) => ({ ...prev, fechaAlerta: event.target.value })); setCalendarioErrors((prev) => ({ ...prev, fechaAlerta: undefined })); }} />{calendarioErrors.fechaAlerta ? <small>{calendarioErrors.fechaAlerta}</small> : null}</label>
                       </div>
-                      <Button type="button" fullWidth disabled={savingCalendario} onClick={onSaveCalendario} data-testid="sanitario-cal-form-save">{savingCalendario ? 'Guardando...' : editingCalendarioId ? 'Guardar cambios' : 'Programar evento'}</Button>
+                      <Button type="button" fullWidth disabled={savingCalendario} onClick={onSaveCalendario} data-testid="sanitario-cal-form-save">{savingCalendario ? 'Guardando...' : editingCalendarioId ? <><Save size={15} aria-hidden /> Guardar cambios</> : <><Calendar size={15} aria-hidden /> Programar evento</>}</Button>
                     </>
                   )}
 

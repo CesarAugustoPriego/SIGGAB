@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../../auth/auth-context';
-import { Button } from '../../../shared/ui';
+import { Button, NAV_ITEMS, LogOut, Beef, Syringe, Scale, Bell, ShoppingCart, AlertTriangle, Package, BarChart3, HeartPulse, ScrollText, RefreshCw } from '../../../shared/ui';
+import type { LucideIcon } from '../../../shared/ui';
 import { dashboardApi } from '../dashboard-api';
 import {
   canViewResumen, canViewProduccion, canViewSanitario,
@@ -115,7 +116,7 @@ export function DashboardPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Pr
   }, [showResumen]);
 
   // ─── Sidebar navigation ───────────────────────────────────────────────────────
-  const NAV_ITEMS = ['Dashboard', 'Ganado', 'Sanitario', 'Produccion', 'Inventario', 'Usuarios'];
+
 
   const nav = (m: string) => {
     if (m === 'Usuarios' && onGoUsersAdmin) return onGoUsersAdmin();
@@ -127,14 +128,14 @@ export function DashboardPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Pr
   const kpiCards = useMemo(() => {
     if (!resumen) return [];
     return [
-      { label: 'Animales activos', value: resumen.totalAnimalesActivos, icon: '🐄', color: '#22c55e', mod: 'Ganado' },
-      { label: 'Vacunaciones del mes', value: resumen.vacunacionesMes, icon: '💉', color: '#3b82f6', mod: 'Sanitario' },
-      { label: 'Pesos por validar', value: resumen.pesosPendientesValidar, icon: '⚖️', color: resumen.pesosPendientesValidar > 0 ? '#f59e0b' : '#22c55e', mod: 'Produccion' },
-      { label: 'Alertas próximas (7d)', value: resumen.alertasProximas7Dias, icon: '🔔', color: resumen.alertasProximas7Dias > 0 ? '#ef4444' : '#22c55e', mod: 'Sanitario' },
-      { label: 'Solicitudes pendientes', value: resumen.solicitudesCompraPendientes, icon: '🛒', color: resumen.solicitudesCompraPendientes > 0 ? '#f59e0b' : '#22c55e', mod: 'Inventario' },
-      { label: 'Insumos agotados', value: resumen.insumosStockAgotado, icon: '⚠️', color: resumen.insumosStockAgotado > 0 ? '#ef4444' : '#22c55e', mod: 'Inventario' },
-      { label: 'Tipos de insumo', value: resumen.inventarioTotalItems, icon: '📦', color: '#64748b', mod: 'Inventario' },
-      { label: 'Stock total (unidades)', value: resumen.inventarioTotalUnidades, icon: '📊', color: '#22c55e', mod: 'Inventario' },
+      { label: 'Animales activos', value: resumen.totalAnimalesActivos, icon: Beef, color: '#22c55e', mod: 'Ganado' },
+      { label: 'Vacunaciones del mes', value: resumen.vacunacionesMes, icon: Syringe, color: '#3b82f6', mod: 'Sanitario' },
+      { label: 'Pesos por validar', value: resumen.pesosPendientesValidar, icon: Scale, color: resumen.pesosPendientesValidar > 0 ? '#f59e0b' : '#22c55e', mod: 'Produccion' },
+      { label: 'Alertas próximas (7d)', value: resumen.alertasProximas7Dias, icon: Bell, color: resumen.alertasProximas7Dias > 0 ? '#ef4444' : '#22c55e', mod: 'Sanitario' },
+      { label: 'Solicitudes pendientes', value: resumen.solicitudesCompraPendientes, icon: ShoppingCart, color: resumen.solicitudesCompraPendientes > 0 ? '#f59e0b' : '#22c55e', mod: 'Inventario' },
+      { label: 'Insumos agotados', value: resumen.insumosStockAgotado, icon: AlertTriangle, color: resumen.insumosStockAgotado > 0 ? '#ef4444' : '#22c55e', mod: 'Inventario' },
+      { label: 'Tipos de insumo', value: resumen.inventarioTotalItems, icon: Package, color: '#64748b', mod: 'Inventario' },
+      { label: 'Stock total (unidades)', value: resumen.inventarioTotalUnidades, icon: BarChart3, color: '#22c55e', mod: 'Inventario' },
     ];
   }, [resumen]);
 
@@ -169,18 +170,21 @@ export function DashboardPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Pr
       <aside className="users-admin-sidebar">
         <div className="users-admin-sidebar__logo"><img src="/branding/logo-rancho-los-alpes.png" alt="Logo Rancho Los Alpes" /></div>
         <nav className="users-admin-sidebar__nav" aria-label="Navegacion de modulos">
-          {NAV_ITEMS.map((item) => (
-            <button key={item} type="button" data-testid={`dash-nav-${item.toLowerCase()}`}
-              className={`users-admin-sidebar__nav-item ${item === 'Dashboard' ? 'is-active' : ''}`}
-              onClick={item === 'Dashboard' ? undefined : () => nav(item)}>
-              {item}
+          {NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            return (
+            <button key={item.label} type="button" data-testid={`dash-nav-${item.label.toLowerCase()}`}
+              className={`users-admin-sidebar__nav-item ${item.label === 'Dashboard' ? 'is-active' : ''}`}
+              onClick={item.label === 'Dashboard' ? undefined : () => nav(item.label)}>
+              <Icon size={18} aria-hidden /> {item.label}
             </button>
-          ))}
+            );
+          })}
         </nav>
         <footer className="users-admin-sidebar__footer">
           <p>{user?.nombreCompleto || 'Usuario'}</p>
           <small>{user?.rol || 'Sin rol'}</small>
-          <Button type="button" className="users-admin-sidebar__logout" onClick={logout} data-testid="dash-sidebar-logout">Cerrar sesión</Button>
+          <Button type="button" className="users-admin-sidebar__logout" onClick={logout} data-testid="dash-sidebar-logout"><LogOut size={15} aria-hidden /> Cerrar sesión</Button>
         </footer>
       </aside>
 
@@ -198,7 +202,7 @@ export function DashboardPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Pr
               {resumen && <span className="dash-updated">{timeAgo(resumen.generadoEn)}</span>}
             </div>
           </div>
-          <Button type="button" variant="ghost" onClick={fetchAll}>↻ Actualizar</Button>
+          <Button type="button" variant="ghost" onClick={fetchAll}><RefreshCw size={14} aria-hidden /> Actualizar</Button>
         </header>
 
         {error && <p className="users-message users-message--error" data-testid="dashboard-error">{error}</p>}
@@ -222,7 +226,7 @@ export function DashboardPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Pr
                       style={{ '--kpi-accent': card.color } as React.CSSProperties}
                       data-testid={`kpi-card-${i}`}
                     >
-                      <span className="dash-kpi-icon">{card.icon}</span>
+                      <span className="dash-kpi-icon">{(() => { const KpiIcon = card.icon as LucideIcon; return <KpiIcon size={24} />; })()}</span>
                       <span className="dash-kpi-value">{fmtNum(card.value)}</span>
                       <span className="dash-kpi-label">{card.label}</span>
                     </button>
@@ -238,7 +242,7 @@ export function DashboardPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Pr
               {/* ── Ganado ── */}
               {showResumen && ganado && (
                 <section className="dash-section dash-half" data-testid="dash-ganado">
-                  <h2 className="dash-section-title">🐄 Ganado</h2>
+                  <h2 className="dash-section-title"><Beef size={20} aria-hidden /> Ganado</h2>
 
                   {/* Por estado — dona CSS */}
                   <h3 className="dash-label">Distribución por estado</h3>
@@ -298,7 +302,7 @@ export function DashboardPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Pr
               {/* ── Producción ── */}
               {showProduccion && produccion && (
                 <section className="dash-section dash-half" data-testid="dash-produccion">
-                  <h2 className="dash-section-title">📊 Producción <small>(últimos 30 días)</small></h2>
+                  <h2 className="dash-section-title"><BarChart3 size={20} aria-hidden /> Producción <small>(últimos 30 días)</small></h2>
 
                   <div className="dash-stat-grid">
                     <div className="dash-stat-card">
@@ -350,7 +354,7 @@ export function DashboardPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Pr
               {/* ── Sanitario ── */}
               {showSanitario && sanitario && (
                 <section className="dash-section dash-half" data-testid="dash-sanitario">
-                  <h2 className="dash-section-title">🏥 Sanitario</h2>
+                  <h2 className="dash-section-title"><HeartPulse size={20} aria-hidden /> Sanitario</h2>
 
                   <h3 className="dash-label">Próximos eventos (15 días)</h3>
                   {sanitario.proximosEventos.length > 0 ? (
@@ -400,7 +404,7 @@ export function DashboardPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Pr
               {/* ── Inventario ── */}
               {showInventario && inventario && (
                 <section className="dash-section dash-half" data-testid="dash-inventario">
-                  <h2 className="dash-section-title">📦 Inventario</h2>
+                  <h2 className="dash-section-title"><Package size={20} aria-hidden /> Inventario</h2>
 
                   <h3 className="dash-label">Insumos agotados</h3>
                   {inventario.agotados.length > 0 ? (
@@ -468,7 +472,7 @@ export function DashboardPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Pr
                 ════════════════════════════════════════════════════════════════════ */}
             {showBitacora && (
               <section className="dash-section" data-testid="dash-bitacora">
-                <h2 className="dash-section-title">📋 Bitácora de Auditoría</h2>
+                <h2 className="dash-section-title"><ScrollText size={20} aria-hidden /> Bitácora de Auditoría</h2>
 
                 <div className="dash-bitacora-controls">
                   <input

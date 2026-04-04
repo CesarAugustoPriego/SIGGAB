@@ -68,6 +68,12 @@ const checks = [
       'btn-confirmar-baja',
     ],
   },
+  {
+    file: 'src/features/aprobaciones/components/aprobaciones-page.tsx',
+    testIds: [
+      'aprobaciones-header'
+    ],
+  },
 ];
 
 const missing = [];

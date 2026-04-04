@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/auth-context';
-import { Button } from '../../../shared/ui';
+import { Button, NAV_ITEMS, LogOut, Layers, Scale, Milk, Baby } from '../../../shared/ui';
 import { ApiClientError } from '../../../types/api';
 import { productivoApi } from '../productivo-api';
 import type {
@@ -46,7 +46,7 @@ interface AnimalOption {
   nombreRaza: string;
 }
 
-const NAV_ITEMS = ['Dashboard', 'Ganado', 'Sanitario', 'Produccion', 'Inventario', 'Reportes', 'Aprobaciones', 'Auditoria', 'Usuarios', 'Respaldos'];
+
 
 const TIPOS_EVENTO: TipoEventoReproductivo[] = ['CELO', 'MONTA', 'PREÑEZ', 'PARTO', 'ABORTO'];
 
@@ -350,18 +350,21 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
       <aside className="users-admin-sidebar">
         <div className="users-admin-sidebar__logo"><img src="/branding/logo-rancho-los-alpes.png" alt="Logo Rancho Los Alpes" /></div>
         <nav className="users-admin-sidebar__nav" aria-label="Navegacion de modulos">
-          {NAV_ITEMS.map((item) => (
-            <button key={item} type="button" data-testid={`productivo-nav-${item.toLowerCase()}`}
-              className={`users-admin-sidebar__nav-item ${item === 'Produccion' ? 'is-active' : ''}`}
-              onClick={item === 'Produccion' ? undefined : () => onNavigate(item)}>
-              {item}
+          {NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            return (
+            <button key={item.label} type="button" data-testid={`productivo-nav-${item.label.toLowerCase()}`}
+              className={`users-admin-sidebar__nav-item ${item.label === 'Produccion' ? 'is-active' : ''}`}
+              onClick={item.label === 'Produccion' ? undefined : () => onNavigate(item.label)}>
+              <Icon size={18} aria-hidden /> {item.label}
             </button>
-          ))}
+            );
+          })}
         </nav>
         <footer className="users-admin-sidebar__footer">
           <p>{user?.nombreCompleto || 'Usuario'}</p>
           <small>{user?.rol || 'Sin rol'}</small>
-          <Button type="button" className="users-admin-sidebar__logout" onClick={logout} data-testid="productivo-sidebar-logout-button">Cerrar sesion</Button>
+          <Button type="button" className="users-admin-sidebar__logout" onClick={logout} data-testid="productivo-sidebar-logout-button"><LogOut size={15} aria-hidden /> Cerrar sesion</Button>
         </footer>
       </aside>
 
@@ -382,17 +385,17 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
               {/* ─── Tabs ─── */}
               <div className="productivo-tabs" data-testid="productivo-tabs">
                 <button type="button" className={`productivo-tab ${activeTab === 'lotes' ? 'is-active' : ''}`} onClick={() => setActiveTab('lotes')} data-testid="tab-lotes">
-                  📋 Lotes de validacion
+                  <Layers size={16} aria-hidden /> Lotes de validacion
                 </button>
                 <button type="button" className={`productivo-tab ${activeTab === 'peso' ? 'is-active' : ''}`} onClick={() => setActiveTab('peso')} data-testid="tab-peso">
-                  ⚖️ Registro de peso
+                  <Scale size={16} aria-hidden /> Registro de peso
                 </button>
                 <button type="button" className={`productivo-tab ${activeTab === 'leche' ? 'is-active' : ''}`} onClick={() => setActiveTab('leche')} data-testid="tab-leche">
-                  🥛 Produccion de leche
+                  <Milk size={16} aria-hidden /> Produccion de leche
                 </button>
                 {canRepro ? (
                   <button type="button" className={`productivo-tab ${activeTab === 'reproductivo' ? 'is-active' : ''}`} onClick={() => setActiveTab('reproductivo')} data-testid="tab-reproductivo">
-                    🐄 Eventos reproductivos
+                    <Baby size={16} aria-hidden /> Eventos reproductivos
                   </button>
                 ) : null}
               </div>

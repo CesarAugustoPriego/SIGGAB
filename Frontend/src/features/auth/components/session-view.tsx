@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../auth-context';
-import { Button } from '../../../shared/ui';
+import { Button, Users, Beef, HeartPulse, BarChart3, Package, LayoutDashboard, FileText, LogOut, RefreshCw, CheckCircle, Shield } from '../../../shared/ui';
 
 interface SessionViewProps {
   canManageUsers?: boolean;
@@ -17,6 +17,10 @@ interface SessionViewProps {
   onGoDashboard?: () => void;
   canViewReportes?: boolean;
   onGoReportes?: () => void;
+  canViewAprobaciones?: boolean;
+  onGoAprobaciones?: () => void;
+  canViewAuditoria?: boolean;
+  onGoAuditoria?: () => void;
 }
 
 export function SessionView({
@@ -34,6 +38,10 @@ export function SessionView({
   onGoDashboard,
   canViewReportes = false,
   onGoReportes,
+  canViewAprobaciones = false,
+  onGoAprobaciones,
+  canViewAuditoria = false,
+  onGoAuditoria,
 }: SessionViewProps) {
   const { user, logout, refreshProfile, apiError } = useAuth();
   const [busyAction, setBusyAction] = useState<'me' | 'logout' | null>(null);
@@ -71,41 +79,52 @@ export function SessionView({
 
         <div className="session-card__actions">
           <Button type="button" onClick={onRefresh} disabled={busyAction !== null} data-testid="session-refresh-button">
+            <RefreshCw size={15} aria-hidden />
             {busyAction === 'me' ? 'Verificando...' : 'Probar /auth/me'}
           </Button>
           {canManageUsers ? (
             <Button type="button" variant="ghost" onClick={onGoUsersAdmin} data-testid="session-users-button">
-              Gestion usuarios
+              <Users size={15} aria-hidden /> Gestion usuarios
             </Button>
           ) : null}
           {canViewGanado ? (
             <Button type="button" variant="ghost" onClick={onGoGanado} data-testid="session-ganado-button">
-              Gestion ganado
+              <Beef size={15} aria-hidden /> Gestion ganado
             </Button>
           ) : null}
           {canViewSanitario ? (
             <Button type="button" variant="ghost" onClick={onGoSanitario} data-testid="session-sanitario-button">
-              Gestion sanitario
+              <HeartPulse size={15} aria-hidden /> Gestion sanitario
             </Button>
           ) : null}
           {canViewProductivo ? (
             <Button type="button" variant="ghost" onClick={onGoProductivo} data-testid="session-productivo-button">
-              Gestion productiva
+              <BarChart3 size={15} aria-hidden /> Gestion productiva
             </Button>
           ) : null}
           {canViewInventario ? (
             <Button type="button" variant="ghost" onClick={onGoInventario} data-testid="session-inventario-button">
-              Gestion inventario
+              <Package size={15} aria-hidden /> Gestion inventario
             </Button>
           ) : null}
           {canViewDashboard ? (
             <Button type="button" variant="ghost" onClick={onGoDashboard} data-testid="session-dashboard-button">
-              Dashboard
+              <LayoutDashboard size={15} aria-hidden /> Dashboard
             </Button>
           ) : null}
           {canViewReportes ? (
             <Button type="button" variant="ghost" onClick={onGoReportes} data-testid="session-reportes-button">
-              Reportes
+              <FileText size={15} aria-hidden /> Reportes
+            </Button>
+          ) : null}
+          {canViewAprobaciones ? (
+            <Button type="button" variant="ghost" onClick={onGoAprobaciones} data-testid="session-aprobaciones-button">
+              <CheckCircle size={15} aria-hidden /> Aprobaciones
+            </Button>
+          ) : null}
+          {canViewAuditoria ? (
+            <Button type="button" variant="ghost" onClick={onGoAuditoria} data-testid="session-auditoria-button">
+              <Shield size={15} aria-hidden /> Auditoria
             </Button>
           ) : null}
           <Button
@@ -115,7 +134,7 @@ export function SessionView({
             disabled={busyAction !== null}
             data-testid="session-logout-button"
           >
-            {busyAction === 'logout' ? 'Cerrando...' : 'Cerrar sesion'}
+            {busyAction === 'logout' ? 'Cerrando...' : <><LogOut size={15} aria-hidden /> Cerrar sesion</>}
           </Button>
         </div>
 

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/auth-context';
-import { Button } from '../../../shared/ui';
+import { Button, NAV_ITEMS, Pencil, Save, X, LogOut, Plus, Check, XCircle } from '../../../shared/ui';
 import { usersApi } from '../users-api';
 import type { Rol, Usuario } from '../users-types';
 import {
@@ -35,18 +35,7 @@ interface UiMessage {
   text: string;
 }
 
-const NAV_ITEMS = [
-  'Dashboard',
-  'Ganado',
-  'Sanitario',
-  'Produccion',
-  'Inventario',
-  'Reportes',
-  'Aprobaciones',
-  'Auditoria',
-  'Usuarios',
-  'Respaldos',
-];
+
 
 const EMPTY_FORM: FormState = {
   nombreCompleto: '',
@@ -274,17 +263,20 @@ export function UsersAdminPage({ onGoHome, onNavigateModule }: UsersAdminPagePro
         </div>
 
         <nav className="users-admin-sidebar__nav" aria-label="Navegacion de modulos">
-          {NAV_ITEMS.map((item) => (
+          {NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            return (
             <button
-              key={item}
+              key={item.label}
               type="button"
-              data-testid={`users-nav-${item.toLowerCase()}`}
-              className={`users-admin-sidebar__nav-item ${item === 'Usuarios' ? 'is-active' : ''}`}
-              onClick={item === 'Usuarios' ? undefined : () => onNavigate(item)}
+              data-testid={`users-nav-${item.label.toLowerCase()}`}
+              className={`users-admin-sidebar__nav-item ${item.label === 'Usuarios' ? 'is-active' : ''}`}
+              onClick={item.label === 'Usuarios' ? undefined : () => onNavigate(item.label)}
             >
-              {item}
+              <Icon size={18} aria-hidden /> {item.label}
             </button>
-          ))}
+            );
+          })}
         </nav>
 
         <footer className="users-admin-sidebar__footer">
@@ -296,7 +288,7 @@ export function UsersAdminPage({ onGoHome, onNavigateModule }: UsersAdminPagePro
             onClick={logout}
             data-testid="users-sidebar-logout-button"
           >
-            Cerrar sesion
+            <LogOut size={15} aria-hidden /> Cerrar sesion
           </Button>
         </footer>
       </aside>
@@ -328,7 +320,7 @@ export function UsersAdminPage({ onGoHome, onNavigateModule }: UsersAdminPagePro
                   <h2>{editingId ? 'Editar usuario' : 'Crear usuario'}</h2>
                   {editingId ? (
                     <Button type="button" variant="ghost" onClick={onCancelEdit}>
-                      Cancelar
+                      <X size={15} aria-hidden /> Cancelar
                     </Button>
                   ) : null}
                 </div>
@@ -399,7 +391,7 @@ export function UsersAdminPage({ onGoHome, onNavigateModule }: UsersAdminPagePro
                 </label>
 
                 <Button type="button" fullWidth disabled={saving} onClick={onSave} data-testid="users-form-save-button">
-                  {saving ? 'Guardando...' : editingId ? 'Guardar cambios' : 'Guardar usuario'}
+                  {saving ? 'Guardando...' : editingId ? <><Save size={15} aria-hidden /> Guardar cambios</> : <><Plus size={15} aria-hidden /> Guardar usuario</>}
                 </Button>
 
                 {message ? (
@@ -450,7 +442,7 @@ export function UsersAdminPage({ onGoHome, onNavigateModule }: UsersAdminPagePro
                             data-testid={`users-edit-button-${usuarioActual.idUsuario}`}
                             onClick={() => (isEditing(usuarioActual.idUsuario) ? onCancelEdit() : onSelectEdit(usuarioActual))}
                           >
-                            {isEditing(usuarioActual.idUsuario) ? 'Cancelando...' : 'Editar'}
+                            {isEditing(usuarioActual.idUsuario) ? <><X size={14} aria-hidden /> Cancelando...</> : <><Pencil size={14} aria-hidden /> Editar</>}
                           </Button>
 
                           <Button
@@ -464,8 +456,8 @@ export function UsersAdminPage({ onGoHome, onNavigateModule }: UsersAdminPagePro
                             {togglingId === usuarioActual.idUsuario
                               ? 'Procesando...'
                               : usuarioActual.activo
-                                ? 'Desactivar'
-                                : 'Activar'}
+                                ? <><XCircle size={14} aria-hidden /> Desactivar</>
+                                : <><Check size={14} aria-hidden /> Activar</>}
                           </Button>
                         </div>
                       </article>

@@ -10,11 +10,13 @@
     "test:e2e:contract": "node scripts/verify-testids.js",
     "test:e2e:dashboard": "npm run test:e2e:contract && playwright test tests/e2e/dashboard.endpoint.spec.ts",
     "test:e2e:reportes": "npm run test:e2e:contract && playwright test tests/e2e/reportes.endpoint.spec.ts",
+    "test:e2e:aprobaciones": "npm run test:e2e:contract && playwright test tests/e2e/aprobaciones.endpoint.spec.ts",
     "test:e2e": "npm run test:e2e:contract && playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed"
   },
   "dependencies": {
+    "lucide-react": "^1.7.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
