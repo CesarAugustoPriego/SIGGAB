@@ -1,9 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   ActivityIndicator,
+  Animated,
   Image,
   ImageBackground,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -24,8 +26,42 @@ export function LoginScreen() {
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const cardTranslateY = useRef(new Animated.Value(0)).current;
 
   const canSubmit = useMemo(() => username.trim().length >= 3 && password.length >= 6, [username, password]);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const onShow = Keyboard.addListener(showEvent, (event) => {
+      setKeyboardVisible(true);
+
+      const keyboardHeight = event.endCoordinates?.height || 280;
+      const targetLift = -Math.min(170, Math.round(keyboardHeight * 0.42));
+
+      Animated.timing(cardTranslateY, {
+        toValue: targetLift,
+        duration: 220,
+        useNativeDriver: true,
+      }).start();
+    });
+
+    const onHide = Keyboard.addListener(hideEvent, () => {
+      setKeyboardVisible(false);
+      Animated.timing(cardTranslateY, {
+        toValue: 0,
+        duration: 220,
+        useNativeDriver: true,
+      }).start();
+    });
+
+    return () => {
+      onShow.remove();
+      onHide.remove();
+    };
+  }, [cardTranslateY]);
 
   const handleSubmit = async () => {
     if (!canSubmit || submitting) return;
@@ -63,19 +99,32 @@ export function LoginScreen() {
         <Text style={styles.topbarTitle}>Inicio</Text>
       </View>
 
-      <KeyboardAvoidingView style={styles.container} behavior={Platform.select({ ios: 'padding', default: undefined })}>
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.select({ ios: 'padding', android: 'height', default: undefined })}>
+        <ScrollView
+          contentContainerStyle={[styles.scrollContent, keyboardVisible ? styles.scrollContentKeyboard : null]}
+          keyboardShouldPersistTaps="handled">
           <ImageBackground
             source={require('../../../../assets/images/auth-hero-register.jpg')}
-            style={styles.hero}
+            style={[styles.hero, keyboardVisible ? styles.heroKeyboardVisible : null]}
             imageStyle={styles.heroImage}>
             <View style={styles.heroOverlay} />
-            <View style={styles.logoWrap}>
-              <Image source={require('../../../../assets/images/logo-rancho-los-alpes.png')} style={styles.logo} />
+            <View style={[styles.logoWrap, keyboardVisible ? styles.logoWrapKeyboardVisible : null]}>
+              <Image
+                source={require('../../../../assets/images/logo-rancho-los-alpes.png')}
+                style={[styles.logo, keyboardVisible ? styles.logoKeyboardVisible : null]}
+              />
             </View>
           </ImageBackground>
 
-          <View style={styles.cardWrap}>
+          <Animated.View
+            style={[
+              styles.cardWrap,
+              {
+                transform: [{ translateY: cardTranslateY }],
+              },
+            ]}>
             <View style={styles.card}>
               <View style={styles.tabs}>
                 <Pressable
@@ -137,11 +186,13 @@ export function LoginScreen() {
                 No tienes cuenta? <Text style={styles.linkText}>Registrate</Text>
               </Text>
             </View>
-          </View>
+          </Animated.View>
 
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>API: {env.apiBaseUrl}</Text>
-          </View>
+          {!keyboardVisible ? (
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>API: {env.apiBaseUrl}</Text>
+            </View>
+          ) : null}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -172,12 +223,19 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingBottom: 30,
   },
+  scrollContentKeyboard: {
+    paddingBottom: 8,
+  },
   hero: {
     minHeight: 420,
     justifyContent: 'flex-start',
     paddingTop: 44,
     alignItems: 'center',
     overflow: 'hidden',
+  },
+  heroKeyboardVisible: {
+    minHeight: 290,
+    paddingTop: 22,
   },
   heroImage: {
     resizeMode: 'cover',
@@ -194,10 +252,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.08)',
   },
+  logoWrapKeyboardVisible: {
+    width: 170,
+    height: 170,
+    borderRadius: 85,
+  },
   logo: {
     width: 200,
     height: 200,
     resizeMode: 'contain',
+  },
+  logoKeyboardVisible: {
+    width: 156,
+    height: 156,
   },
   cardWrap: {
     marginTop: -60,
