@@ -82,8 +82,8 @@ jobs:
         run: npx playwright install --with-deps chromium
         working-directory: Frontend
 
-      - name: Run frontend E2E tests
-        run: npm run test:e2e
+      - name: Run preproduction gate (build + release E2E)
+        run: npm run preprod:gate
         working-directory: Frontend
 
       - name: Upload Playwright report

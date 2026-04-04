@@ -12,6 +12,7 @@ Usar este checklist como gate obligatorio para congelar el release web antes de 
   - Solicitudes de compra: `Administrador`.
 - [x] `Dashboard` alineado a matriz funcional (`Propietario` y `Administrador`).
 - [x] RF14 cerrado: `Propietario` y `Administrador` pueden consultar bitacora (`/dashboard/bitacora`) y abrir vista de auditoria.
+- [x] Smoke E2E por rol completo en verde (`npm run test:e2e:roles-smoke`).
 - [x] Build de frontend en verde (`npm run build`).
 - [x] E2E de release web en verde (`npm run test:e2e:release-web`).
 
@@ -38,4 +39,3 @@ Usar este checklist como gate obligatorio para congelar el release web antes de 
 ## Backlog no bloqueante (pulido final)
 - Revisar textos con codificacion heredada en algunos labels/mensajes.
 - Homologar tono de mensajes de error y vacios entre modulos.
-- Ejecutar smoke E2E adicional por rol completo en CI (`Propietario`, `Administrador`, `Veterinario`, `Produccion`, `Campo`, `Almacen`).
