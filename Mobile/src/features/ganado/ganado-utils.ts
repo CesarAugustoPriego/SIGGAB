@@ -22,6 +22,17 @@ export interface AnimalFormErrors {
   estadoSanitarioInicial?: string;
 }
 
+export interface BajaFormState {
+  estadoActual: Exclude<EstadoAnimal, 'ACTIVO'>;
+  motivoBaja: string;
+  fechaBaja: string;
+}
+
+export interface BajaFormErrors {
+  motivoBaja?: string;
+  fechaBaja?: string;
+}
+
 export const EMPTY_ANIMAL_FORM: AnimalFormState = {
   numeroArete: '',
   fechaIngreso: '',
@@ -30,6 +41,12 @@ export const EMPTY_ANIMAL_FORM: AnimalFormState = {
   procedencia: '',
   edadEstimada: '',
   estadoSanitarioInicial: '',
+};
+
+export const DEFAULT_BAJA_FORM: BajaFormState = {
+  estadoActual: 'VENDIDO',
+  motivoBaja: '',
+  fechaBaja: new Date().toISOString().slice(0, 10),
 };
 
 export function toNumeric(value: number | string) {
@@ -95,6 +112,55 @@ export function validateAnimalForm(form: AnimalFormState): AnimalFormErrors {
   }
 
   return errors;
+}
+
+export function validateAnimalUpdateForm(form: AnimalFormState): AnimalFormErrors {
+  const errors: AnimalFormErrors = {};
+
+  if (!form.fechaIngreso || !/^\d{4}-\d{2}-\d{2}$/.test(form.fechaIngreso)) {
+    errors.fechaIngreso = 'Fecha invalida (YYYY-MM-DD).';
+  }
+  if (!form.pesoInicial.trim() || Number(form.pesoInicial) <= 0) {
+    errors.pesoInicial = 'El peso debe ser mayor a 0.';
+  }
+  if (!form.idRaza || Number(form.idRaza) <= 0) {
+    errors.idRaza = 'Selecciona una raza valida.';
+  }
+  if (!form.procedencia.trim()) errors.procedencia = 'La procedencia es obligatoria.';
+  if (form.procedencia.trim().length > 100) errors.procedencia = 'Maximo 100 caracteres.';
+  if (!form.edadEstimada.trim() || !Number.isInteger(Number(form.edadEstimada)) || Number(form.edadEstimada) < 0) {
+    errors.edadEstimada = 'Edad en meses: entero >= 0.';
+  }
+  if (!form.estadoSanitarioInicial.trim()) {
+    errors.estadoSanitarioInicial = 'El estado sanitario inicial es obligatorio.';
+  }
+
+  return errors;
+}
+
+export function validateBajaForm(form: BajaFormState): BajaFormErrors {
+  const errors: BajaFormErrors = {};
+
+  if (!form.motivoBaja.trim() || form.motivoBaja.trim().length < 5) {
+    errors.motivoBaja = 'Minimo 5 caracteres.';
+  }
+  if (!form.fechaBaja || !/^\d{4}-\d{2}-\d{2}$/.test(form.fechaBaja)) {
+    errors.fechaBaja = 'Fecha invalida (YYYY-MM-DD).';
+  }
+
+  return errors;
+}
+
+export function toAnimalFormState(animal: Animal): AnimalFormState {
+  return {
+    numeroArete: animal.numeroArete,
+    fechaIngreso: toInputDate(animal.fechaIngreso),
+    pesoInicial: String(toNumeric(animal.pesoInicial)),
+    idRaza: String(animal.idRaza),
+    procedencia: animal.procedencia,
+    edadEstimada: String(animal.edadEstimada),
+    estadoSanitarioInicial: animal.estadoSanitarioInicial,
+  };
 }
 
 export function mapServerFieldErrors(error: unknown) {

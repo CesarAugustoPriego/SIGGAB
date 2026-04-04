@@ -32,6 +32,21 @@ export interface CreateAnimalInput {
   estadoSanitarioInicial: string;
 }
 
+export interface UpdateAnimalInput {
+  fechaIngreso?: string;
+  pesoInicial?: number;
+  idRaza?: number;
+  procedencia?: string;
+  edadEstimada?: number;
+  estadoSanitarioInicial?: string;
+}
+
+export interface BajaAnimalInput {
+  estadoActual: Exclude<EstadoAnimal, 'ACTIVO'>;
+  motivoBaja: string;
+  fechaBaja: string;
+}
+
 export interface AnimalFilters {
   estadoActual?: EstadoAnimal | 'TODOS';
   idRaza?: number;

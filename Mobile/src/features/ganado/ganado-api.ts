@@ -1,6 +1,14 @@
 import { httpClient } from '@/src/lib/http-client';
 
-import type { Animal, AnimalFilters, CreateAnimalInput, HistorialAnimalResponse, Raza } from './ganado-types';
+import type {
+  Animal,
+  AnimalFilters,
+  BajaAnimalInput,
+  CreateAnimalInput,
+  HistorialAnimalResponse,
+  Raza,
+  UpdateAnimalInput,
+} from './ganado-types';
 
 function buildAnimalesQuery(filters: AnimalFilters = {}) {
   const params = new URLSearchParams();
@@ -34,4 +42,12 @@ export const ganadoApi = {
   ),
 
   createAnimal: (payload: CreateAnimalInput) => httpClient.post<Animal>('/animales', payload),
+
+  updateAnimal: (idAnimal: number, payload: UpdateAnimalInput) => (
+    httpClient.patch<Animal>(`/animales/${idAnimal}`, payload)
+  ),
+
+  bajaAnimal: (idAnimal: number, payload: BajaAnimalInput) => (
+    httpClient.patch<Animal>(`/animales/${idAnimal}/baja`, payload)
+  ),
 };
