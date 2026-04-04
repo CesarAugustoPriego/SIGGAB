@@ -60,6 +60,7 @@ export function canViewGanado(roleName: string | undefined) {
     'propietario',
     'administrador',
     'medico veterinario',
+    'veterinario',
     'produccion',
     'campo',
   ]);
@@ -69,6 +70,7 @@ export function canCreateAnimal(roleName: string | undefined) {
   return hasRole(roleName, [
     'administrador',
     'medico veterinario',
+    'veterinario',
     'produccion',
     'campo',
   ]);

@@ -25,7 +25,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', icon: LayoutDashboard },
   { label: 'Ganado', icon: Beef },
   { label: 'Sanitario', icon: HeartPulse },
-  { label: 'Produccion', icon: BarChart3 },
+  { label: 'Productivo', icon: BarChart3 },
   { label: 'Inventario', icon: Package },
   { label: 'Reportes', icon: FileText },
   { label: 'Aprobaciones', icon: CheckCircle },

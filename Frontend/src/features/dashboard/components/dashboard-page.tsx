@@ -132,7 +132,7 @@ export function DashboardPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Pr
     return [
       { label: 'Animales activos', value: resumen.totalAnimalesActivos, icon: Beef, color: '#22c55e', mod: 'Ganado' },
       { label: 'Vacunaciones del mes', value: resumen.vacunacionesMes, icon: Syringe, color: '#3b82f6', mod: 'Sanitario' },
-      { label: 'Pesos por validar', value: resumen.pesosPendientesValidar, icon: Scale, color: resumen.pesosPendientesValidar > 0 ? '#f59e0b' : '#22c55e', mod: 'Produccion' },
+      { label: 'Pesos por validar', value: resumen.pesosPendientesValidar, icon: Scale, color: resumen.pesosPendientesValidar > 0 ? '#f59e0b' : '#22c55e', mod: 'Productivo' },
       { label: 'Alertas próximas (7d)', value: resumen.alertasProximas7Dias, icon: Bell, color: resumen.alertasProximas7Dias > 0 ? '#ef4444' : '#22c55e', mod: 'Sanitario' },
       { label: 'Solicitudes pendientes', value: resumen.solicitudesCompraPendientes, icon: ShoppingCart, color: resumen.solicitudesCompraPendientes > 0 ? '#f59e0b' : '#22c55e', mod: 'Inventario' },
       { label: 'Insumos agotados', value: resumen.insumosStockAgotado, icon: AlertTriangle, color: resumen.insumosStockAgotado > 0 ? '#ef4444' : '#22c55e', mod: 'Inventario' },
@@ -344,7 +344,7 @@ export function DashboardPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Pr
                     {produccion.eventosReproductivos.length === 0 && <p className="dash-empty">No hay registros para mostrar.</p>}
                   </div>
 
-                  <Button type="button" variant="ghost" onClick={() => nav('Produccion')}>Ir a Productivo →</Button>
+                  <Button type="button" variant="ghost" onClick={() => nav('Productivo')}>Ir a Productivo →</Button>
                 </section>
               )}
             </div>

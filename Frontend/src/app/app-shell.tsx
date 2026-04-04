@@ -130,7 +130,7 @@ export function AppShell() {
       return;
     }
 
-    if (moduleName === 'Produccion' && hasProductivoAccess) {
+    if (moduleName === 'Productivo' && hasProductivoAccess) {
       navigate('/app/productivo');
       return;
     }

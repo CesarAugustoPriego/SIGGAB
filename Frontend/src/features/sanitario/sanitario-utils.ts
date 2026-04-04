@@ -66,6 +66,7 @@ export function canViewSanitario(roleName: string | undefined) {
     'propietario',
     'administrador',
     'medico veterinario',
+    'veterinario',
     'campo',
   ]);
 }
@@ -75,26 +76,28 @@ export function canListSanitario(roleName: string | undefined) {
     'propietario',
     'administrador',
     'medico veterinario',
+    'veterinario',
   ]);
 }
 
 export function canCreateEventoSanitario(roleName: string | undefined) {
   return hasRole(roleName, [
     'medico veterinario',
+    'veterinario',
     'campo',
   ]);
 }
 
 export function canEditEventoSanitario(roleName: string | undefined) {
-  return hasRole(roleName, ['medico veterinario']);
+  return hasRole(roleName, ['medico veterinario', 'veterinario']);
 }
 
 export function canAprobarEventoSanitario(roleName: string | undefined) {
-  return hasRole(roleName, ['medico veterinario']);
+  return hasRole(roleName, ['medico veterinario', 'veterinario']);
 }
 
 export function canManageCalendarioSanitario(roleName: string | undefined) {
-  return hasRole(roleName, ['medico veterinario']);
+  return hasRole(roleName, ['medico veterinario', 'veterinario']);
 }
 
 export function canViewAlertasSanitarias(roleName: string | undefined) {
@@ -102,6 +105,7 @@ export function canViewAlertasSanitarias(roleName: string | undefined) {
     'propietario',
     'administrador',
     'medico veterinario',
+    'veterinario',
   ]);
 }
 

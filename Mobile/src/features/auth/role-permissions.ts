@@ -66,6 +66,52 @@ export function canViewSanitario(roleName: string | undefined) {
   ]);
 }
 
+export function canViewSanitarioRecords(roleName: string | undefined) {
+  return hasRole(roleName, [
+    'propietario',
+    'administrador',
+    'medico veterinario',
+    'veterinario',
+  ]);
+}
+
+export function canCreateSanitarioEvento(roleName: string | undefined) {
+  return hasRole(roleName, [
+    'medico veterinario',
+    'veterinario',
+    'campo',
+  ]);
+}
+
+export function canEditSanitarioEvento(roleName: string | undefined) {
+  return hasRole(roleName, [
+    'medico veterinario',
+    'veterinario',
+  ]);
+}
+
+export function canApproveSanitarioEvento(roleName: string | undefined) {
+  return hasRole(roleName, [
+    'medico veterinario',
+    'veterinario',
+  ]);
+}
+
+export function canViewCalendarioSanitario(roleName: string | undefined) {
+  return canViewSanitarioRecords(roleName);
+}
+
+export function canCreateCalendarioSanitario(roleName: string | undefined) {
+  return hasRole(roleName, [
+    'medico veterinario',
+    'veterinario',
+  ]);
+}
+
+export function canCompleteCalendarioSanitario(roleName: string | undefined) {
+  return canCreateCalendarioSanitario(roleName);
+}
+
 export function canViewProductivo(roleName: string | undefined) {
   return hasRole(roleName, [
     'propietario',

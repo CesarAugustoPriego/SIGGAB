@@ -12,7 +12,10 @@ import {
 } from 'react-native';
 
 import { useAuth } from '@/src/features/auth/auth-context';
-import { getVisibleModulesForRole } from '@/src/features/auth/role-permissions';
+import {
+  canViewCalendarioSanitario,
+  getVisibleModulesForRole,
+} from '@/src/features/auth/role-permissions';
 
 export function HomeScreen() {
   const router = useRouter();
@@ -45,6 +48,15 @@ export function HomeScreen() {
   const onPressModule = (moduleKey: string, title: string) => {
     if (moduleKey === 'ganado') {
       router.push('/(app)/ganado');
+      return;
+    }
+
+    if (moduleKey === 'sanitario') {
+      if (canViewCalendarioSanitario(user?.rol)) {
+        router.push('/(app)/sanitario/calendario');
+      } else {
+        router.push('/(app)/ganado');
+      }
       return;
     }
 

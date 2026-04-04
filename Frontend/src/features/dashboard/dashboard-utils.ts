@@ -26,7 +26,7 @@ export function canViewProduccion(roleName: string | undefined) {
 
 /** Puede ver panel sanitario */
 export function canViewSanitario(roleName: string | undefined) {
-  return hasRole(roleName, ['propietario', 'administrador', 'medico veterinario']);
+  return hasRole(roleName, ['propietario', 'administrador', 'medico veterinario', 'veterinario']);
 }
 
 /** Puede ver panel inventario */

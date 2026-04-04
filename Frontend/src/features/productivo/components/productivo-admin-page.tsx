@@ -356,8 +356,8 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
             const Icon = item.icon;
             return (
             <button key={item.label} type="button" data-testid={`productivo-nav-${item.label.toLowerCase()}`}
-              className={`users-admin-sidebar__nav-item ${item.label === 'Produccion' ? 'is-active' : ''}`}
-              onClick={item.label === 'Produccion' ? undefined : () => onNavigate(item.label)}>
+              className={`users-admin-sidebar__nav-item ${item.label === 'Productivo' ? 'is-active' : ''}`}
+              onClick={item.label === 'Productivo' ? undefined : () => onNavigate(item.label)}>
               <Icon size={18} aria-hidden /> {item.label}
             </button>
             );
@@ -373,7 +373,7 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
       {/* ─── Main ─── */}
       <main className="users-admin-main">
         <header className="users-admin-main__header" data-testid="productivo-admin-header">
-          <h1>Produccion</h1>
+          <h1>Productivo</h1>
           <p>Pesos, leche y reproduccion del ganado</p>
         </header>
 

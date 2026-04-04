@@ -23,6 +23,8 @@ export default function AppLayout() {
       <Stack.Screen name="ganado/editar" />
       <Stack.Screen name="ganado/baja" />
       <Stack.Screen name="ganado/[id]" />
+      <Stack.Screen name="sanitario/index" />
+      <Stack.Screen name="sanitario/calendario" />
     </Stack>
   );
 }

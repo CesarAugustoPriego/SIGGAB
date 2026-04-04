@@ -18,6 +18,7 @@ export function canViewReportes(roleName: string | undefined) {
     'propietario',
     'administrador',
     'medico veterinario',
+    'veterinario',
     'produccion',
     'almacen',
   ]);
@@ -28,6 +29,7 @@ export function canViewReporteSanitario(roleName: string | undefined) {
     'propietario',
     'administrador',
     'medico veterinario',
+    'veterinario',
     'almacen',
   ]);
 }
@@ -53,6 +55,7 @@ export function canViewReporteComparativo(roleName: string | undefined) {
     'propietario',
     'administrador',
     'medico veterinario',
+    'veterinario',
     'produccion',
   ]);
 }

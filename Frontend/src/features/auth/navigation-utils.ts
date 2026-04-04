@@ -14,7 +14,7 @@ export function canViewNavItem(label: string, roleName: string | undefined) {
   if (label === 'Dashboard') return canViewDashboard(roleName);
   if (label === 'Ganado') return canViewGanado(roleName);
   if (label === 'Sanitario') return canViewSanitario(roleName);
-  if (label === 'Produccion') return canViewProductivo(roleName);
+  if (label === 'Productivo') return canViewProductivo(roleName);
   if (label === 'Inventario') return canViewInventario(roleName);
   if (label === 'Reportes') return canViewReportes(roleName);
   if (label === 'Aprobaciones') return canViewAprobaciones(roleName);

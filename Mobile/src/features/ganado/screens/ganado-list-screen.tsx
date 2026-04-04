@@ -20,6 +20,8 @@ import {
   canBajaAnimal,
   canCreateAnimal,
   canEditAnimal,
+  canCreateSanitarioEvento,
+  canViewSanitario,
   canViewAnimalHistorial,
   canViewGanado,
 } from '@/src/features/auth/role-permissions';
@@ -50,6 +52,10 @@ export function GanadoListScreen() {
   const canEdit = useMemo(() => canEditAnimal(user?.rol), [user?.rol]);
   const canBaja = useMemo(() => canBajaAnimal(user?.rol), [user?.rol]);
   const canHistorial = useMemo(() => canViewAnimalHistorial(user?.rol), [user?.rol]);
+  const canOpenSanidad = useMemo(
+    () => canViewSanitario(user?.rol) || canCreateSanitarioEvento(user?.rol),
+    [user?.rol]
+  );
 
   const loadAnimales = useCallback(async () => {
     if (!canView) return;
@@ -97,6 +103,16 @@ export function GanadoListScreen() {
       actions.push({
         text: 'Ver historial',
         onPress: () => onOpenAnimal(animal),
+      });
+    }
+
+    if (canOpenSanidad) {
+      actions.push({
+        text: 'Abrir sanidad',
+        onPress: () => router.push({
+          pathname: '/(app)/sanitario',
+          params: { idAnimal: String(animal.idAnimal) },
+        }),
       });
     }
 

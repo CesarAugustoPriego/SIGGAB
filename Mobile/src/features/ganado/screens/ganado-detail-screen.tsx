@@ -232,6 +232,27 @@ export function GanadoDetailScreen() {
         {activeTab === 'sanidad' ? (
           <View style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>Resumen sanitario</Text>
+
+            <View style={styles.sanidadActionsRow}>
+              <Pressable
+                style={styles.sanidadActionBtn}
+                onPress={() => router.push({
+                  pathname: '/(app)/sanitario',
+                  params: { idAnimal: String(animal.idAnimal) },
+                })}>
+                <Text style={styles.sanidadActionBtnText}>Registrar evento</Text>
+              </Pressable>
+
+              <Pressable
+                style={styles.sanidadActionBtn}
+                onPress={() => router.push({
+                  pathname: '/(app)/sanitario/calendario',
+                  params: { idAnimal: String(animal.idAnimal) },
+                })}>
+                <Text style={styles.sanidadActionBtnText}>Calendario</Text>
+              </Pressable>
+            </View>
+
             <InfoRow label="Eventos sanitarios" value={String(historial?.historial.resumen.totalEventosSanitarios || 0)} />
             <InfoRow label="Calendario" value={String(historial?.historial.sanitario.calendario.length || 0)} />
 
@@ -550,6 +571,25 @@ const styles = StyleSheet.create({
   historyMeta: {
     color: '#849385',
     fontSize: 10,
+    fontWeight: '700',
+  },
+  sanidadActionsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  sanidadActionBtn: {
+    flex: 1,
+    minHeight: 38,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#CDE4D2',
+    backgroundColor: '#F2FBF4',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sanidadActionBtnText: {
+    color: '#157347',
+    fontSize: 12,
     fontWeight: '700',
   },
   centerBox: {

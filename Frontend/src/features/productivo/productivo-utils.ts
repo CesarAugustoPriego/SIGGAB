@@ -24,6 +24,7 @@ export function canViewProductivo(roleName: string | undefined) {
     'administrador',
     'produccion',
     'medico veterinario',
+    'veterinario',
   ]);
 }
 
@@ -63,6 +64,7 @@ export function canViewReproductivos(roleName: string | undefined) {
     'administrador',
     'produccion',
     'medico veterinario',
+    'veterinario',
   ]);
 }
 
