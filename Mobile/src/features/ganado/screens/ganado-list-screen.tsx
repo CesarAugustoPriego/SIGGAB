@@ -16,7 +16,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/src/features/auth/auth-context';
-import { canCreateAnimal, canViewGanado } from '@/src/features/auth/role-permissions';
+import {
+  canBajaAnimal,
+  canCreateAnimal,
+  canEditAnimal,
+  canViewAnimalHistorial,
+  canViewGanado,
+} from '@/src/features/auth/role-permissions';
 
 import { ganadoApi } from '../ganado-api';
 import type { Animal, EstadoAnimal } from '../ganado-types';
@@ -41,6 +47,9 @@ export function GanadoListScreen() {
 
   const canView = useMemo(() => canViewGanado(user?.rol), [user?.rol]);
   const canCreate = useMemo(() => canCreateAnimal(user?.rol), [user?.rol]);
+  const canEdit = useMemo(() => canEditAnimal(user?.rol), [user?.rol]);
+  const canBaja = useMemo(() => canBajaAnimal(user?.rol), [user?.rol]);
+  const canHistorial = useMemo(() => canViewAnimalHistorial(user?.rol), [user?.rol]);
 
   const loadAnimales = useCallback(async () => {
     if (!canView) return;
@@ -82,19 +91,45 @@ export function GanadoListScreen() {
   };
 
   const onLongPressAnimal = (animal: Animal) => {
+    const actions: { text: string; style?: 'cancel' | 'destructive'; onPress?: () => void }[] = [];
+
+    if (canHistorial) {
+      actions.push({
+        text: 'Ver historial',
+        onPress: () => onOpenAnimal(animal),
+      });
+    }
+
+    if (canEdit && animal.estadoActual === 'ACTIVO') {
+      actions.push({
+        text: 'Editar',
+        onPress: () => router.push({
+          pathname: '/(app)/ganado/editar',
+          params: { id: String(animal.idAnimal) },
+        }),
+      });
+    }
+
+    if (canBaja && animal.estadoActual === 'ACTIVO') {
+      actions.push({
+        text: 'Dar de baja',
+        style: 'destructive',
+        onPress: () => router.push({
+          pathname: '/(app)/ganado/baja',
+          params: { id: String(animal.idAnimal) },
+        }),
+      });
+    }
+
+    actions.push({
+      text: 'Cancelar',
+      style: 'cancel',
+    });
+
     Alert.alert(
       'Acciones de ganado',
       `Arete: ${animal.numeroArete}`,
-      [
-        {
-          text: 'Ver historial',
-          onPress: () => onOpenAnimal(animal),
-        },
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
-      ]
+      actions
     );
   };
 
@@ -134,6 +169,9 @@ export function GanadoListScreen() {
           <View style={styles.headerActions}>
             <Pressable style={styles.roundAction} onPress={onRefresh}>
               <Feather name="grid" size={16} color="#6A6F6A" />
+            </Pressable>
+            <Pressable style={styles.roundAction} onPress={() => router.push('/(app)/ganado/escanear')}>
+              <Feather name="camera" size={16} color="#2F9B47" />
             </Pressable>
             {canCreate ? (
               <Pressable style={styles.roundAction} onPress={() => router.push('/(app)/ganado/registrar')}>

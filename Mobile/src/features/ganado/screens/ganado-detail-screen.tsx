@@ -13,7 +13,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/src/features/auth/auth-context';
-import { canViewAnimalHistorial, canViewGanado } from '@/src/features/auth/role-permissions';
+import {
+  canBajaAnimal,
+  canEditAnimal,
+  canViewAnimalHistorial,
+  canViewGanado,
+} from '@/src/features/auth/role-permissions';
 
 import { ganadoApi } from '../ganado-api';
 import type { Animal, HistorialAnimalResponse } from '../ganado-types';
@@ -29,6 +34,8 @@ export function GanadoDetailScreen() {
   const { user } = useAuth();
   const canView = useMemo(() => canViewGanado(user?.rol), [user?.rol]);
   const canHistorial = useMemo(() => canViewAnimalHistorial(user?.rol), [user?.rol]);
+  const canEdit = useMemo(() => canEditAnimal(user?.rol), [user?.rol]);
+  const canBaja = useMemo(() => canBajaAnimal(user?.rol), [user?.rol]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -145,6 +152,34 @@ export function GanadoDetailScreen() {
 
           <Image source={require('../../../../assets/images/auth-hero-register.jpg')} style={styles.heroAnimal} />
         </View>
+
+        {(canEdit || canBaja) ? (
+          <View style={styles.actionsRow}>
+            {canEdit ? (
+              <Pressable
+                style={[styles.actionBtn, animal.estadoActual !== 'ACTIVO' ? styles.actionBtnDisabled : null]}
+                disabled={animal.estadoActual !== 'ACTIVO'}
+                onPress={() => router.push({
+                  pathname: '/(app)/ganado/editar',
+                  params: { id: String(animal.idAnimal) },
+                })}>
+                <Text style={styles.actionBtnText}>Editar</Text>
+              </Pressable>
+            ) : null}
+
+            {canBaja ? (
+              <Pressable
+                style={[styles.actionBtnDanger, animal.estadoActual !== 'ACTIVO' ? styles.actionBtnDisabled : null]}
+                disabled={animal.estadoActual !== 'ACTIVO'}
+                onPress={() => router.push({
+                  pathname: '/(app)/ganado/baja',
+                  params: { id: String(animal.idAnimal) },
+                })}>
+                <Text style={styles.actionBtnDangerText}>Dar de baja</Text>
+              </Pressable>
+            ) : null}
+          </View>
+        ) : null}
 
         <View style={styles.tabsWrap}>
           <TabButton label="GENERAL" active={activeTab === 'general'} onPress={() => setActiveTab('general')} />
@@ -364,6 +399,39 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 4,
     gap: 4,
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  actionBtn: {
+    flex: 1,
+    minHeight: 40,
+    borderRadius: 999,
+    backgroundColor: '#2F9B47',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  actionBtnDanger: {
+    flex: 1,
+    minHeight: 40,
+    borderRadius: 999,
+    backgroundColor: '#B42318',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionBtnDangerText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  actionBtnDisabled: {
+    opacity: 0.45,
   },
   tabButton: {
     flex: 1,

@@ -40,6 +40,12 @@
           }
         }
       ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Permite que SIGGAB use la camara para escanear aretes oficiales."
+        }
+      ],
       "expo-secure-store"
     ],
     "experiments": {
