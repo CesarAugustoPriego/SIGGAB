@@ -1,0 +1,144 @@
+/* =========================================================
+   SIGGAB PREMIUM DESIGN OVERRIDE (Web V2)
+   Match Mobile's aesthetic cleanly and safely.
+   ========================================================= */
+
+/* 1. Global Tokens Overrides */
+:root {
+  --green-dark: #1A472A !important;
+  --green-btn: #2E7D32 !important;
+  --gray-bg: #F5F8F5 !important;
+  --text-dark: #1B241B !important;
+  --border: #e2ede2 !important;
+  --shadow: 0 10px 30px rgba(46, 125, 50, 0.1) !important;
+}
+
+body {
+  background: var(--gray-bg) !important;
+}
+
+/* 2. Admin Shell Layout & Sidebar Glassmorphism */
+.users-admin-shell {
+  background: var(--gray-bg) !important;
+}
+
+.users-admin-sidebar {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border-right: 1px solid var(--border) !important;
+  box-shadow: 4px 0 30px rgba(0, 0, 0, 0.03) !important;
+  color: var(--text-dark) !important;
+}
+
+.users-admin-sidebar__logo img {
+  filter: drop-shadow(0 4px 8px rgba(46, 125, 50, 0.15)) !important;
+  transform: scale(1.1) !important;
+}
+
+/* 3. Navigation Items */
+.users-admin-sidebar__nav-item {
+  background: transparent !important;
+  color: var(--text-dark) !important;
+  border-radius: 12px !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  padding: 10px 14px !important;
+}
+
+.users-admin-sidebar__nav-item:hover {
+  background: rgba(46, 125, 50, 0.06) !important;
+  color: var(--green-btn) !important;
+  transform: translateX(4px) !important;
+}
+
+.users-admin-sidebar__nav-item.is-active {
+  background: var(--green-btn) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 14px rgba(46, 125, 50, 0.25) !important;
+  transform: translateX(4px) !important;
+}
+
+/* 4. Top Header Clean */
+.users-admin-main__header {
+  background: rgba(255, 255, 255, 0.7) !important;
+  backdrop-filter: blur(16px) !important;
+  border-bottom: 1px solid var(--border) !important;
+  color: var(--text-dark) !important;
+}
+
+.users-admin-main__header h1 {
+  color: var(--green-dark) !important;
+  letter-spacing: -0.02em !important;
+}
+
+.users-admin-main__header p {
+  color: #6B7280 !important;
+  font-weight: 500 !important;
+}
+
+/* 5. Generic Cards */
+.users-admin-card, .ganado-card, .audit-card, .session-card {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(8px) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.users-admin-card:hover, .ganado-card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: var(--shadow) !important;
+}
+
+.users-admin-card__title h2, .ganado-card h2 {
+  color: var(--green-dark) !important;
+}
+
+/* 6. Dynamic Tables */
+.productivo-table-wrap, .dash-table-wrap {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-radius: 12px !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.02) !important;
+  overflow: hidden !important;
+}
+
+.productivo-table, table {
+  background: transparent !important;
+}
+
+.productivo-table th, table th {
+  background: rgba(46, 125, 50, 0.05) !important;
+  color: var(--green-dark) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  border-bottom: 2px solid var(--border) !important;
+  padding: 18px 24px !important;
+}
+
+.productivo-table td, table td {
+  padding: 16px 24px !important;
+  border-bottom: 1px solid var(--border) !important;
+  transition: background 0.15s ease !important;
+}
+
+.productivo-table tbody tr:hover, table tbody tr:hover {
+  background: rgba(46, 125, 50, 0.02) !important;
+}
+
+/* 7. Footer Logout */
+.users-admin-sidebar__logout {
+  background: #fef2f2 !important;
+  color: #ef4444 !important;
+  border-radius: 12px !important;
+  border: 1px solid #fee2e2 !important;
+  transition: all 0.2s ease !important;
+}
+
+.users-admin-sidebar__logout:hover {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2) !important;
+  transform: translateY(-1px) !important;
+}
