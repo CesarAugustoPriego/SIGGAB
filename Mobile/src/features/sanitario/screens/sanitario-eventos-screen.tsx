@@ -391,7 +391,7 @@ export function SanitarioEventosScreen() {
           }}>
             {refreshing
               ? <ActivityIndicator color="#2F9B47" />
-              : <Feather name="bell" size={18} color="#131913" />}
+              : <Feather name="refresh-cw" size={16} color="#131913" />}
           </Pressable>
         </View>
 

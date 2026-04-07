@@ -176,7 +176,7 @@ export function GanadoListScreen() {
           <Pressable style={styles.iconButton} onPress={onRefresh}>
             {refreshing
               ? <ActivityIndicator color="#2A7A43" />
-              : <Feather name="bell" size={18} color="#0E0E0E" />}
+              : <Feather name="refresh-cw" size={16} color="#0E0E0E" />}
           </Pressable>
         </View>
 

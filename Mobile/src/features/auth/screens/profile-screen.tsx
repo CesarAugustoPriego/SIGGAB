@@ -200,10 +200,6 @@ export function ProfileScreen() {
           style={styles.topLogo}
           resizeMode="contain"
         />
-
-        <View style={styles.iconBtn}>
-          <Feather name="user" size={22} color="#1A1A1A" />
-        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -228,22 +224,6 @@ export function ProfileScreen() {
         {/* ── Ajustes ───────────────────────────────── */}
         <View style={styles.settingsCard}>
           <Text style={styles.settingsTitle}>Ajustes</Text>
-
-          {/* Notificaciones push */}
-          <View style={styles.settingsRow}>
-            <View style={styles.settingsLeft}>
-              <Feather name="bell" size={18} color="#555" />
-              <Text style={styles.settingsLabel}>Notificaciones push</Text>
-            </View>
-            <Switch
-              value={notifPush}
-              onValueChange={setNotifPush}
-              trackColor={{ false: '#E0E0E0', true: '#81C784' }}
-              thumbColor={notifPush ? '#2E7D32' : '#BDBDBD'}
-            />
-          </View>
-
-          <View style={styles.divider} />
 
           {/* Cambiar contraseña */}
           <Pressable

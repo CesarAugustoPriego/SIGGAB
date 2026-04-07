@@ -136,9 +136,7 @@ export function GanadoDetailScreen() {
 
           <Image source={require('../../../../assets/images/logo-rancho-los-alpes.png')} style={styles.logo} />
 
-          <Pressable style={styles.iconButton}>
-            <Feather name="bell" size={18} color="#0E0E0E" />
-          </Pressable>
+          <View style={[styles.iconButton, { opacity: 0 }]} />
         </View>
 
         <View style={styles.heroCard}>

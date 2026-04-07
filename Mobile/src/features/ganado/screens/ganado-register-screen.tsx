@@ -140,9 +140,7 @@ export function GanadoRegisterScreen() {
 
           <Image source={require('../../../../assets/images/logo-rancho-los-alpes.png')} style={styles.logo} />
 
-          <Pressable style={styles.iconButton}>
-            <Feather name="bell" size={18} color="#111" />
-          </Pressable>
+          <View style={[styles.iconButton, { opacity: 0 }]} />
         </View>
 
         <Text style={styles.screenTitle}>Registrar</Text>

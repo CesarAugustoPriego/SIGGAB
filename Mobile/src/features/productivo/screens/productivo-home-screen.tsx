@@ -325,7 +325,7 @@ export function ProductivoHomeScreen() {
             {tab === 'peso' && (
               <Pressable
                 style={styles.primaryFab}
-                onPress={() => router.push('/(app)/productivo/registro-peso')}
+                onPress={() => router.push('/(app)/productivo/registro-peso' as any)}
               >
                 <Feather name="plus" size={16} color="#FFF" />
                 <Text style={styles.primaryFabText}>Registrar peso</Text>
@@ -334,7 +334,7 @@ export function ProductivoHomeScreen() {
             {tab === 'leche' && (
               <Pressable
                 style={[styles.primaryFab, { backgroundColor: '#1A8FC0' }]}
-                onPress={() => router.push('/(app)/productivo/registro-leche')}
+                onPress={() => router.push('/(app)/productivo/registro-leche' as any)}
               >
                 <Feather name="plus" size={16} color="#FFF" />
                 <Text style={styles.primaryFabText}>Registrar leche</Text>
@@ -343,7 +343,7 @@ export function ProductivoHomeScreen() {
             {tab === 'reproductivo' && (
               <Pressable
                 style={[styles.primaryFab, { backgroundColor: '#8E44AD' }]}
-                onPress={() => router.push('/(app)/productivo/registro-reproductivo')}
+                onPress={() => router.push('/(app)/productivo/registro-reproductivo' as any)}
               >
                 <Feather name="plus" size={16} color="#FFF" />
                 <Text style={styles.primaryFabText}>Registrar evento</Text>

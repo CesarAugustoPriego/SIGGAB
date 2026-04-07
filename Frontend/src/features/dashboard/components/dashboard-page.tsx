@@ -204,7 +204,7 @@ export function DashboardPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Pr
               {resumen && <span className="dash-updated">{timeAgo(resumen.generadoEn)}</span>}
             </div>
           </div>
-          <Button type="button" variant="ghost" onClick={fetchAll}><RefreshCw size={14} aria-hidden /> Actualizar</Button>
+          <Button type="button" variant="ghost" onClick={fetchAll} style={{ marginTop: '0.5rem', alignSelf: 'flex-start' }}><RefreshCw size={14} aria-hidden /> Actualizar</Button>
         </header>
 
         {error && <p className="users-message users-message--error" data-testid="dashboard-error">{error}</p>}
@@ -344,7 +344,7 @@ export function DashboardPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Pr
                     {produccion.eventosReproductivos.length === 0 && <p className="dash-empty">No hay registros para mostrar.</p>}
                   </div>
 
-                  <Button type="button" variant="ghost" onClick={() => nav('Productivo')}>Ir a Productivo →</Button>
+                  <Button type="button" variant="ghost" onClick={() => nav('Productivo')} style={{ marginTop: '1.25rem', alignSelf: 'flex-start' }}>Ir a Productivo →</Button>
                 </section>
               )}
             </div>
@@ -399,7 +399,7 @@ export function DashboardPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Pr
                     <p className="dash-ok">Sin pendientes ✓</p>
                   )}
 
-                  <Button type="button" variant="ghost" onClick={() => nav('Sanitario')}>Ir a Sanitario →</Button>
+                  <Button type="button" variant="ghost" onClick={() => nav('Sanitario')} style={{ marginTop: '1.25rem', alignSelf: 'flex-start' }}>Ir a Sanitario →</Button>
                 </section>
               )}
 
@@ -464,7 +464,7 @@ export function DashboardPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Pr
                       )}
                     </tbody>
                   </table>
-                  <Button type="button" variant="ghost" onClick={() => nav('Inventario')}>Ir a Inventario →</Button>
+                  <Button type="button" variant="ghost" onClick={() => nav('Inventario')} style={{ marginTop: '1.25rem', alignSelf: 'flex-start' }}>Ir a Inventario →</Button>
                 </section>
               )}
             </div>

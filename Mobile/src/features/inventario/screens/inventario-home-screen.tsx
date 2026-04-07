@@ -161,7 +161,7 @@ export function InventarioHomeScreen() {
         <View style={styles.actionsRow}>
           <Pressable
             style={styles.primaryFab}
-            onPress={() => router.push('/(app)/inventario/registro-movimiento')}
+            onPress={() => router.push('/(app)/inventario/registro-movimiento' as any)}
           >
             <Feather name="file-text" size={16} color="#FFF" />
             <Text style={styles.primaryFabText}>Reportar movimiento</Text>

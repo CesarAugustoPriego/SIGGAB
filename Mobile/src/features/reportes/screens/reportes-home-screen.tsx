@@ -50,9 +50,7 @@ export function ReportesHomeScreen() {
           source={require('../../../../assets/images/logo-rancho-los-alpes.png')}
           style={styles.logo}
         />
-        <Pressable style={styles.iconButton} onPress={() => {}}>
-           <Feather name="bell" size={22} color="#1A1A1A" />
-        </Pressable>
+        <View style={[styles.iconButton, { opacity: 0 }]} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>

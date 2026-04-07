@@ -262,9 +262,7 @@ export function HomeScreen() {
           resizeMode="contain"
         />
 
-        <Pressable style={styles.iconBtn} onPress={() => {}}>
-          <Feather name="bell" size={22} color="#1A1A1A" />
-        </Pressable>
+        <View style={styles.iconBtn} />
       </View>
 
       <ScrollView
