@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { LineChart } from 'react-native-gifted-charts';
 import {
   ActivityIndicator,
+  Dimensions,
   Image,
   Pressable,
   ScrollView,
@@ -201,7 +203,7 @@ export function GanadoDetailScreen() {
 
         {activeTab === 'produccion' ? (
           <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Agregar registros del dia</Text>
+            <Text style={styles.sectionTitle}>Últimos registros</Text>
 
             <RecordCard
               icon={<MaterialCommunityIcons name="weight-kilogram" size={17} color="#3171E0" />}
@@ -225,6 +227,11 @@ export function GanadoDetailScreen() {
               detail={reproUltimo?.tipoEvento || 'Sin registro'}
               subtitle={reproUltimo?.fechaEvento ? `Ultimo: ${toInputDate(reproUltimo.fechaEvento)}` : 'Sin fecha'}
               status={reproUltimo?.estadoValidacion}
+            />
+
+            {/* ── Gráfica de historial de peso individual ── */}
+            <WeightHistoryChart
+              registros={historial?.historial.productivo.registrosPeso ?? []}
             />
           </View>
         ) : null}
@@ -274,6 +281,124 @@ export function GanadoDetailScreen() {
     </SafeAreaView>
   );
 }
+
+
+const DETAIL_CHART_W = Dimensions.get('window').width - 88;
+
+function WeightHistoryChart({ registros }: { registros: { peso: number | string; fechaRegistro: string; estadoValidacion: string }[] }) {
+  const sorted = [...registros]
+    .sort((a, b) => a.fechaRegistro.localeCompare(b.fechaRegistro));
+
+  if (sorted.length < 2) {
+    return (
+      <View style={chartStyles.emptyWrap}>
+        <MaterialCommunityIcons name="chart-line" size={24} color="#C0C8C0" />
+        <Text style={chartStyles.emptyText}>Sin suficientes registros para graficar.</Text>
+      </View>
+    );
+  }
+
+  const data = sorted.map((r, i) => {
+    const rawDate = r.fechaRegistro;
+    const date = new Date(rawDate.includes('T') ? rawDate : rawDate + 'T00:00:00');
+    const label = date.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' });
+    return {
+      value: typeof r.peso === 'string' ? parseFloat(r.peso) : r.peso,
+      label: i % Math.max(1, Math.floor(sorted.length / 4)) === 0 ? label : undefined,
+    };
+  });
+
+  const lastValue = data[data.length - 1].value;
+  const firstValue = data[0].value;
+  const deltaTotal = lastValue - firstValue;
+  const deltaPct = firstValue > 0 ? ((deltaTotal / firstValue) * 100).toFixed(0) : '0';
+  const positive = deltaTotal >= 0;
+
+  return (
+    <View style={chartStyles.card}>
+      <View style={chartStyles.header}>
+        <View>
+          <Text style={chartStyles.title}>Evolución de peso</Text>
+          <Text style={chartStyles.sub}>{sorted.length} medición{sorted.length !== 1 ? 'es' : ''}</Text>
+        </View>
+        <View style={[chartStyles.badge, positive ? chartStyles.badgePos : chartStyles.badgeNeg]}>
+          <Text style={[chartStyles.badgeText, positive ? chartStyles.badgeTextPos : chartStyles.badgeTextNeg]}>
+            {positive ? '+' : ''}{deltaPct}%
+          </Text>
+        </View>
+      </View>
+      <LineChart
+        data={data}
+        width={DETAIL_CHART_W}
+        height={120}
+        color="#2F9B47"
+        thickness={2.5}
+        startFillColor="#2F9B47"
+        endFillColor="#2F9B4708"
+        startOpacity={0.22}
+        endOpacity={0}
+        areaChart
+        curved
+        hideDataPoints={data.length > 8}
+        dataPointsColor="#2F9B47"
+        dataPointsRadius={4}
+        xAxisLabelTextStyle={{ color: '#8A938A', fontSize: 8 }}
+        yAxisTextStyle={{ color: '#8A938A', fontSize: 8 }}
+        yAxisColor="transparent"
+        xAxisColor="#E0E8E0"
+        rulesColor="#F0F4F0"
+        noOfSections={3}
+        initialSpacing={6}
+        endSpacing={6}
+        backgroundColor="transparent"
+        pointerConfig={{
+          pointerStripColor: '#2F9B47',
+          pointerStripWidth: 1.5,
+          pointerColor: '#2F9B47',
+          radius: 5,
+          pointerLabelWidth: 72,
+          pointerLabelHeight: 36,
+          activatePointersOnLongPress: true,
+          autoAdjustPointerLabelPosition: true,
+          pointerLabelComponent: (items: { value: number }[]) => (
+            <View style={chartStyles.tooltip}>
+              <Text style={chartStyles.tooltipText}>{items[0]?.value} kg</Text>
+            </View>
+          ),
+        }}
+      />
+    </View>
+  );
+}
+
+const chartStyles = StyleSheet.create({
+  card: {
+    backgroundColor: '#F7FAF7',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#D4DAD4',
+    padding: 12,
+    gap: 8,
+    overflow: 'hidden',
+  },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  title: { fontSize: 13, fontWeight: '700', color: '#1B251B' },
+  sub: { fontSize: 10, color: '#8A938A', marginTop: 1 },
+  badge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
+  badgePos: { backgroundColor: '#E6F4EA' },
+  badgeNeg: { backgroundColor: '#FDECEA' },
+  badgeText: { fontSize: 11, fontWeight: '800' },
+  badgeTextPos: { color: '#1E6F38' },
+  badgeTextNeg: { color: '#C0392B' },
+  tooltip: {
+    backgroundColor: '#FFF', borderRadius: 7, paddingHorizontal: 8, paddingVertical: 4,
+    borderWidth: 1, borderColor: '#2F9B47',
+    shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 4, elevation: 3,
+  },
+  tooltipText: { fontSize: 11, fontWeight: '800', color: '#2F9B47' },
+  emptyWrap: { alignItems: 'center', gap: 4, paddingVertical: 16 },
+  emptyText: { fontSize: 11, color: '#A0A8A0', textAlign: 'center' },
+});
 
 function TabButton({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
   return (

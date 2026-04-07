@@ -25,6 +25,10 @@ export default function AppLayout() {
       <Stack.Screen name="ganado/[id]" />
       <Stack.Screen name="sanitario/index" />
       <Stack.Screen name="sanitario/calendario" />
+      <Stack.Screen name="productivo/index" />
+      <Stack.Screen name="productivo/registro-peso" />
+      <Stack.Screen name="productivo/registro-leche" />
+      <Stack.Screen name="productivo/registro-reproductivo" />
     </Stack>
   );
 }

@@ -60,6 +60,12 @@ export function HomeScreen() {
       return;
     }
 
+    if (moduleKey === 'productivo') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      router.push('/(app)/productivo' as any);
+      return;
+    }
+
     Alert.alert(
       `${title} (Proximamente)`,
       'Este modulo quedara habilitado en la siguiente iteracion movil conectada al backend.'
