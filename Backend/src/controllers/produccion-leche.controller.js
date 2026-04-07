@@ -17,9 +17,17 @@ async function getById(req, res, next) {
   } catch (e) { next(e); }
 }
 
+const { notifyAdmins } = require('../services/notifications.service');
+
 async function create(req, res, next) {
   try {
-    return sendCreated(res, await produccionLecheService.create(req.body, req.user.idUsuario), 'Producción de leche registrada');
+    const registro = await produccionLecheService.create(req.body, req.user.idUsuario);
+    notifyAdmins(
+      'Nuevos Datos: Ordeña', 
+      `Se reportó una ordeña de ${registro.litrosProducidos}L para validar.`,
+      { recordType: 'LECHE', id: registro.idProduccion }
+    );
+    return sendCreated(res, registro, 'Producción de leche registrada');
   } catch (e) { next(e); }
 }
 

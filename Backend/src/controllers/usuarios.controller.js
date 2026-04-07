@@ -59,4 +59,14 @@ async function getRoles(req, res, next) {
   }
 }
 
-module.exports = { getAll, getById, create, update, updateEstado, getRoles };
+async function updatePushToken(req, res, next) {
+  try {
+    const { token } = req.body;
+    await usuariosService.updatePushToken(req.user.idUsuario, token);
+    return sendSuccess(res, { token }, 'Push token actualizado');
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = { getAll, getById, create, update, updateEstado, getRoles, updatePushToken };

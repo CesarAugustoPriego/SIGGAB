@@ -149,4 +149,14 @@ async function getRoles() {
   return prisma.rol.findMany({ orderBy: { idRol: 'asc' } });
 }
 
-module.exports = { getAll, getById, create, update, updateEstado, getRoles };
+/**
+ * Actualizar token push de expo
+ */
+async function updatePushToken(idUsuario, token) {
+  return prisma.usuario.update({
+    where: { idUsuario },
+    data: { expoPushToken: token },
+  });
+}
+
+module.exports = { getAll, getById, create, update, updateEstado, getRoles, updatePushToken };

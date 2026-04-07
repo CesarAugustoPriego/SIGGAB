@@ -77,6 +77,7 @@ model Usuario {
   intentosFallidos Int    @default(0) @map("intentos_fallidos")
   bloqueadoHasta DateTime? @map("bloqueado_hasta")
   fechaCreacion  DateTime @default(now()) @map("fecha_creacion")
+  expoPushToken  String?  @map("expo_push_token") @db.VarChar(255)
 
   rol Rol @relation(fields: [idRol], references: [idRol])
 

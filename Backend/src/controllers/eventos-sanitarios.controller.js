@@ -25,9 +25,16 @@ async function getById(req, res, next) {
   }
 }
 
+const { notifyAdmins } = require('../services/notifications.service');
+
 async function create(req, res, next) {
   try {
     const evento = await eventosSanitariosService.create(req.body, req.user.idUsuario);
+    notifyAdmins(
+      'Nuevos Datos: Sanidad', 
+      `Se registró un evento sanitario para validación.`,
+      { recordType: 'SANITARIO', id: evento.idEvento }
+    );
     return sendCreated(res, evento, 'Evento sanitario registrado exitosamente');
   } catch (error) {
     next(error);

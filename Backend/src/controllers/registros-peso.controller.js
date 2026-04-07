@@ -17,9 +17,18 @@ async function getById(req, res, next) {
   } catch (e) { next(e); }
 }
 
+const { notifyAdmins } = require('../services/notifications.service');
+
 async function create(req, res, next) {
   try {
-    return sendCreated(res, await registrosPesoService.create(req.body, req.user.idUsuario), 'Registro de peso creado');
+    const registro = await registrosPesoService.create(req.body, req.user.idUsuario);
+    // Disparar push notification
+    notifyAdmins(
+      'Nuevos Datos: Peso', 
+      `Se registró un peso de ${registro.peso}kg para validar.`,
+      { recordType: 'PESO', id: registro.idRegistroPeso }
+    );
+    return sendCreated(res, registro, 'Registro de peso creado');
   } catch (e) { next(e); }
 }
 

@@ -62,6 +62,28 @@ router.post('/', requireRole('Administrador'), validate(createUsuarioSchema), us
 
 /**
  * @swagger
+ * /usuarios/me/push-token:
+ *   patch:
+ *     tags: [Usuarios]
+ *     summary: Actualizar el Push Token del dispositivo vinculado al usuario
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [token]
+ *             properties:
+ *               token:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Push token actualizado
+ */
+router.patch('/me/push-token', usuariosController.updatePushToken);
+
+/**
+ * @swagger
  * /usuarios/{id}:
  *   get:
  *     tags: [Usuarios]
