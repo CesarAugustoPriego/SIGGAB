@@ -81,13 +81,6 @@ export function LoginScreen() {
     }
   };
 
-  const handleRegisterTab = () => {
-    setActiveTab('register');
-    Alert.alert(
-      'Registro pendiente',
-      'La vista de registro movil se habilitara en la siguiente iteracion.'
-    );
-  };
 
   const handleLoginTab = () => {
     setActiveTab('login');
@@ -133,17 +126,12 @@ export function LoginScreen() {
                   <Text style={[styles.tabText, activeTab === 'login' ? styles.tabTextActive : null]}>Iniciar sesion</Text>
                 </Pressable>
 
-                <Pressable
-                  onPress={handleRegisterTab}
-                  style={[styles.tabButton, activeTab === 'register' ? styles.tabButtonActive : null]}>
-                  <Text style={[styles.tabText, activeTab === 'register' ? styles.tabTextActive : null]}>Registrarse</Text>
-                </Pressable>
               </View>
 
               <Text style={styles.welcomeTitle}>Bienvenido a Siggab</Text>
 
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Correo electronico:</Text>
+                <Text style={styles.label}>Nombre de usuario:</Text>
                 <TextInput
                   value={username}
                   onChangeText={setUsername}
@@ -182,9 +170,6 @@ export function LoginScreen() {
                   : <Text style={styles.primaryButtonText}>Iniciar sesion</Text>}
               </Pressable>
 
-              <Text style={styles.linkCaption}>
-                No tienes cuenta? <Text style={styles.linkText}>Registrate</Text>
-              </Text>
             </View>
           </Animated.View>
 

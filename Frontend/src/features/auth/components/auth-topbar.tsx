@@ -1,4 +1,4 @@
-﻿import { Button } from '../../../shared/ui';
+import { Button } from '../../../shared/ui';
 import type { AuthView } from './auth-view';
 
 interface AuthTopBarProps {
@@ -18,11 +18,6 @@ export function AuthTopBar({ view, onChangeView }: AuthTopBarProps) {
         <strong>SIGGAB</strong>
       </div>
 
-      <nav className="auth-topbar__nav" aria-label="Navegacion principal">
-        <a href="#">Nosotros</a>
-        <a href="#">Servicios</a>
-        <a href="#">Contacto</a>
-      </nav>
 
       <div className="auth-topbar__actions">
         <Button
@@ -32,14 +27,6 @@ export function AuthTopBar({ view, onChangeView }: AuthTopBarProps) {
           onClick={() => onChangeView('login')}
         >
           Ingresar
-        </Button>
-        <Button
-          type="button"
-          variant="pill"
-          className={view === 'register' ? 'is-active' : ''}
-          onClick={() => onChangeView('register')}
-        >
-          Registrarse
         </Button>
       </div>
     </header>

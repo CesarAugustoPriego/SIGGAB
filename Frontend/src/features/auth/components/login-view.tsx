@@ -3,11 +3,7 @@ import { env } from '../../../config/env';
 import { useAuth } from '../auth-context';
 import { Button, TextField, User, Lock, Eye, EyeOff, ArrowRight, ShieldCheck } from '../../../shared/ui';
 
-interface LoginViewProps {
-  onGoRegister: () => void;
-}
-
-export function LoginView({ onGoRegister }: LoginViewProps) {
+export function LoginView() {
   const { login, apiError, clearApiError, status } = useAuth();
   const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('SiggabAdmin2026!');
@@ -45,7 +41,7 @@ export function LoginView({ onGoRegister }: LoginViewProps) {
             label="Usuario"
             type="text"
             data-testid="login-username-input"
-            placeholder="admin o nombre@ejemplo.com"
+            placeholder="Ej: admin"
             autoComplete="username"
             value={username}
             onChange={(event) => setUsername(event.target.value)}
@@ -90,12 +86,6 @@ export function LoginView({ onGoRegister }: LoginViewProps) {
 
           {apiError ? <p className="error-banner" data-testid="login-error-banner">{apiError}</p> : null}
 
-          <p className="login-footer">
-            No tienes cuenta?
-            <Button type="button" variant="link" className="login-footer__link" onClick={onGoRegister}>
-              Registrate
-            </Button>
-          </p>
 
           <p className="api-note">API activa: {env.apiBaseUrl}</p>
 

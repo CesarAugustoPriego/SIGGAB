@@ -15,7 +15,7 @@ export function AuthPage({ view, onChangeView }: AuthPageProps) {
       return <RegisterMockView onGoLogin={() => onChangeView('login')} />;
     }
 
-    return <LoginView onGoRegister={() => onChangeView('register')} />;
+    return <LoginView />;
   }, [onChangeView, view]);
 
   return (
