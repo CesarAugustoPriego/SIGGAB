@@ -44,4 +44,5 @@ export const authApi = {
       timeoutMs: 6000,
     }
   ),
+  updatePushToken: (token: string) => httpClient.patch<any>('/usuarios/me/push-token', { token }, true),
 };

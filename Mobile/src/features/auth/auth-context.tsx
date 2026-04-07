@@ -19,6 +19,7 @@ import {
 } from '@/src/lib/session-storage';
 
 import { authApi, type LoginInput } from './auth-api';
+import { setupPushNotifications } from '@/src/lib/notifications';
 
 type AuthStatus = 'booting' | 'authenticated' | 'unauthenticated';
 
@@ -150,6 +151,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         refreshToken: data.refreshToken,
         user: data.usuario,
       });
+
+      // Si es un rol autorizado, intentamos recolectar token de notificaciones push
+      try {
+        const token = await setupPushNotifications();
+        if (token) {
+          // Send silently to the backend inside a setTimeout or async wrap 
+          // so we don't delay the UI transition for the dashboard
+          setTimeout(() => {
+             authApi.updatePushToken(token).catch(e => console.log('Silenced push push error:', e));
+          }, 500);
+        }
+      } catch (e) {
+        console.log('Setup push failed automatically: ', e);
+      }
+      
       setApiError(null);
     } catch (error) {
       setApiError(getErrorMessage(error));
