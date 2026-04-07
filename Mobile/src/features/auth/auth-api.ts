@@ -45,4 +45,6 @@ export const authApi = {
     }
   ),
   updatePushToken: (token: string) => httpClient.patch<any>('/usuarios/me/push-token', { token }, true),
+  cambiarPassword: (passwordActual: string, nuevaPassword: string) =>
+    httpClient.patch<null>('/auth/cambiar-password', { passwordActual, nuevaPassword }, true),
 };

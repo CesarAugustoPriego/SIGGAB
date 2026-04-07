@@ -114,4 +114,31 @@ router.post('/logout', authMiddleware, validate(refreshTokenSchema), authControl
  */
 router.get('/me', authMiddleware, authController.me);
 
+/**
+ * @swagger
+ * /auth/cambiar-password:
+ *   patch:
+ *     tags: [Auth]
+ *     summary: Cambiar contraseña del usuario autenticado
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [passwordActual, nuevaPassword]
+ *             properties:
+ *               passwordActual:
+ *                 type: string
+ *               nuevaPassword:
+ *                 type: string
+ *                 minLength: 8
+ *     responses:
+ *       200:
+ *         description: Contraseña actualizada
+ *       401:
+ *         description: Contraseña actual incorrecta
+ */
+router.patch('/cambiar-password', authMiddleware, authController.cambiarPassword);
+
 module.exports = router;

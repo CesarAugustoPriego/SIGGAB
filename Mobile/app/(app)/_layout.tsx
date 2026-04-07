@@ -29,6 +29,11 @@ export default function AppLayout() {
       <Stack.Screen name="productivo/registro-peso" />
       <Stack.Screen name="productivo/registro-leche" />
       <Stack.Screen name="productivo/registro-reproductivo" />
+      <Stack.Screen name="inventario/index" />
+      <Stack.Screen name="inventario/registro-movimiento" />
+      <Stack.Screen name="aprobaciones/index" />
+      <Stack.Screen name="reportes/index" />
+      <Stack.Screen name="perfil" />
     </Stack>
   );
 }
