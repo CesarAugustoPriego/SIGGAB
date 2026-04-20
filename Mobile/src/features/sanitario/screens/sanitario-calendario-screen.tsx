@@ -20,6 +20,7 @@ import { useAuth } from '@/src/features/auth/auth-context';
 import {
   canCompleteCalendarioSanitario,
   canCreateCalendarioSanitario,
+  canCreateSanitarioEvento,
   canViewCalendarioSanitario,
 } from '@/src/features/auth/role-permissions';
 import { ganadoApi } from '@/src/features/ganado/ganado-api';
@@ -54,6 +55,7 @@ export function SanitarioCalendarioScreen() {
 
   const canView = useMemo(() => canViewCalendarioSanitario(user?.rol), [user?.rol]);
   const canCreate = useMemo(() => canCreateCalendarioSanitario(user?.rol), [user?.rol]);
+  const canCreateEvento = useMemo(() => canCreateSanitarioEvento(user?.rol), [user?.rol]);
   const canComplete = useMemo(() => canCompleteCalendarioSanitario(user?.rol), [user?.rol]);
 
   const [loading, setLoading] = useState(true);
@@ -72,6 +74,8 @@ export function SanitarioCalendarioScreen() {
   const [animales, setAnimales] = useState<Animal[]>([]);
   const [selectedCalendario, setSelectedCalendario] = useState<CalendarioSanitario | null>(null);
   const [showProgramModal, setShowProgramModal] = useState(false);
+  const [showAnimalPickerModal, setShowAnimalPickerModal] = useState(false);
+  const [animalSearch, setAnimalSearch] = useState('');
   const [editingCalendarioId, setEditingCalendarioId] = useState<number | null>(null);
   const [programForm, setProgramForm] = useState<ProgramacionFormState>(() => ({
     ...EMPTY_PROGRAMACION_FORM,
@@ -92,7 +96,9 @@ export function SanitarioCalendarioScreen() {
         sanitarioApi.getCalendario(idAnimalParam > 0 ? { idAnimal: idAnimalParam } : {}),
         sanitarioApi.getAlertas(30),
         sanitarioApi.getTiposEvento(),
-        canCreate ? ganadoApi.getAnimales({ estadoActual: 'ACTIVO' }) : Promise.resolve([] as Animal[]),
+        canCreate || canCreateEvento
+          ? ganadoApi.getAnimales({ estadoActual: 'ACTIVO' })
+          : Promise.resolve([] as Animal[]),
       ]);
 
       setCalendario(calendarioData);
@@ -109,7 +115,7 @@ export function SanitarioCalendarioScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [canView, canCreate, idAnimalParam]);
+  }, [canView, canCreate, canCreateEvento, idAnimalParam]);
 
   useFocusEffect(
     useCallback(() => {
@@ -130,6 +136,15 @@ export function SanitarioCalendarioScreen() {
     () => tipos.find((item) => item.idTipoEvento === Number(programForm.idTipoEvento)),
     [tipos, programForm.idTipoEvento]
   );
+  const filteredAnimales = useMemo(() => {
+    const normalized = animalSearch.trim().toLowerCase();
+    if (!normalized) return animales;
+
+    return animales.filter((item) => (
+      item.numeroArete.toLowerCase().includes(normalized)
+      || (item.raza?.nombreRaza?.toLowerCase().includes(normalized) ?? false)
+    ));
+  }, [animales, animalSearch]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -138,6 +153,26 @@ export function SanitarioCalendarioScreen() {
 
   const changeMonth = (delta: -1 | 1) => {
     setMonthCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() + delta, 1));
+  };
+
+  const onOpenAnimalPicker = () => {
+    if (!canCreateEvento) return;
+
+    if (animales.length === 0) {
+      setMessage('No hay animales activos para registrar evento sanitario.');
+      return;
+    }
+
+    setAnimalSearch('');
+    setShowAnimalPickerModal(true);
+  };
+
+  const onSelectAnimalForEvento = (animal: Animal) => {
+    setShowAnimalPickerModal(false);
+    router.push({
+      pathname: '/(app)/sanitario',
+      params: { idAnimal: String(animal.idAnimal) },
+    });
   };
 
   const onCloseProgramModal = () => {
@@ -320,6 +355,12 @@ export function SanitarioCalendarioScreen() {
 
         {message ? <Text style={styles.messageText}>{message}</Text> : null}
 
+        {canCreateEvento ? (
+          <Pressable style={styles.mainButton} onPress={onOpenAnimalPicker}>
+            <Text style={styles.mainButtonText}>Registrar evento sanitario</Text>
+          </Pressable>
+        ) : null}
+
         {viewMode === 'CALENDARIO' ? (
           <View style={styles.sectionCard}>
             <View style={styles.weekHeader}>
@@ -426,6 +467,49 @@ export function SanitarioCalendarioScreen() {
           </View>
         ) : null}
       </ScrollView>
+
+      <Modal transparent visible={showAnimalPickerModal} animationType="fade" onRequestClose={() => setShowAnimalPickerModal(false)}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <Pressable style={styles.modalClose} onPress={() => setShowAnimalPickerModal(false)}>
+              <Feather name="x" size={18} color="#7A7A7A" />
+            </Pressable>
+
+            <Text style={styles.modalTitle}>Seleccionar animal</Text>
+            <Text style={styles.modalSubtitle}>Elige el arete para registrar evento sanitario.</Text>
+
+            <TextInput
+              style={styles.input}
+              value={animalSearch}
+              onChangeText={setAnimalSearch}
+              placeholder="Buscar por arete o raza"
+              placeholderTextColor="#8A938A"
+              autoCapitalize="none"
+            />
+
+            <ScrollView style={styles.animalList} contentContainerStyle={styles.animalListContent}>
+              {filteredAnimales.map((item) => (
+                <Pressable
+                  key={item.idAnimal}
+                  style={styles.animalRow}
+                  onPress={() => onSelectAnimalForEvento(item)}>
+                  <View style={styles.animalRowInfo}>
+                    <Text style={styles.animalRowTitle}>Arete #{item.numeroArete}</Text>
+                    <Text style={styles.animalRowMeta}>
+                      {item.raza?.nombreRaza || 'Sin raza'} · {item.edadEstimada ?? '?'} meses
+                    </Text>
+                  </View>
+                  <Feather name="chevron-right" size={16} color="#8A918A" />
+                </Pressable>
+              ))}
+
+              {filteredAnimales.length === 0 ? (
+                <Text style={styles.emptyText}>No hay animales que coincidan con la busqueda.</Text>
+              ) : null}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
 
       <Modal transparent visible={selectedCalendario !== null} animationType="fade" onRequestClose={() => setSelectedCalendario(null)}>
         <View style={styles.modalBackdrop}>
@@ -803,6 +887,39 @@ const styles = StyleSheet.create({
   },
   alertaItem: {
     color: '#7A6A29',
+    fontSize: 11,
+  },
+  animalList: {
+    maxHeight: 320,
+  },
+  animalListContent: {
+    gap: 6,
+    paddingVertical: 2,
+  },
+  animalRow: {
+    minHeight: 54,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#D2D8D2',
+    backgroundColor: '#F8F9F8',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  animalRowInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  animalRowTitle: {
+    color: '#1D261D',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  animalRowMeta: {
+    color: '#768276',
     fontSize: 11,
   },
   centerBox: {
