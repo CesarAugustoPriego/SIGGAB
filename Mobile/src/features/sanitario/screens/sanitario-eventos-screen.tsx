@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -34,6 +35,7 @@ import type {
   TipoEventoSanitario,
 } from '../sanitario-types';
 import {
+  buildMonthGrid,
   EMPTY_EVENTO_FORM,
   findTipoForCategoria,
   formatDate,
@@ -42,6 +44,7 @@ import {
   getCategoriaLabel,
   getEstadoRegistroColor,
   getSanitarioErrorMessage,
+  monthTitle,
   resolveCategoriaFromTipoName,
   toEventoFormState,
   toEventoPayload,
@@ -78,6 +81,11 @@ export function SanitarioEventosScreen() {
   const [editingEventId, setEditingEventId] = useState<number>(idEventoParam > 0 ? idEventoParam : 0);
   const [form, setForm] = useState<EventoFormState>(EMPTY_EVENTO_FORM);
   const [errors, setErrors] = useState<EventoFormErrors>({});
+  const [isAlertCalendarOpen, setIsAlertCalendarOpen] = useState(false);
+  const [alertMonthCursor, setAlertMonthCursor] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
 
   const labels = useMemo(() => getCategoriaFieldLabels(selectedCategoria), [selectedCategoria]);
   const isReadOnlyMode = !canCreateEvento && !canEditEvento;
@@ -89,6 +97,7 @@ export function SanitarioEventosScreen() {
     () => tipos.find((tipo) => tipo.idTipoEvento === Number(form.idTipoEvento)) || null,
     [tipos, form.idTipoEvento]
   );
+  const alertCalendarCells = useMemo(() => buildMonthGrid(alertMonthCursor), [alertMonthCursor]);
 
   const syncTipoForCategoria = useCallback((nextCategoria: SanitarioCategoria, options?: { force?: boolean }) => {
     const tipoMatch = findTipoForCategoria(tipos, nextCategoria);
@@ -336,6 +345,32 @@ export function SanitarioEventosScreen() {
     Alert.alert('Acciones del evento', `Evento #${evento.idEvento}`, options);
   };
 
+  const openAlertCalendar = () => {
+    if (isReadOnlyMode || !canCreateCalendario) return;
+
+    const referenceIso = form.fechaAlertaProgramacion || form.fechaEvento || new Date().toISOString().slice(0, 10);
+    const referenceDate = new Date(`${referenceIso}T00:00:00`);
+    if (Number.isFinite(referenceDate.getTime())) {
+      setAlertMonthCursor(new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1));
+    }
+
+    setIsAlertCalendarOpen(true);
+  };
+
+  const closeAlertCalendar = () => {
+    setIsAlertCalendarOpen(false);
+  };
+
+  const changeAlertCalendarMonth = (delta: -1 | 1) => {
+    setAlertMonthCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() + delta, 1));
+  };
+
+  const onSelectAlertDate = (isoDate: string) => {
+    setForm((prev) => ({ ...prev, fechaAlertaProgramacion: isoDate }));
+    setErrors((prev) => ({ ...prev, fechaAlertaProgramacion: undefined }));
+    setIsAlertCalendarOpen(false);
+  };
+
   if (!canViewRecords && !canCreateEvento) {
     return (
       <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
@@ -505,14 +540,29 @@ export function SanitarioEventosScreen() {
 
             <View style={styles.alertCard}>
               <Text style={styles.alertTitle}>{labels.alerta}</Text>
-              <TextInput
-                value={form.fechaAlertaProgramacion}
-                onChangeText={(value) => setForm((prev) => ({ ...prev, fechaAlertaProgramacion: value }))}
-                style={styles.input}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor="#8C948C"
-                editable={!isReadOnlyMode && canCreateCalendario}
-              />
+              <Pressable
+                onPress={openAlertCalendar}
+                disabled={isReadOnlyMode || !canCreateCalendario}
+                style={[styles.inputWrap, isReadOnlyMode || !canCreateCalendario ? styles.inputDisabledWrap : null]}>
+                <Text style={[
+                  styles.input,
+                  !form.fechaAlertaProgramacion ? styles.placeholderText : null,
+                  isReadOnlyMode || !canCreateCalendario ? styles.inputDisabled : null,
+                ]}>
+                  {form.fechaAlertaProgramacion || 'Seleccionar fecha'}
+                </Text>
+                <Feather name="calendar" size={15} color="#121212" />
+              </Pressable>
+              {form.fechaAlertaProgramacion && !isReadOnlyMode && canCreateCalendario ? (
+                <Pressable
+                  onPress={() => {
+                    setForm((prev) => ({ ...prev, fechaAlertaProgramacion: '' }));
+                    setErrors((prev) => ({ ...prev, fechaAlertaProgramacion: undefined }));
+                  }}
+                  style={styles.clearAlertButton}>
+                  <Text style={styles.clearAlertButtonText}>Quitar fecha</Text>
+                </Pressable>
+              ) : null}
               {!canCreateCalendario ? (
                 <Text style={styles.alertHint}>
                   Tu rol no puede programar alertas en calendario.
@@ -607,6 +657,63 @@ export function SanitarioEventosScreen() {
           </View>
         ) : null}
       </ScrollView>
+
+      <Modal transparent visible={isAlertCalendarOpen} animationType="fade" onRequestClose={closeAlertCalendar}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <Pressable style={styles.modalClose} onPress={closeAlertCalendar}>
+              <Feather name="x" size={18} color="#7A7A7A" />
+            </Pressable>
+
+            <Text style={styles.modalTitle}>Seleccionar fecha de alerta</Text>
+            <Text style={styles.modalSubtitle}>
+              {form.fechaAlertaProgramacion ? `Actual: ${formatDate(form.fechaAlertaProgramacion)}` : 'Sin fecha seleccionada'}
+            </Text>
+
+            <View style={styles.monthNav}>
+              <Pressable onPress={() => changeAlertCalendarMonth(-1)} style={styles.monthArrow}>
+                <Feather name="chevron-left" size={15} color="#2D7D43" />
+              </Pressable>
+              <Text style={styles.monthLabel}>{monthTitle(alertMonthCursor)}</Text>
+              <Pressable onPress={() => changeAlertCalendarMonth(1)} style={styles.monthArrow}>
+                <Feather name="chevron-right" size={15} color="#2D7D43" />
+              </Pressable>
+            </View>
+
+            <View style={styles.weekHeader}>
+              {['LUN', 'MAR', 'MIE', 'JUE', 'VIE', 'SAB', 'DOM'].map((dayName) => (
+                <Text key={dayName} style={styles.weekHeaderText}>{dayName}</Text>
+              ))}
+            </View>
+
+            <View style={styles.grid}>
+              {alertCalendarCells.map((cell) => {
+                const isSelected = form.fechaAlertaProgramacion === cell.isoDate;
+
+                return (
+                  <Pressable
+                    key={cell.isoDate}
+                    onPress={() => onSelectAlertDate(cell.isoDate)}
+                    style={[
+                      styles.dayCell,
+                      !cell.inCurrentMonth ? styles.dayCellMuted : null,
+                      isSelected ? styles.dayCellSelected : null,
+                    ]}>
+                    <Text
+                      style={[
+                        styles.dayText,
+                        !cell.inCurrentMonth ? styles.dayTextMuted : null,
+                        isSelected ? styles.dayTextSelected : null,
+                      ]}>
+                      {cell.day}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1020,5 +1127,127 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.86,
+  },
+  clearAlertButton: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+  },
+  clearAlertButtonText: {
+    color: '#395B39',
+    fontSize: 11,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 18,
+  },
+  modalCard: {
+    width: '100%',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#D5DBD5',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    gap: 8,
+  },
+  modalClose: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F3F4F3',
+    borderWidth: 1,
+    borderColor: '#E1E4E1',
+    zIndex: 2,
+  },
+  modalTitle: {
+    marginTop: 4,
+    color: '#141B14',
+    fontSize: 24,
+    lineHeight: 26,
+    fontWeight: '800',
+  },
+  modalSubtitle: {
+    color: '#566456',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  monthNav: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  monthArrow: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EAF5EC',
+    borderWidth: 1,
+    borderColor: '#D2E4D5',
+  },
+  monthLabel: {
+    color: '#283428',
+    fontWeight: '700',
+    fontSize: 13,
+    textTransform: 'capitalize',
+  },
+  weekHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 2,
+  },
+  weekHeaderText: {
+    width: '14%',
+    textAlign: 'center',
+    color: '#788478',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#D9DFD9',
+    overflow: 'hidden',
+    backgroundColor: '#FBFCFB',
+  },
+  dayCell: {
+    width: '14.2857%',
+    minHeight: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 0.5,
+    borderColor: '#E3E7E3',
+  },
+  dayCellMuted: {
+    backgroundColor: '#F4F6F4',
+  },
+  dayCellSelected: {
+    backgroundColor: '#2FA448',
+  },
+  dayText: {
+    color: '#263026',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  dayTextMuted: {
+    color: '#A1AAA1',
+  },
+  dayTextSelected: {
+    color: '#FFFFFF',
   },
 });

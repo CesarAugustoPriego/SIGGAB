@@ -140,16 +140,6 @@ export function SanitarioCalendarioScreen() {
     setMonthCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() + delta, 1));
   };
 
-  const onOpenProgramModal = () => {
-    setEditingCalendarioId(null);
-    setProgramForm({
-      ...EMPTY_PROGRAMACION_FORM,
-      idAnimal: idAnimalParam > 0 ? String(idAnimalParam) : '',
-    });
-    setProgramErrors({});
-    setShowProgramModal(true);
-  };
-
   const onCloseProgramModal = () => {
     if (savingProgramacion) return;
     setEditingCalendarioId(null);
@@ -234,7 +224,7 @@ export function SanitarioCalendarioScreen() {
     }));
 
     options.push({ text: 'Cancelar', style: 'cancel' });
-    Alert.alert('Seleccionar arete', 'Elige el animal para programar evento', options);
+    Alert.alert('Seleccionar arete', 'Elige el animal para el evento', options);
   };
 
   const openTipoSelector = () => {
@@ -393,11 +383,6 @@ export function SanitarioCalendarioScreen() {
               <Text style={styles.emptyText}>No hay eventos programados para esta fecha.</Text>
             ) : null}
 
-            {canCreate ? (
-              <Pressable style={styles.mainButton} onPress={onOpenProgramModal}>
-                <Text style={styles.mainButtonText}>Programar evento</Text>
-              </Pressable>
-            ) : null}
           </View>
         ) : null}
 
@@ -492,7 +477,7 @@ export function SanitarioCalendarioScreen() {
             </Pressable>
 
             <Text style={styles.modalTitle}>
-              {editingCalendarioId ? 'Editar Programacion' : 'Programar Evento'}
+              {editingCalendarioId ? 'Editar Programacion' : 'Programacion sanitaria'}
             </Text>
 
             <Text style={styles.formLabel}>Animal</Text>

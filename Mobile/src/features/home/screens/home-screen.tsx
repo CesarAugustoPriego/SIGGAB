@@ -77,26 +77,6 @@ function getQuickActions(rol: string | undefined): QuickAction[] {
     });
   }
 
-  // Sanitario — si puede ver el calendario lo mandamos ahí,
-  // si solo puede ver eventos (campo), lo mandamos a eventos
-  if (canViewSanitario(rol) && !canViewProductivo(rol)) {
-    if (canViewCalendarioSanitario(rol)) {
-      actions.push({
-        key: 'calendario',
-        label: 'Calendario',
-        icon: 'calendar-check',
-        color: '#6A1B9A',
-        route: '/(app)/sanitario/calendario',
-      });
-    }
-    actions.push({
-      key: 'eventos',
-      label: 'Eventos',
-      icon: 'heart-pulse',
-      color: '#AD1457',
-      route: '/(app)/sanitario',
-    });
-  }
 
   // Inventario
   if (canViewInventario(rol)) {
@@ -554,3 +534,4 @@ const styles = StyleSheet.create({
 
   pressed: { opacity: 0.82 },
 });
+
