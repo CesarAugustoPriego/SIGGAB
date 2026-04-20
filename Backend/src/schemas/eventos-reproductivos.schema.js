@@ -2,7 +2,7 @@ const { z } = require('zod');
 
 const createEventoReproductivoSchema = z.object({
   idAnimal: z.number({ required_error: 'El animal es obligatorio' }).int().positive(),
-  idLote: z.number({ required_error: 'El lote es obligatorio' }).int().positive(),
+  idLote: z.number().int().positive().optional(),
   tipoEvento: z.enum(['CELO', 'MONTA', 'PREÑEZ', 'PARTO', 'ABORTO'], {
     required_error: 'El tipo de evento reproductivo es obligatorio',
     invalid_type_error: 'Tipo inválido. Valores: CELO, MONTA, PREÑEZ, PARTO, ABORTO',

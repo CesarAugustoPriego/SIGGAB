@@ -17,6 +17,7 @@ import { useAuth } from '@/src/features/auth/auth-context';
 import {
   canViewAprobaciones,
   canViewCalendarioSanitario,
+  canViewEventosReproductivos,
   canViewGanado,
   canViewInventario,
   canViewProductivo,
@@ -139,6 +140,11 @@ export function HomeScreen() {
   const rol = user?.rol;
   const quickActions = useMemo(() => getQuickActions(rol), [rol]);
   const sanitarioRoute = useMemo(() => getSanitarioRoute(rol), [rol]);
+  const canViewProductivoModule = useMemo(() => canViewEventosReproductivos(rol), [rol]);
+  const isReproductivoOnly = useMemo(
+    () => canViewEventosReproductivos(rol) && !canViewProductivo(rol),
+    [rol]
+  );
 
   useEffect(() => {
     setLoadingStats(true);
@@ -188,11 +194,11 @@ export function HomeScreen() {
         onPress: () => router.push(sanitarioRoute as never),
       });
     }
-    if (canViewProductivo(rol)) {
+    if (canViewProductivoModule) {
       items.push({
         key: 'productivo',
-        label: 'Control Productivo',
-        icon: <MaterialCommunityIcons name="scale-bathroom" size={20} color="#4A6A4A" />,
+        label: isReproductivoOnly ? 'Eventos Reproductivos' : 'Control Productivo',
+        icon: <MaterialCommunityIcons name={isReproductivoOnly ? 'heart-pulse' : 'scale-bathroom'} size={20} color="#4A6A4A" />,
         onPress: () => router.push('/(app)/productivo' as never),
       });
     }
@@ -222,7 +228,7 @@ export function HomeScreen() {
     }
 
     return items;
-  }, [rol, router, sanitarioRoute]);
+  }, [rol, router, sanitarioRoute, canViewProductivoModule, isReproductivoOnly]);
 
   const firstName = user?.nombreCompleto?.split(' ')[0] ?? 'Usuario';
   const roleDisplay = user?.rol ?? 'Sin Rol';
@@ -355,16 +361,18 @@ export function HomeScreen() {
               </Pressable>
             )}
 
-            {canViewProductivo(rol) && (
+            {canViewProductivoModule && (
               <Pressable
                 style={({ pressed }) => [styles.moduleCard, pressed && styles.pressed]}
                 onPress={() => router.push('/(app)/productivo' as never)}
               >
                 <View style={[styles.moduleIcon, { backgroundColor: '#E3F2FD' }]}>
-                  <MaterialCommunityIcons name="scale-bathroom" size={24} color="#1565C0" />
+                  <MaterialCommunityIcons name={isReproductivoOnly ? 'heart-pulse' : 'scale-bathroom'} size={24} color="#1565C0" />
                 </View>
-                <Text style={styles.moduleTitle}>Productivo</Text>
-                <Text style={styles.moduleSub}>Peso, leche, reproductivo</Text>
+                <Text style={styles.moduleTitle}>{isReproductivoOnly ? 'Reproductivo' : 'Productivo'}</Text>
+                <Text style={styles.moduleSub}>
+                  {isReproductivoOnly ? 'Eventos reproductivos' : 'Peso, leche, reproductivo'}
+                </Text>
               </Pressable>
             )}
 

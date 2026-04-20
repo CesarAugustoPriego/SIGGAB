@@ -121,6 +121,23 @@ export function canViewProductivo(roleName: string | undefined) {
   ]);
 }
 
+export function canViewEventosReproductivos(roleName: string | undefined) {
+  return canViewProductivo(roleName) || hasRole(roleName, [
+    'medico veterinario',
+    'veterinario',
+  ]);
+}
+
+export function canCreateEventoReproductivo(roleName: string | undefined) {
+  return hasRole(roleName, [
+    'administrador',
+    'produccion',
+    'campo',
+    'medico veterinario',
+    'veterinario',
+  ]);
+}
+
 export function canViewInventario(roleName: string | undefined) {
   return hasRole(roleName, ['propietario', 'administrador', 'almacen']);
 }
@@ -166,7 +183,7 @@ export function getVisibleModulesForRole(roleName: string | undefined): MobileMo
     if (module.key === 'dashboard') return canViewDashboard(roleName);
     if (module.key === 'ganado') return canViewGanado(roleName);
     if (module.key === 'sanitario') return canViewSanitario(roleName);
-    if (module.key === 'productivo') return canViewProductivo(roleName);
+    if (module.key === 'productivo') return canViewEventosReproductivos(roleName);
     if (module.key === 'inventario') return canViewInventario(roleName);
     if (module.key === 'reportes') return canViewReportes(roleName);
     if (module.key === 'aprobaciones') return canViewAprobaciones(roleName);

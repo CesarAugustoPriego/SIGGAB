@@ -69,7 +69,7 @@ export interface CreateProduccionLecheInput {
 export interface EventoReproductivo {
   idEventoReproductivo: number;
   idAnimal: number;
-  idLote: number;
+  idLote: number | null;
   tipoEvento: TipoEventoReproductivo;
   fechaEvento: string;
   observaciones: string | null;
@@ -83,7 +83,7 @@ export interface EventoReproductivo {
 
 export interface CreateEventoReproductivoInput {
   idAnimal: number;
-  idLote: number;
+  idLote?: number;
   tipoEvento: TipoEventoReproductivo;
   fechaEvento: string;
   observaciones?: string;

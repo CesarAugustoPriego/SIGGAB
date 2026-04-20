@@ -57,12 +57,13 @@ router.use(auth);
  *         application/json:
  *           schema:
  *             type: object
- *             required: [idAnimal, idLote, tipoEvento, fechaEvento]
+ *             required: [idAnimal, tipoEvento, fechaEvento]
  *             properties:
  *               idAnimal:
  *                 type: integer
  *               idLote:
  *                 type: integer
+ *                 nullable: true
  *               tipoEvento:
  *                 type: string
  *                 enum: [CELO, MONTA, PRENEZ, PARTO, ABORTO]
@@ -78,7 +79,12 @@ router.use(auth);
  *         description: Error de validacion
  */
 router.get('/', requireRole('Propietario', 'Administrador', 'Produccion', 'Medico Veterinario'), ctrl.getAll);
-router.post('/', requireRole('Produccion', 'Campo', 'Administrador'), validate(createEventoReproductivoSchema), ctrl.create);
+router.post(
+  '/',
+  requireRole('Produccion', 'Campo', 'Administrador', 'Medico Veterinario'),
+  validate(createEventoReproductivoSchema),
+  ctrl.create
+);
 
 /**
  * @swagger
@@ -130,7 +136,12 @@ router.post('/', requireRole('Produccion', 'Campo', 'Administrador'), validate(c
  *         description: Evento no encontrado
  */
 router.get('/:id', requireRole('Propietario', 'Administrador', 'Produccion', 'Medico Veterinario'), ctrl.getById);
-router.patch('/:id', requireRole('Produccion'), validate(updateEventoReproductivoSchema), ctrl.update);
+router.patch(
+  '/:id',
+  requireRole('Produccion', 'Campo', 'Administrador', 'Medico Veterinario'),
+  validate(updateEventoReproductivoSchema),
+  ctrl.update
+);
 
 /**
  * @swagger

@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import {
   ActivityIndicator,
   Alert,
@@ -16,10 +16,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/src/features/auth/auth-context';
+import {
+  canCreateEventoReproductivo,
+  canViewEventosReproductivos,
+} from '@/src/features/auth/role-permissions';
 import type { Animal } from '@/src/features/ganado/ganado-types';
 import { AnimalPicker } from '@/src/shared/components/animal-picker';
 import { productivoApi } from '../productivo-api';
-import type { LoteProductivo, TipoEventoReproductivo } from '../productivo-types';
+import type { TipoEventoReproductivo } from '../productivo-types';
 
 const ACCENT = '#8E44AD';
 
@@ -33,53 +37,38 @@ const TIPOS: { value: TipoEventoReproductivo; label: string; icon: string; color
 
 export function RegistroReproductivoScreen() {
   const router = useRouter();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
 
   const [animal, setAnimal] = useState<Animal | null>(null);
-  const [lotes, setLotes] = useState<LoteProductivo[]>([]);
-  const [loadingLotes, setLoadingLotes] = useState(false);
-  const [selectedLote, setSelectedLote] = useState<number | null>(null);
-  const [loteError, setLoteError] = useState<string | null>(null);
-
   const [tipoEvento, setTipoEvento] = useState<TipoEventoReproductivo | null>(null);
   const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10));
   const [observaciones, setObservaciones] = useState('');
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const canView = useMemo(() => canViewEventosReproductivos(user?.rol), [user?.rol]);
+  const canCreate = useMemo(() => canCreateEventoReproductivo(user?.rol), [user?.rol]);
 
   const canSave = useMemo(
-    () => !!animal && !!selectedLote && !!tipoEvento && !!fecha,
-    [animal, selectedLote, tipoEvento, fecha],
+    () => !!animal && !!tipoEvento && !!fecha,
+    [animal, tipoEvento, fecha],
   );
 
-  const onAnimalSelected = useCallback(async (selected: Animal | null) => {
+  const onAnimalSelected = useCallback((selected: Animal | null) => {
     setAnimal(selected);
-    setLotes([]);
-    setSelectedLote(null);
-    setLoteError(null);
-    if (!selected) return;
-
-    setLoadingLotes(true);
-    try {
-      const data = await productivoApi.getLotes('PENDIENTE');
-      setLotes(data);
-      if (data.length > 0) setSelectedLote(data[0].idLote);
-      if (data.length === 0) setLoteError('No hay lotes activos. Crea uno desde el panel web.');
-    } catch {
-      setLoteError('Error al cargar lotes.');
-    } finally {
-      setLoadingLotes(false);
-    }
   }, []);
 
   const onSave = useCallback(async () => {
-    if (!canSave || !animal || !selectedLote || !tipoEvento) return;
+    if (!canSave || !animal || !tipoEvento) return;
+    if (animal.sexo !== 'HEMBRA') {
+      setFormError('Solo se pueden registrar eventos reproductivos en hembras.');
+      return;
+    }
+
     setSaving(true);
     setFormError(null);
     try {
       await productivoApi.createEventoReproductivo({
         idAnimal: animal.idAnimal,
-        idLote: selectedLote,
         tipoEvento,
         fechaEvento: fecha,
         observaciones: observaciones.trim() || undefined,
@@ -96,7 +85,21 @@ export function RegistroReproductivoScreen() {
     } finally {
       setSaving(false);
     }
-  }, [canSave, animal, selectedLote, tipoEvento, fecha, observaciones, logout, router]);
+  }, [canSave, animal, tipoEvento, fecha, observaciones, logout, router]);
+
+  if (!canView || !canCreate) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+        <View style={styles.centerBox}>
+          <Text style={styles.centerTitle}>Acceso restringido</Text>
+          <Text style={styles.centerText}>Tu rol no tiene permisos para registrar eventos reproductivos.</Text>
+          <Pressable style={styles.mainButton} onPress={() => router.replace('/(app)/home')}>
+            <Text style={styles.mainButtonText}>Volver al inicio</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
@@ -122,40 +125,10 @@ export function RegistroReproductivoScreen() {
             />
           </View>
 
-          {/* 2. Lote */}
+          {/* 2. Tipo de evento */}
           {animal && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>2. Seleccionar lote</Text>
-              {loadingLotes ? (
-                <ActivityIndicator color={ACCENT} />
-              ) : loteError ? (
-                <Text style={styles.fieldError}>{loteError}</Text>
-              ) : (
-                lotes.map((l) => (
-                  <Pressable
-                    key={l.idLote}
-                    onPress={() => setSelectedLote(l.idLote)}
-                    style={[styles.loteItem, selectedLote === l.idLote && styles.loteItemActive]}
-                  >
-                    <MaterialCommunityIcons
-                      name={selectedLote === l.idLote ? 'radiobox-marked' : 'radiobox-blank'}
-                      size={18}
-                      color={selectedLote === l.idLote ? ACCENT : '#8A9A8A'}
-                    />
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.loteLabel}>Lote #{l.idLote}</Text>
-                      <Text style={styles.loteSub}>{l.fechaInicio} → {l.fechaFin}</Text>
-                    </View>
-                  </Pressable>
-                ))
-              )}
-            </View>
-          )}
-
-          {/* 3. Tipo de evento */}
-          {animal && selectedLote && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>3. Tipo de evento *</Text>
+              <Text style={styles.sectionTitle}>2. Tipo de evento *</Text>
               <View style={styles.tiposGrid}>
                 {TIPOS.map((t) => (
                   <Pressable
@@ -180,10 +153,10 @@ export function RegistroReproductivoScreen() {
             </View>
           )}
 
-          {/* 4. Detalle */}
-          {animal && selectedLote && tipoEvento && (
+          {/* 3. Detalle */}
+          {animal && tipoEvento && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>4. Detalle del evento</Text>
+              <Text style={styles.sectionTitle}>3. Detalle del evento</Text>
 
               <View style={styles.fieldGroup}>
                 <Text style={styles.fieldLabel}>Fecha del evento *</Text>
@@ -248,14 +221,6 @@ const styles = StyleSheet.create({
   section: { backgroundColor: '#FFFFFF', borderRadius: 14, padding: 14, gap: 12, borderWidth: 1, borderColor: '#E0CEE8' },
   sectionTitle: { fontSize: 13, fontWeight: '700', color: '#4A1A5A', textTransform: 'uppercase', letterSpacing: 0.5 },
 
-  loteItem: {
-    flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 10,
-    borderWidth: 1, borderColor: '#E0CEE8', backgroundColor: '#FAF5FB',
-  },
-  loteItemActive: { borderColor: ACCENT, backgroundColor: '#F8F0FB' },
-  loteLabel: { fontSize: 13, fontWeight: '700', color: '#3A1A4A' },
-  loteSub: { fontSize: 11, color: '#7A7A8A' },
-
   tiposGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tipoChip: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
@@ -282,4 +247,34 @@ const styles = StyleSheet.create({
   },
   saveButtonDisabled: { opacity: 0.5 },
   saveButtonText: { color: '#FFF', fontWeight: '700', fontSize: 15 },
+  centerBox: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    paddingHorizontal: 20,
+  },
+  centerTitle: {
+    color: '#1A261B',
+    fontSize: 20,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  centerText: {
+    color: '#667266',
+    textAlign: 'center',
+  },
+  mainButton: {
+    minHeight: 42,
+    borderRadius: 999,
+    backgroundColor: '#39A94E',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+  },
+  mainButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
 });

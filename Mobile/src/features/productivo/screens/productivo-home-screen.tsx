@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -16,7 +16,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/src/features/auth/auth-context';
-import { canViewProductivo, canCreateAnimal } from '@/src/features/auth/role-permissions';
+import {
+  canCreateAnimal,
+  canCreateEventoReproductivo,
+  canViewEventosReproductivos,
+  canViewProductivo,
+} from '@/src/features/auth/role-permissions';
 import { productivoApi } from '../productivo-api';
 import type { RegistroPeso, ProduccionLeche, EventoReproductivo } from '../productivo-types';
 
@@ -108,17 +113,30 @@ export function ProductivoHomeScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const canView = useMemo(() => canViewProductivo(user?.rol), [user?.rol]);
-  const canCreate = useMemo(() => canCreateAnimal(user?.rol), [user?.rol]);
+  const canViewFullProductivo = useMemo(() => canViewProductivo(user?.rol), [user?.rol]);
+  const canViewReproductivo = useMemo(() => canViewEventosReproductivos(user?.rol), [user?.rol]);
+  const canCreateFullRegistros = useMemo(() => canCreateAnimal(user?.rol), [user?.rol]);
+  const canCreateReproductivo = useMemo(() => canCreateEventoReproductivo(user?.rol), [user?.rol]);
+  const canView = canViewFullProductivo || canViewReproductivo;
+  const visibleTabs = useMemo(
+    () => (canViewFullProductivo ? (['peso', 'leche', 'reproductivo'] as Tab[]) : (['reproductivo'] as Tab[])),
+    [canViewFullProductivo]
+  );
+
+  useEffect(() => {
+    if (!visibleTabs.includes(tab)) {
+      setTab(visibleTabs[0]);
+    }
+  }, [tab, visibleTabs]);
 
   const loadData = useCallback(async () => {
     if (!canView) { setLoading(false); return; }
     setError(null);
     try {
       const [peso, leche, repro] = await Promise.all([
-        productivoApi.getRegistrosPeso(),
-        productivoApi.getProduccionLeche(),
-        productivoApi.getEventosReproductivos(),
+        canViewFullProductivo ? productivoApi.getRegistrosPeso() : Promise.resolve([] as RegistroPeso[]),
+        canViewFullProductivo ? productivoApi.getProduccionLeche() : Promise.resolve([] as ProduccionLeche[]),
+        canViewReproductivo ? productivoApi.getEventosReproductivos() : Promise.resolve([] as EventoReproductivo[]),
       ]);
       setRegistrosPeso(peso);
       setRegistrosLeche(leche);
@@ -130,7 +148,7 @@ export function ProductivoHomeScreen() {
     } finally {
       setLoading(false);
     }
-  }, [canView, logout]);
+  }, [canView, canViewFullProductivo, canViewReproductivo, logout]);
 
   useFocusEffect(useCallback(() => {
     setLoading(true);
@@ -225,7 +243,7 @@ export function ProductivoHomeScreen() {
 
         {/* ── Tabs ── */}
         <View style={styles.tabBar}>
-          {(['peso', 'leche', 'reproductivo'] as Tab[]).map((t) => (
+          {visibleTabs.map((t) => (
             <Pressable
               key={t}
               onPress={() => setTab(t)}
@@ -239,7 +257,7 @@ export function ProductivoHomeScreen() {
         </View>
 
         {/* ── Chart ── */}
-        {(tab === 'peso' || tab === 'leche') && (
+        {canViewFullProductivo && (tab === 'peso' || tab === 'leche') && (
           <View style={styles.chartCard}>
             <View style={styles.chartHeader}>
               <View>
@@ -320,9 +338,9 @@ export function ProductivoHomeScreen() {
         )}
 
         {/* ── FAB ── */}
-        {canCreate && (
+        {(canCreateFullRegistros || canCreateReproductivo) && (
           <View style={styles.actionsRow}>
-            {tab === 'peso' && (
+            {canCreateFullRegistros && tab === 'peso' && (
               <Pressable
                 style={styles.primaryFab}
                 onPress={() => router.push('/(app)/productivo/registro-peso' as any)}
@@ -331,7 +349,7 @@ export function ProductivoHomeScreen() {
                 <Text style={styles.primaryFabText}>Registrar peso</Text>
               </Pressable>
             )}
-            {tab === 'leche' && (
+            {canCreateFullRegistros && tab === 'leche' && (
               <Pressable
                 style={[styles.primaryFab, { backgroundColor: '#1A8FC0' }]}
                 onPress={() => router.push('/(app)/productivo/registro-leche' as any)}
@@ -340,7 +358,7 @@ export function ProductivoHomeScreen() {
                 <Text style={styles.primaryFabText}>Registrar leche</Text>
               </Pressable>
             )}
-            {tab === 'reproductivo' && (
+            {canCreateReproductivo && tab === 'reproductivo' && (
               <Pressable
                 style={[styles.primaryFab, { backgroundColor: '#8E44AD' }]}
                 onPress={() => router.push('/(app)/productivo/registro-reproductivo' as any)}
@@ -355,7 +373,9 @@ export function ProductivoHomeScreen() {
         {error && <Text style={styles.errorText}>{error}</Text>}
 
         {/* ── Historial list ── */}
-        <Text style={styles.listTitle}>Historial de registros</Text>
+        <Text style={styles.listTitle}>
+          {canViewFullProductivo ? 'Historial de registros' : 'Historial de eventos reproductivos'}
+        </Text>
 
         {loading ? (
           <View style={styles.centerBox}>

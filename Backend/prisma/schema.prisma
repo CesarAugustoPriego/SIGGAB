@@ -318,7 +318,7 @@ model ProduccionLeche {
 model EventoReproductivo {
   idEventoReproductivo Int            @id @default(autoincrement()) @map("id_evento_reproductivo")
   idAnimal             Int            @map("id_animal")
-  idLote               Int            @map("id_lote")
+  idLote               Int?           @map("id_lote")
   tipoEvento           String         @map("tipo_evento") @db.VarChar(50)
   fechaEvento          DateTime       @map("fecha_evento") @db.Date
   observaciones        String?        @db.Text
@@ -327,7 +327,7 @@ model EventoReproductivo {
   validadoPor          Int?           @map("validado_por")
 
   animal      Animal                   @relation(fields: [idAnimal], references: [idAnimal])
-  lote        LoteValidacionProductiva @relation(fields: [idLote], references: [idLote])
+  lote        LoteValidacionProductiva? @relation(fields: [idLote], references: [idLote])
   registrador Usuario                  @relation("RegistradoPorRepro", fields: [registradoPor], references: [idUsuario])
   validador   Usuario?                 @relation("ValidadoPorRepro", fields: [validadoPor], references: [idUsuario])
 
