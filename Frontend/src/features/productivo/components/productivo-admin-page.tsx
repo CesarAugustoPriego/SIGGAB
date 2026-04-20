@@ -14,8 +14,10 @@ import type {
 } from '../productivo-types';
 import {
   canViewProductivo,
+  canListProductivo,
   canCreateLote,
   canCreateRegistro,
+  canCreateEventoReproductivo,
   canEditRegistro,
   canValidarRegistro,
   canViewReproductivos,
@@ -58,7 +60,9 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
   const { user, logout } = useAuth();
   const visibleNavItems = useMemo(() => getVisibleNavItemsForRole(user?.rol, NAV_ITEMS), [user?.rol]);
 
-  const [activeTab, setActiveTab] = useState<Tab>('lotes');
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    return canListProductivo(user?.rol) ? 'lotes' : 'reproductivo';
+  });
   const [loadingInit, setLoadingInit] = useState(true);
   const [message, setMessage] = useState<UiMessage | null>(null);
 
@@ -91,7 +95,7 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
   // ─── Reproductivo state ───────────────────────────────────────────────────
   const [eventos, setEventos] = useState<EventoReproductivo[]>([]);
   const [loadingEventos, setLoadingEventos] = useState(false);
-  const [eventoForm, setEventoForm] = useState({ idAnimal: '', idLote: '', tipoEvento: '', fechaEvento: '', observaciones: '' });
+  const [eventoForm, setEventoForm] = useState({ idAnimal: '', tipoEvento: '', fechaEvento: '', observaciones: '' });
   const [savingEvento, setSavingEvento] = useState(false);
   const [eventoFilter, setEventoFilter] = useState({ idAnimal: '', idLote: '', tipo: 'TODOS' as TipoEventoReproductivo | 'TODOS', estado: 'TODOS' as EstadoRegistro | 'TODOS' });
   const [editingEventoId, setEditingEventoId] = useState<number | null>(null);
@@ -103,6 +107,8 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
   const canEdit = useMemo(() => canEditRegistro(user?.rol), [user?.rol]);
   const canValidar = useMemo(() => canValidarRegistro(user?.rol), [user?.rol]);
   const canRepro = useMemo(() => canViewReproductivos(user?.rol), [user?.rol]);
+  const canCreateRepro = useMemo(() => canCreateEventoReproductivo(user?.rol), [user?.rol]);
+  const canList = useMemo(() => canListProductivo(user?.rol), [user?.rol]);
 
 
   // ─── Error handler ────────────────────────────────────────────────────────
@@ -175,7 +181,10 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
   // ─── Init ─────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!canView) { setLoadingInit(false); return; }
-    void Promise.all([loadLotes(), loadAnimales()]).finally(() => setLoadingInit(false));
+    const promises: Promise<unknown>[] = [loadAnimales()];
+    if (canList) promises.push(loadLotes());
+    
+    void Promise.all(promises).finally(() => setLoadingInit(false));
   }, [canView, loadLotes, loadAnimales]);
 
   // ─── Tab data ─────────────────────────────────────────────────────────────
@@ -301,7 +310,7 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
   };
 
   // ─── Reproductivo handlers ─────────────────────────────────────────────────
-  const resetEventoForm = () => { setEventoForm({ idAnimal: '', idLote: '', tipoEvento: '', fechaEvento: '', observaciones: '' }); setEditingEventoId(null); };
+  const resetEventoForm = () => { setEventoForm({ idAnimal: '', tipoEvento: '', fechaEvento: '', observaciones: '' }); setEditingEventoId(null); };
 
   const onSaveEvento = async () => {
     if (editingEventoId) {
@@ -320,12 +329,11 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
       return;
     }
 
-    if (!eventoForm.idAnimal || !eventoForm.idLote || !eventoForm.tipoEvento || !eventoForm.fechaEvento) { setMessage({ type: 'error', text: 'Animal, lote, tipo y fecha son obligatorios.' }); return; }
+    if (!eventoForm.idAnimal || !eventoForm.tipoEvento || !eventoForm.fechaEvento) { setMessage({ type: 'error', text: 'Animal, tipo y fecha son obligatorios.' }); return; }
     try {
       setSavingEvento(true); setMessage(null);
       const created = await productivoApi.createEventoReproductivo({
         idAnimal: Number(eventoForm.idAnimal),
-        idLote: Number(eventoForm.idLote),
         tipoEvento: eventoForm.tipoEvento as TipoEventoReproductivo,
         fechaEvento: eventoForm.fechaEvento,
         observaciones: eventoForm.observaciones || undefined,
@@ -393,15 +401,19 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
             <div className="productivo-content">
               {/* ─── Tabs ─── */}
               <div className="productivo-tabs" data-testid="productivo-tabs">
-                <button type="button" className={`productivo-tab ${activeTab === 'lotes' ? 'is-active' : ''}`} onClick={() => setActiveTab('lotes')} data-testid="tab-lotes">
-                  <Layers size={16} aria-hidden /> Lotes de validacion
-                </button>
-                <button type="button" className={`productivo-tab ${activeTab === 'peso' ? 'is-active' : ''}`} onClick={() => setActiveTab('peso')} data-testid="tab-peso">
-                  <Scale size={16} aria-hidden /> Registro de peso
-                </button>
-                <button type="button" className={`productivo-tab ${activeTab === 'leche' ? 'is-active' : ''}`} onClick={() => setActiveTab('leche')} data-testid="tab-leche">
-                  <Milk size={16} aria-hidden /> Produccion de leche
-                </button>
+                {canList ? (
+                  <>
+                    <button type="button" className={`productivo-tab ${activeTab === 'lotes' ? 'is-active' : ''}`} onClick={() => setActiveTab('lotes')} data-testid="tab-lotes">
+                      <Layers size={16} aria-hidden /> Lotes de validacion
+                    </button>
+                    <button type="button" className={`productivo-tab ${activeTab === 'peso' ? 'is-active' : ''}`} onClick={() => setActiveTab('peso')} data-testid="tab-peso">
+                      <Scale size={16} aria-hidden /> Registro de peso
+                    </button>
+                    <button type="button" className={`productivo-tab ${activeTab === 'leche' ? 'is-active' : ''}`} onClick={() => setActiveTab('leche')} data-testid="tab-leche">
+                      <Milk size={16} aria-hidden /> Produccion de leche
+                    </button>
+                  </>
+                ) : null}
                 {canRepro ? (
                   <button type="button" className={`productivo-tab ${activeTab === 'reproductivo' ? 'is-active' : ''}`} onClick={() => setActiveTab('reproductivo')} data-testid="tab-reproductivo">
                     <Baby size={16} aria-hidden /> Eventos reproductivos
@@ -619,7 +631,7 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
               {/* ─── TAB: Reproductivo ─── */}
               {activeTab === 'reproductivo' && canRepro ? (
                 <div className="productivo-tab-content">
-                  {canCreate ? (
+                  {canCreateRepro ? (
                     <article className="productivo-card">
                       <div className="users-admin-card__title"><h2>{editingEventoId ? 'Editar evento reproductivo' : 'Nuevo evento reproductivo'}</h2>{editingEventoId ? <Button type="button" variant="ghost" onClick={resetEventoForm}>Cancelar</Button> : null}</div>
                       <p className="productivo-subtitle">Registra eventos: celo, monta, preñez, parto o aborto</p>
@@ -630,12 +642,7 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
                             {hembras.map((a) => <option key={a.idAnimal} value={a.idAnimal}>{a.numeroArete} - {a.nombreRaza}</option>)}
                           </select>
                         </label>
-                        <label className="productivo-field"><span>Lote de validacion</span>
-                          <select value={eventoForm.idLote} onChange={(e) => setEventoForm((p) => ({ ...p, idLote: e.target.value }))} disabled={!!editingEventoId} data-testid="evento-lote">
-                            <option value="">Selecciona un lote</option>
-                            {lotes.map((l) => <option key={l.idLote} value={l.idLote}>#{l.idLote} ({toInputDate(l.fechaInicio)} → {toInputDate(l.fechaFin)}) [{l.estado}]</option>)}
-                          </select>
-                        </label>
+
                       </div>
                       <div className="productivo-field-row">
                         <label className="productivo-field"><span>Tipo de evento</span>
@@ -651,9 +658,9 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
                     </article>
                   ) : null}
 
-                  <div className="productivo-filters productivo-filters--4">
+                  <div className="productivo-filters productivo-filters--3">
                     <label className="productivo-field"><span>Animal</span><select value={eventoFilter.idAnimal} onChange={(e) => setEventoFilter((p) => ({ ...p, idAnimal: e.target.value }))}><option value="">Todos</option>{animales.map((a) => <option key={a.idAnimal} value={a.idAnimal}>{a.numeroArete}</option>)}</select></label>
-                    <label className="productivo-field"><span>Lote</span><select value={eventoFilter.idLote} onChange={(e) => setEventoFilter((p) => ({ ...p, idLote: e.target.value }))}><option value="">Todos</option>{lotes.map((l) => <option key={l.idLote} value={l.idLote}>#{l.idLote}</option>)}</select></label>
+
                     <label className="productivo-field"><span>Tipo</span><select value={eventoFilter.tipo} onChange={(e) => setEventoFilter((p) => ({ ...p, tipo: e.target.value as TipoEventoReproductivo | 'TODOS' }))}><option value="TODOS">Todos</option>{TIPOS_EVENTO.map((t) => <option key={t} value={t}>{t}</option>)}</select></label>
                     <label className="productivo-field"><span>Estado</span><select value={eventoFilter.estado} onChange={(e) => setEventoFilter((p) => ({ ...p, estado: e.target.value as EstadoRegistro | 'TODOS' }))}><option value="TODOS">Todos</option><option value="PENDIENTE">Pendiente</option><option value="APROBADO">Aprobado</option><option value="RECHAZADO">Rechazado</option></select></label>
                   </div>
@@ -663,12 +670,12 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
                     {loadingEventos ? <p className="productivo-helper">Cargando eventos...</p> : (
                       <div className="productivo-table-wrap">
                         <table className="productivo-table">
-                          <thead><tr><th>Arete</th><th>Lote</th><th>Tipo</th><th>Fecha</th><th>Observaciones</th><th>Registrado por</th><th>Estado</th><th>Acciones</th></tr></thead>
+                          <thead><tr><th>Arete</th><th>Tipo</th><th>Fecha</th><th>Observaciones</th><th>Registrado por</th><th>Estado</th><th>Acciones</th></tr></thead>
                           <tbody>
-                            {eventos.length === 0 ? <tr><td colSpan={8} className="productivo-table-empty">No hay registros para mostrar.</td></tr> : eventos.map((e) => (
+                            {eventos.length === 0 ? <tr><td colSpan={7} className="productivo-table-empty">No hay registros para mostrar.</td></tr> : eventos.map((e) => (
                               <tr key={e.idEventoReproductivo}>
                                 <td className="productivo-table-id">{e.animal?.numeroArete || 'N/A'}</td>
-                                <td>#{e.idLote}</td>
+
                                 <td><span className={`productivo-tipo ${getTipoEventoClass(e.tipoEvento)}`}>{e.tipoEvento}</span></td>
                                 <td>{toInputDate(e.fechaEvento)}</td>
                                 <td className="productivo-table-obs">{e.observaciones || '-'}</td>
@@ -677,7 +684,7 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
                                 <td>
                                   {e.estadoValidacion === 'PENDIENTE' ? (
                                     <div className="productivo-table-actions">
-                                      {canEdit ? <Button type="button" variant="ghost" onClick={() => { setEditingEventoId(e.idEventoReproductivo); setEventoForm({ idAnimal: String(e.idAnimal), idLote: String(e.idLote), tipoEvento: e.tipoEvento, fechaEvento: toInputDate(e.fechaEvento), observaciones: e.observaciones || '' }); }}>Editar</Button> : null}
+                                      {canEdit ? <Button type="button" variant="ghost" onClick={() => { setEditingEventoId(e.idEventoReproductivo); setEventoForm({ idAnimal: String(e.idAnimal), tipoEvento: e.tipoEvento, fechaEvento: toInputDate(e.fechaEvento), observaciones: e.observaciones || '' }); }}>Editar</Button> : null}
                                       {canValidar ? <Button type="button" className="users-btn-success" onClick={() => void onValidarEvento(e.idEventoReproductivo, 'APROBADO')}>Aprobar</Button> : null}
                                       {canValidar ? <Button type="button" className="users-btn-danger" onClick={() => void onValidarEvento(e.idEventoReproductivo, 'RECHAZADO')}>Rechazar</Button> : null}
                                     </div>

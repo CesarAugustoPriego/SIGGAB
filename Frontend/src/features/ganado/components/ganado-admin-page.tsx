@@ -27,46 +27,23 @@ import {
   formatSexoAnimal,
   getGanadoErrorMessage,
   getGanadoFieldErrors,
-  isValidAreteFormat,
+
   toInputDate,
   toNumeric,
+  validateAnimalForm,
+  validateBajaForm,
+  toAnimalFormState,
+  type AnimalFormState,
+  type AnimalFormErrors,
+  type BajaFormState,
+
+  DEFAULT_BAJA_FORM,
 } from '../ganado-utils';
 
 interface GanadoAdminPageProps {
   onGoHome: () => void;
   onGoUsersAdmin?: () => void;
   onNavigateModule?: (moduleName: string) => void;
-}
-
-interface AnimalFormState {
-  numeroArete: string;
-  fechaIngreso: string;
-  pesoInicial: string;
-  idRaza: string;
-  sexo: SexoAnimal;
-  procedencia: ProcedenciaAnimal;
-  edadEstimada: string;
-  estadoSanitarioInicial: string;
-  fotoBase64: string;
-  fotoPreviewUrl: string;
-  eliminarFoto: boolean;
-}
-
-interface AnimalFormErrors {
-  numeroArete?: string;
-  fechaIngreso?: string;
-  pesoInicial?: string;
-  idRaza?: string;
-  sexo?: string;
-  procedencia?: string;
-  edadEstimada?: string;
-  estadoSanitarioInicial?: string;
-}
-
-interface BajaFormState {
-  estadoActual: Exclude<EstadoAnimal, 'ACTIVO'>;
-  motivoBaja: string;
-  fechaBaja: string;
 }
 
 interface UiMessage {
@@ -84,11 +61,7 @@ const PROCEDENCIA_OPTIONS: Array<{ value: ProcedenciaAnimal; label: string }> = 
   { value: 'NACIDA', label: 'Nacida en rancho' },
 ];
 
-const DEFAULT_BAJA_FORM: BajaFormState = {
-  estadoActual: 'VENDIDO',
-  motivoBaja: '',
-  fechaBaja: new Date().toISOString().slice(0, 10),
-};
+
 
 function buildEmptyForm(defaultRazaId = ''): AnimalFormState {
   return {
@@ -117,49 +90,9 @@ function animalSummary(animal: Animal) {
   return `${animal.raza?.nombreRaza || 'Tabasquena'} · ${formatSexoAnimal(animal.sexo)} · ${toNumeric(animal.pesoInicial)} kg · ${animal.edadEstimada} meses`;
 }
 
-function validateAnimalForm(form: AnimalFormState): AnimalFormErrors {
-  const errors: AnimalFormErrors = {};
 
-  if (!form.numeroArete.trim()) {
-    errors.numeroArete = 'El numero de arete es obligatorio.';
-  } else if (!isValidAreteFormat(form.numeroArete)) {
-    errors.numeroArete = 'El arete SINIIGA debe ser 10 digitos numericos comenzando con 27. Ej: 2712345678';
-  }
-  if (!form.fechaIngreso || !/^\d{4}-\d{2}-\d{2}$/.test(form.fechaIngreso)) errors.fechaIngreso = 'Fecha invalida (YYYY-MM-DD).';
-  if (!form.pesoInicial.trim() || Number(form.pesoInicial) <= 0) errors.pesoInicial = 'El peso debe ser mayor a 0.';
-  if (!form.idRaza || Number(form.idRaza) <= 0) errors.idRaza = 'Selecciona la raza disponible.';
-  if (!form.sexo) errors.sexo = 'Selecciona si el animal es hembra o macho.';
-  if (!form.procedencia) errors.procedencia = 'Selecciona la procedencia del animal.';
-  if (!form.edadEstimada.trim() || !Number.isInteger(Number(form.edadEstimada)) || Number(form.edadEstimada) < 0) {
-    errors.edadEstimada = 'La edad debe ser un entero mayor o igual a 0.';
-  }
-  if (!form.estadoSanitarioInicial.trim()) errors.estadoSanitarioInicial = 'El estado sanitario inicial es obligatorio.';
 
-  return errors;
-}
 
-function validateBajaForm(form: BajaFormState) {
-  const errors: { motivoBaja?: string; fechaBaja?: string } = {};
-  if (!form.motivoBaja.trim() || form.motivoBaja.trim().length < 5) errors.motivoBaja = 'Minimo 5 caracteres.';
-  if (!form.fechaBaja || !/^\d{4}-\d{2}-\d{2}$/.test(form.fechaBaja)) errors.fechaBaja = 'Fecha invalida.';
-  return errors;
-}
-
-function toFormState(animal: Animal): AnimalFormState {
-  return {
-    numeroArete: animal.numeroArete,
-    fechaIngreso: toInputDate(animal.fechaIngreso),
-    pesoInicial: String(toNumeric(animal.pesoInicial)),
-    idRaza: String(animal.idRaza),
-    sexo: animal.sexo,
-    procedencia: animal.procedencia,
-    edadEstimada: String(animal.edadEstimada),
-    estadoSanitarioInicial: animal.estadoSanitarioInicial,
-    fotoBase64: '',
-    fotoPreviewUrl: animal.fotoUrl || '',
-    eliminarFoto: false,
-  };
-}
 
 function buildUpdatePayload(form: AnimalFormState, animal: Animal): UpdateAnimalInput | null {
   const payload: UpdateAnimalInput = {};
@@ -391,7 +324,7 @@ export function GanadoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: 
     setEditingAnimalId(animal.idAnimal);
     setFormErrors({});
     setMessage(null);
-    setForm(toFormState(animal));
+    setForm(toAnimalFormState(animal));
   };
 
   const onFieldChange = (field: keyof AnimalFormState, value: string | boolean) => {
@@ -645,7 +578,7 @@ export function GanadoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: 
                   ) : (
                     <>
                       <label className="ganado-field">
-                        <span>Numero de arete SINIIGA</span>
+                        <span>Arete SINIIGA</span>
                         <input
                           type="text"
                           data-testid="input-arete"
@@ -655,13 +588,13 @@ export function GanadoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: 
                           maxLength={10}
                           disabled={editingAnimalId !== null}
                         />
-                        <small className="ganado-field-hint">Formato SINIIGA Tabasco: 27 + 8 digitos (ej: 2712345678)</small>
+                        <small className="ganado-field-hint">Formato: 27 + 8 digitos (codigo Tabasco)</small>
                         {formErrors.numeroArete ? <small>{formErrors.numeroArete}</small> : null}
                       </label>
 
                       <div className="ganado-field-row">
                         <label className="ganado-field">
-                          <span>Fecha de ingreso</span>
+                          <span>Fecha ingreso</span>
                           <input
                             type="date"
                             data-testid="input-fecha"
@@ -672,7 +605,7 @@ export function GanadoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: 
                         </label>
 
                         <label className="ganado-field">
-                          <span>Peso inicial (kg)</span>
+                          <span>Peso (kg)</span>
                           <input
                             type="number"
                             min="0.1"
@@ -688,7 +621,7 @@ export function GanadoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: 
 
                       <div className="ganado-field-row">
                         <label className="ganado-field">
-                          <span>Edad estimada (meses)</span>
+                          <span>Edad (meses)</span>
                           <input
                             type="number"
                             min="0"

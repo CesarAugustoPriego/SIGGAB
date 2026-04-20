@@ -17,7 +17,7 @@ function hasRole(roleName: string | undefined, allowed: string[]) {
   return allowed.includes(normalized);
 }
 
-/** Puede ver la pantalla de producción */
+/** Puede ver la pantalla de produccion */
 export function canViewProductivo(roleName: string | undefined) {
   return hasRole(roleName, [
     'propietario',
@@ -42,12 +42,12 @@ export function canCreateLote(roleName: string | undefined) {
   return hasRole(roleName, ['produccion', 'administrador']);
 }
 
-/** Puede crear registros (peso, leche, repro) */
+/** Puede crear registros (peso, leche) */
 export function canCreateRegistro(roleName: string | undefined) {
   return hasRole(roleName, ['produccion', 'campo', 'administrador']);
 }
 
-/** Puede editar registros (solo Producción, solo PENDIENTE) */
+/** Puede editar registros (solo Produccion, solo PENDIENTE) */
 export function canEditRegistro(roleName: string | undefined) {
   return hasRole(roleName, ['produccion']);
 }
@@ -63,6 +63,17 @@ export function canViewReproductivos(roleName: string | undefined) {
     'propietario',
     'administrador',
     'produccion',
+    'medico veterinario',
+    'veterinario',
+  ]);
+}
+
+/** Puede crear eventos reproductivos (incluye veterinario — alineado con movil) */
+export function canCreateEventoReproductivo(roleName: string | undefined) {
+  return hasRole(roleName, [
+    'administrador',
+    'produccion',
+    'campo',
     'medico veterinario',
     'veterinario',
   ]);

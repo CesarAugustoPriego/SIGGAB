@@ -10,6 +10,7 @@ import type {
   EstadoAprobacionSanitaria,
   EstadoCalendarioSanitario,
   EventoSanitario,
+  SanitarioCategoria,
   TipoEventoSanitario,
 } from '../sanitario-types';
 import {
@@ -22,6 +23,10 @@ import {
   canViewSanitario,
   formatEstadoAprobacion,
   formatEstadoCalendario,
+  getCategoriaFieldLabels,
+  getCategoriaLabel,
+  findTipoForCategoria,
+  resolveCategoriaFromTipoName,
   getSanitarioErrorMessage,
   getSanitarioFieldErrors,
   toInputDate,
@@ -131,6 +136,13 @@ export function SanitarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule 
   const [eventoForm, setEventoForm] = useState<EventoFormState>(EMPTY_EVENTO_FORM);
   const [eventoErrors, setEventoErrors] = useState<Partial<Record<keyof EventoFormState, string>>>({});
   const [editingEventoId, setEditingEventoId] = useState<number | null>(null);
+  const [selectedCategoria, setSelectedCategoria] = useState<SanitarioCategoria>('VACUNA');
+
+  const categoriaLabels = useMemo(() => getCategoriaFieldLabels(selectedCategoria), [selectedCategoria]);
+  const tiposCategoria = useMemo(
+    () => tiposEvento.filter((tipo) => resolveCategoriaFromTipoName(tipo.nombreTipo) === selectedCategoria),
+    [tiposEvento, selectedCategoria]
+  );
 
   const [calendarioForm, setCalendarioForm] = useState<CalendarioFormState>(EMPTY_CALENDARIO_FORM);
   const [calendarioErrors, setCalendarioErrors] = useState<Partial<Record<keyof CalendarioFormState, string>>>({});
@@ -502,13 +514,40 @@ export function SanitarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule 
                     <p className="sanitario-helper-message">Tu rol solo puede consultar informacion sanitaria.</p>
                   ) : (
                     <>
+                      {/* ── Tipo de evento sanitario (categorias) ── */}
+                      <div className="sanitario-categoria-bar">
+                        <span className="sanitario-categoria-label">Tipo de evento sanitario</span>
+                        <div className="sanitario-categoria-chips">
+                          {(['VACUNA', 'TRATAMIENTO', 'PADECIMIENTO'] as const).map((cat) => (
+                            <button
+                              key={cat}
+                              type="button"
+                              className={`sanitario-categoria-chip ${selectedCategoria === cat ? 'is-active' : ''}`}
+                              onClick={() => {
+                                setSelectedCategoria(cat);
+                                setEventoForm((prev) => ({ ...prev, diagnostico: '', medicamento: '', dosis: '' }));
+                                const tipoMatch = findTipoForCategoria(tiposEvento, cat);
+                                if (tipoMatch) {
+                                  setEventoForm((prev) => ({ ...prev, idTipoEvento: String(tipoMatch.idTipoEvento) }));
+                                }
+                              }}
+                              data-testid={`sanitario-categoria-${cat.toLowerCase()}`}
+                            >
+                              {getCategoriaLabel(cat)}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
                       <label className="sanitario-field"><span>Animal</span><select data-testid="sanitario-form-id-animal" value={eventoForm.idAnimal} onChange={(event) => { setEventoForm((prev) => ({ ...prev, idAnimal: event.target.value })); setEventoErrors((prev) => ({ ...prev, idAnimal: undefined })); }} disabled={editingEventoId !== null}><option value="">Selecciona un arete</option>{animales.map((animal) => <option key={animal.idAnimal} value={animal.idAnimal}>{animal.numeroArete}</option>)}</select>{eventoErrors.idAnimal ? <small>{eventoErrors.idAnimal}</small> : null}</label>
-                      <label className="sanitario-field"><span>Tipo de evento</span><select data-testid="sanitario-form-id-tipo" value={eventoForm.idTipoEvento} onChange={(event) => { setEventoForm((prev) => ({ ...prev, idTipoEvento: event.target.value })); setEventoErrors((prev) => ({ ...prev, idTipoEvento: undefined })); }}><option value="">Selecciona tipo</option>{tiposEvento.map((tipo) => <option key={tipo.idTipoEvento} value={tipo.idTipoEvento}>{tipo.nombreTipo}</option>)}</select>{eventoErrors.idTipoEvento ? <small>{eventoErrors.idTipoEvento}</small> : null}</label>
+                      <label className="sanitario-field"><span>Tipo especifico</span><select data-testid="sanitario-form-id-tipo" value={eventoForm.idTipoEvento} onChange={(event) => { setEventoForm((prev) => ({ ...prev, idTipoEvento: event.target.value })); setEventoErrors((prev) => ({ ...prev, idTipoEvento: undefined })); }}><option value="">Seleccionar tipo de evento</option>{tiposCategoria.map((tipo) => <option key={tipo.idTipoEvento} value={tipo.idTipoEvento}>{tipo.nombreTipo}</option>)}</select>{eventoErrors.idTipoEvento ? <small>{eventoErrors.idTipoEvento}</small> : null}</label>
                       <label className="sanitario-field"><span>Fecha del evento</span><input type="date" data-testid="sanitario-form-fecha-evento" value={eventoForm.fechaEvento} onChange={(event) => { setEventoForm((prev) => ({ ...prev, fechaEvento: event.target.value })); setEventoErrors((prev) => ({ ...prev, fechaEvento: undefined })); }} />{eventoErrors.fechaEvento ? <small>{eventoErrors.fechaEvento}</small> : null}</label>
-                      <label className="sanitario-field"><span>Diagnostico</span><textarea data-testid="sanitario-form-diagnostico" rows={3} value={eventoForm.diagnostico} onChange={(event) => setEventoForm((prev) => ({ ...prev, diagnostico: event.target.value }))} placeholder="Descripcion clinica" /></label>
+                      <label className="sanitario-field"><span>{categoriaLabels.principal}</span><textarea data-testid="sanitario-form-diagnostico" rows={3} value={eventoForm.diagnostico} onChange={(event) => setEventoForm((prev) => ({ ...prev, diagnostico: event.target.value }))} placeholder="Captura el dato principal..." /></label>
                       <div className="sanitario-field-row">
-                        <label className="sanitario-field"><span>Medicamento</span><input type="text" data-testid="sanitario-form-medicamento" value={eventoForm.medicamento} onChange={(event) => setEventoForm((prev) => ({ ...prev, medicamento: event.target.value }))} /></label>
-                        <label className="sanitario-field"><span>Dosis</span><input type="text" data-testid="sanitario-form-dosis" value={eventoForm.dosis} onChange={(event) => setEventoForm((prev) => ({ ...prev, dosis: event.target.value }))} /></label>
+                        <label className="sanitario-field"><span>{categoriaLabels.secundario}</span><input type="text" data-testid="sanitario-form-medicamento" value={eventoForm.medicamento} onChange={(event) => setEventoForm((prev) => ({ ...prev, medicamento: event.target.value }))} placeholder="Dato complementario..." /></label>
+                        {categoriaLabels.terciario ? (
+                          <label className="sanitario-field"><span>{categoriaLabels.terciario}</span><input type="text" data-testid="sanitario-form-dosis" value={eventoForm.dosis} onChange={(event) => setEventoForm((prev) => ({ ...prev, dosis: event.target.value }))} placeholder="Dato adicional..." /></label>
+                        ) : null}
                       </div>
                       <Button type="button" fullWidth disabled={savingEvento} onClick={onSaveEvento} data-testid="sanitario-form-save-evento">{savingEvento ? 'Guardando...' : editingEventoId ? <><Save size={15} aria-hidden /> Guardar cambios</> : <><Plus size={15} aria-hidden /> Registrar evento</>}</Button>
                     </>
@@ -561,7 +600,7 @@ export function SanitarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule 
                       <label className="sanitario-field"><span>Estado</span><select data-testid="sanitario-filter-evento-estado" value={eventoFilters.estadoAprobacion} onChange={(event) => setEventoFilters((prev) => ({ ...prev, estadoAprobacion: event.target.value as EstadoAprobacionSanitaria | 'TODOS' }))}><option value="TODOS">Todos</option><option value="PENDIENTE">Pendiente</option><option value="APROBADO">Aprobado</option><option value="RECHAZADO">Rechazado</option></select></label>
                     </div>
                     <div className="sanitario-list" data-testid="sanitario-eventos-list">
-                      {loadingEventos ? <p className="sanitario-helper-message">Cargando eventos sanitarios...</p> : eventos.length === 0 ? <p className="sanitario-helper-message">No hay eventos sanitarios para estos filtros.</p> : eventos.map((evento) => <article key={evento.idEvento} className="sanitario-item" data-testid={`sanitario-evento-${evento.idEvento}`}><div className="sanitario-item__head"><strong>{evento.animal?.numeroArete || animalById.get(evento.idAnimal)?.numeroArete || `#${evento.idAnimal}`}</strong><span className={`sanitario-status ${toEventoClass(evento.estadoAprobacion)}`}>{formatEstadoAprobacion(evento.estadoAprobacion)}</span></div><p>{evento.tipoEvento?.nombreTipo || tipoById.get(evento.idTipoEvento)?.nombreTipo || 'Tipo'} · Fecha: {formatDate(evento.fechaEvento)}</p><p>Diagnostico: {evento.diagnostico || 'Sin diagnostico'}</p><p>Medicamento: {evento.medicamento || 'N/A'} · Dosis: {evento.dosis || 'N/A'}</p>{(canEdit || canApprove) && evento.estadoAprobacion === 'PENDIENTE' ? <div className="sanitario-item__actions">{canEdit ? <Button type="button" variant="ghost" data-testid={`sanitario-evento-editar-${evento.idEvento}`} onClick={() => { setEditingEventoId(evento.idEvento); setEventoForm({ idAnimal: String(evento.idAnimal), idTipoEvento: String(evento.idTipoEvento), fechaEvento: toInputDate(evento.fechaEvento), diagnostico: evento.diagnostico || '', medicamento: evento.medicamento || '', dosis: evento.dosis || '' }); }}>Editar</Button> : null}{canApprove ? <><Button type="button" variant="ghost" className="users-btn-success" data-testid={`sanitario-evento-aprobar-${evento.idEvento}`} disabled={processingEventoId === evento.idEvento} onClick={() => void onAprobarEvento(evento.idEvento, 'APROBADO')}>{processingEventoId === evento.idEvento ? 'Procesando...' : 'Aprobar'}</Button><Button type="button" variant="ghost" className="users-btn-danger" data-testid={`sanitario-evento-rechazar-${evento.idEvento}`} disabled={processingEventoId === evento.idEvento} onClick={() => void onAprobarEvento(evento.idEvento, 'RECHAZADO')}>{processingEventoId === evento.idEvento ? 'Procesando...' : 'Rechazar'}</Button></> : null}</div> : null}</article>)}
+                      {loadingEventos ? <p className="sanitario-helper-message">Cargando eventos sanitarios...</p> : eventos.length === 0 ? <p className="sanitario-helper-message">No hay eventos sanitarios para estos filtros.</p> : eventos.map((evento) => { const eventoCat = resolveCategoriaFromTipoName(evento.tipoEvento?.nombreTipo); return (<article key={evento.idEvento} className="sanitario-item" data-testid={`sanitario-evento-${evento.idEvento}`}><div className="sanitario-item__head"><strong>{evento.animal?.numeroArete || animalById.get(evento.idAnimal)?.numeroArete || `#${evento.idAnimal}`}</strong><span className={`sanitario-status ${toEventoClass(evento.estadoAprobacion)}`}>{formatEstadoAprobacion(evento.estadoAprobacion)}</span></div><p><span className="sanitario-item__categoria">{getCategoriaLabel(eventoCat)}</span> · {evento.tipoEvento?.nombreTipo || tipoById.get(evento.idTipoEvento)?.nombreTipo || 'Tipo'} · {formatDate(evento.fechaEvento)}</p><p>{getCategoriaFieldLabels(eventoCat).principal}: {evento.diagnostico || 'Sin dato'}</p><p>{getCategoriaFieldLabels(eventoCat).secundario}: {evento.medicamento || 'N/A'}{getCategoriaFieldLabels(eventoCat).terciario ? ` · ${getCategoriaFieldLabels(eventoCat).terciario}: ${evento.dosis || 'N/A'}` : ''}</p>{(canEdit || canApprove) && evento.estadoAprobacion === 'PENDIENTE' ? <div className="sanitario-item__actions">{canEdit ? <Button type="button" variant="ghost" data-testid={`sanitario-evento-editar-${evento.idEvento}`} onClick={() => { const cat = resolveCategoriaFromTipoName(evento.tipoEvento?.nombreTipo); setSelectedCategoria(cat); setEditingEventoId(evento.idEvento); setEventoForm({ idAnimal: String(evento.idAnimal), idTipoEvento: String(evento.idTipoEvento), fechaEvento: toInputDate(evento.fechaEvento), diagnostico: evento.diagnostico || '', medicamento: evento.medicamento || '', dosis: evento.dosis || '' }); }}>Editar</Button> : null}{canApprove ? <><Button type="button" variant="ghost" className="users-btn-success" data-testid={`sanitario-evento-aprobar-${evento.idEvento}`} disabled={processingEventoId === evento.idEvento} onClick={() => void onAprobarEvento(evento.idEvento, 'APROBADO')}>{processingEventoId === evento.idEvento ? 'Procesando...' : 'Aprobar'}</Button><Button type="button" variant="ghost" className="users-btn-danger" data-testid={`sanitario-evento-rechazar-${evento.idEvento}`} disabled={processingEventoId === evento.idEvento} onClick={() => void onAprobarEvento(evento.idEvento, 'RECHAZADO')}>{processingEventoId === evento.idEvento ? 'Procesando...' : 'Rechazar'}</Button></> : null}</div> : null}</article>); })}
                     </div>
                   </article>
 

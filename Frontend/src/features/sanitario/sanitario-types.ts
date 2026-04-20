@@ -1,5 +1,6 @@
 export type EstadoAprobacionSanitaria = 'PENDIENTE' | 'APROBADO' | 'RECHAZADO';
 export type EstadoCalendarioSanitario = 'PENDIENTE' | 'COMPLETADO' | 'CANCELADO';
+export type SanitarioCategoria = 'VACUNA' | 'TRATAMIENTO' | 'PADECIMIENTO';
 
 export interface AnimalRef {
   idAnimal: number;

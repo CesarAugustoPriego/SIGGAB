@@ -66,13 +66,39 @@ export interface HistorialAnimalResponse {
   animal: Animal;
   historial: {
     sanitario: {
-      eventos: unknown[];
-      calendario: unknown[];
+      eventos: {
+        idEvento: number;
+        fechaEvento: string;
+        diagnostico: string;
+        estadoAprobacion: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO';
+        tipoEvento?: { nombreTipo: string } | null;
+      }[];
+      calendario: {
+        idCalendario: number;
+        fechaProgramada: string;
+        estado: 'PENDIENTE' | 'COMPLETADO' | 'CANCELADO';
+        tipoEvento?: { nombreTipo: string } | null;
+      }[];
     };
     productivo: {
-      registrosPeso: unknown[];
-      produccionesLeche: unknown[];
-      eventosReproductivos: unknown[];
+      registrosPeso: {
+        idRegistroPeso: number;
+        fechaRegistro: string;
+        peso: number | string;
+        estadoValidacion: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO';
+      }[];
+      produccionesLeche: {
+        idProduccion: number;
+        fechaRegistro: string;
+        litrosProducidos: number | string;
+        estadoValidacion: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO';
+      }[];
+      eventosReproductivos: {
+        idEventoReproductivo: number;
+        fechaEvento: string;
+        tipoEvento: string;
+        estadoValidacion: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO';
+      }[];
     };
     resumen: {
       totalEventosSanitarios: number;

@@ -100,7 +100,7 @@ export interface EventoReproductivo {
 
 export interface CreateEventoReproductivoInput {
   idAnimal: number;
-  idLote: number;
+  idLote?: number;
   tipoEvento: TipoEventoReproductivo;
   fechaEvento: string;
   observaciones?: string;

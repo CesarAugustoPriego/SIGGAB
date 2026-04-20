@@ -4,6 +4,8 @@ import type {
   EstadoAprobacionSanitaria,
   EstadoCalendarioSanitario,
   EventoSanitario,
+  SanitarioCategoria,
+  TipoEventoSanitario,
 } from './sanitario-types';
 
 type SanitarioFieldErrorKey =
@@ -107,6 +109,53 @@ export function canViewAlertasSanitarias(roleName: string | undefined) {
     'medico veterinario',
     'veterinario',
   ]);
+}
+
+export function resolveCategoriaFromTipoName(nombreTipo: string | undefined): SanitarioCategoria {
+  const normalized = normalizeText(nombreTipo || '');
+  if (normalized.includes('vacun')) return 'VACUNA';
+  if (normalized.includes('trat')) return 'TRATAMIENTO';
+  return 'PADECIMIENTO';
+}
+
+export function getCategoriaLabel(categoria: SanitarioCategoria) {
+  if (categoria === 'VACUNA') return 'Vacuna';
+  if (categoria === 'TRATAMIENTO') return 'Tratamiento';
+  return 'Padecimiento';
+}
+
+export function getCategoriaFieldLabels(categoria: SanitarioCategoria) {
+  if (categoria === 'VACUNA') {
+    return {
+      principal: 'Nombre de la vacuna',
+      secundario: 'Lote / Fabricante',
+      terciario: 'Observaciones',
+      alerta: 'Generar alerta de revacunacion',
+    };
+  }
+
+  if (categoria === 'TRATAMIENTO') {
+    return {
+      principal: 'Nombre del tratamiento / medicamento',
+      secundario: 'Dosis y via de administracion',
+      terciario: 'Periodo de retiro (dias)',
+      alerta: 'Generar alerta de retiro',
+    };
+  }
+
+  return {
+    principal: 'Diagnostico / padecimiento',
+    secundario: 'Observaciones',
+    terciario: '',
+    alerta: 'Generar alerta de revision',
+  };
+}
+
+export function findTipoForCategoria(
+  tipos: TipoEventoSanitario[],
+  categoria: SanitarioCategoria
+) {
+  return tipos.find((tipo) => resolveCategoriaFromTipoName(tipo.nombreTipo) === categoria) || null;
 }
 
 export function getSanitarioFieldErrors(error: unknown) {
