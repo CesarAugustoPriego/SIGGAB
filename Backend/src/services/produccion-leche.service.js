@@ -20,6 +20,9 @@ async function create(data, idUsuario) {
   if (animal.estadoActual !== 'ACTIVO') {
     throw Object.assign(new Error('Solo se puede registrar producción de animales ACTIVOS'), { statusCode: 400 });
   }
+  if (animal.sexo === 'MACHO') {
+    throw Object.assign(new Error('Solo se puede registrar produccion de leche en hembras.'), { statusCode: 400 });
+  }
 
   const lote = await lotesRepository.findById(data.idLote);
   if (!lote) throw Object.assign(new Error('Lote de validación no encontrado'), { statusCode: 400 });

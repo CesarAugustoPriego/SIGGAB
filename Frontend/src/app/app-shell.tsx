@@ -71,9 +71,27 @@ export function AppShell() {
   useEffect(() => {
     if (status === 'booting') return;
 
-    if (status === 'authenticated' && route.startsWith('/auth')) {
-      navigate(isAdmin ? '/app/usuarios' : getDefaultProtectedRoute(), true);
-      return;
+    const resolveHomeRoute = (): AppRoute => {
+      if (isAdmin) return '/app/usuarios';
+      if (hasDashboardAccess) return '/app/dashboard';
+      if (hasGanadoAccess) return '/app/ganado';
+      if (hasProductivoAccess) return '/app/productivo';
+      if (hasSanitarioAccess) return '/app/sanitario';
+      if (hasInventarioAccess) return '/app/inventario';
+      if (hasReportesAccess) return '/app/reportes';
+      if (hasAprobacionesAccess) return '/app/aprobaciones';
+      if (hasAuditoriaAccess) return '/app/auditoria';
+      if (hasRespaldosAccess) return '/app/respaldos';
+      return '/app';
+    };
+
+    const homeRoute = resolveHomeRoute();
+
+    if (status === 'authenticated' && (route === '/app' || route.startsWith('/auth'))) {
+      if (route !== homeRoute) {
+        navigate(homeRoute, true);
+        return;
+      }
     }
 
     if (status === 'unauthenticated' && isProtectedRoute(route)) {
@@ -82,44 +100,44 @@ export function AppShell() {
     }
 
     if (status === 'authenticated' && route === '/app/usuarios' && !isAdmin) {
-      navigate('/app', true);
+      navigate(homeRoute, true);
       return;
     }
 
     if (status === 'authenticated' && route === '/app/ganado' && !hasGanadoAccess) {
-      navigate('/app', true);
+      navigate(homeRoute, true);
       return;
     }
 
     if (status === 'authenticated' && route === '/app/sanitario' && !hasSanitarioAccess) {
-      navigate('/app', true);
+      navigate(homeRoute, true);
     }
 
     if (status === 'authenticated' && route === '/app/productivo' && !hasProductivoAccess) {
-      navigate('/app', true);
+      navigate(homeRoute, true);
     }
 
     if (status === 'authenticated' && route === '/app/inventario' && !hasInventarioAccess) {
-      navigate('/app', true);
+      navigate(homeRoute, true);
     }
 
     if (status === 'authenticated' && route === '/app/dashboard' && !hasDashboardAccess) {
-      navigate('/app', true);
+      navigate(homeRoute, true);
     }
     if (status === 'authenticated' && route === '/app/reportes' && !hasReportesAccess) {
-      navigate('/app', true);
+      navigate(homeRoute, true);
       return;
     }
     if (status === 'authenticated' && route === '/app/aprobaciones' && !hasAprobacionesAccess) {
-      navigate('/app', true);
+      navigate(homeRoute, true);
       return;
     }
     if (status === 'authenticated' && route === '/app/auditoria' && !hasAuditoriaAccess) {
-      navigate('/app', true);
+      navigate(homeRoute, true);
       return;
     }
     if (status === 'authenticated' && route === '/app/respaldos' && !hasRespaldosAccess) {
-      navigate('/app', true);
+      navigate(homeRoute, true);
       return;
     }
   }, [hasGanadoAccess, hasSanitarioAccess, hasProductivoAccess, hasInventarioAccess, hasDashboardAccess, hasReportesAccess, hasAprobacionesAccess, hasAuditoriaAccess, hasRespaldosAccess, isAdmin, navigate, route, status]);

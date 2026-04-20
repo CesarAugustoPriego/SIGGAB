@@ -11,6 +11,7 @@ async function main() {
   try {
     // Verificar conexión a la BD
     await prisma.$connect();
+    await prisma.$queryRaw`SELECT 1`;
     console.log('✅ Conexión a PostgreSQL establecida');
 
     app.listen(PORT, () => {

@@ -5,17 +5,70 @@ const { PrismaPg } = require('@prisma/adapter-pg');
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 
-// Crear pool y adapter para Prisma 7.x
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 const BCRYPT_ROUNDS = 12;
 
-async function main() {
-  console.log('🌱 Ejecutando seed de SIGGAB...\n');
+// ── Razas comunes de ganado vacuno en Tabasco ───────────────────────────
+const RAZAS_TABASCO = [
+  { nombreRaza: 'Brahman', descripcion: 'El más común en el sureste mexicano por su adaptabilidad al clima húmedo y resistencia a parásitos.' },
+  { nombreRaza: 'Suizo Pardo (Brown Swiss)', descripcion: 'Muy utilizado en la región para la producción de leche y carne.' },
+  { nombreRaza: 'Simbrah', descripcion: 'Cruza de Simmental y Brahman, popular por su rápido crecimiento en climas tropicales.' },
+  { nombreRaza: 'Nelore', descripcion: 'Raza cebuína fundamental en la producción de carne, valorada por su rusticidad.' },
+  { nombreRaza: 'Cruzas (Pardo Suizo/Cebú)', descripcion: 'Muy utilizadas en sistemas de doble propósito, combinando producción de leche y rusticidad cebuína.' },
+  { nombreRaza: 'Brangus/Angus', descripcion: 'Incrementando su presencia para mejorar la calidad de la carne (marmoleo).' },
+];
 
-  // ─── 1. ROLES ───
+function normalizeText(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+async function seedBreedCatalog() {
+  const razasExistentes = await prisma.raza.findMany({ orderBy: { idRaza: 'asc' } });
+
+  const nombresTarget = RAZAS_TABASCO.map((r) => normalizeText(r.nombreRaza));
+
+  // Upsert each target breed
+  const createdRazas = [];
+  for (const razaData of RAZAS_TABASCO) {
+    const normalized = normalizeText(razaData.nombreRaza);
+    const existente = razasExistentes.find((r) => normalizeText(r.nombreRaza) === normalized);
+
+    if (existente) {
+      const updated = await prisma.raza.update({
+        where: { idRaza: existente.idRaza },
+        data: { nombreRaza: razaData.nombreRaza, activo: true },
+      });
+      createdRazas.push(updated);
+    } else {
+      const created = await prisma.raza.create({
+        data: { nombreRaza: razaData.nombreRaza, activo: true },
+      });
+      createdRazas.push(created);
+    }
+  }
+
+  // Deactivate any breed NOT in the target list
+  const activeIds = createdRazas.map((r) => r.idRaza);
+  const otrasRazas = razasExistentes.filter((r) => !activeIds.includes(r.idRaza) && r.activo);
+  for (const raza of otrasRazas) {
+    await prisma.raza.update({
+      where: { idRaza: raza.idRaza },
+      data: { activo: false },
+    });
+  }
+
+  return createdRazas;
+}
+
+async function main() {
+  console.log('Ejecutando seed de SIGGAB...\n');
+
   const rolesData = [
     { nombreRol: 'Propietario', descripcion: 'Consultor estratégico. Consulta reportes, dashboard e indicadores. Sin operación directa.' },
     { nombreRol: 'Administrador', descripcion: 'Gestor / Autorizador. Gestión completa del sistema, usuarios, validaciones y compras.' },
@@ -25,18 +78,17 @@ async function main() {
     { nombreRol: 'Almacén', descripcion: 'Registrador / Solicitante. Gestión de inventario y solicitudes de compra.' },
   ];
 
-  console.log('📋 Insertando roles...');
+  console.log('Insertando roles...');
   for (const rolData of rolesData) {
     const rol = await prisma.rol.upsert({
       where: { idRol: rolesData.indexOf(rolData) + 1 },
       update: rolData,
       create: rolData,
     });
-    console.log(`   ✓ ${rol.nombreRol}`);
+    console.log(`  OK ${rol.nombreRol}`);
   }
 
-  // ─── 2. USUARIO ADMINISTRADOR POR DEFECTO ───
-  console.log('\n👤 Creando usuario administrador...');
+  console.log('\nCreando usuario administrador...');
   const adminPassword = await bcrypt.hash('SiggabAdmin2026!', BCRYPT_ROUNDS);
 
   const admin = await prisma.usuario.upsert({
@@ -46,15 +98,14 @@ async function main() {
       nombreCompleto: 'Administrador del Sistema',
       username: 'admin',
       passwordHash: adminPassword,
-      idRol: 2, // Administrador
+      idRol: 2,
       activo: true,
     },
   });
-  console.log(`   ✓ Usuario: ${admin.username} (Rol: Administrador)`);
-  console.log(`   ℹ️  Contraseña: SiggabAdmin2026!`);
+  console.log(`  OK Usuario: ${admin.username} (Rol: Administrador)`);
+  console.log('  INFO Contrasena: SiggabAdmin2026!');
 
-  // ─── 3. TIPOS DE EVENTO SANITARIO ───
-  console.log('\n🏥 Insertando tipos de evento sanitario...');
+  console.log('\nInsertando tipos de evento sanitario...');
   const tiposEvento = [
     { nombreTipo: 'Vacuna' },
     { nombreTipo: 'Enfermedad' },
@@ -67,42 +118,24 @@ async function main() {
       update: tipoData,
       create: tipoData,
     });
-    console.log(`   ✓ ${tipo.nombreTipo}`);
+    console.log(`  OK ${tipo.nombreTipo}`);
   }
 
-  // ─── 4. RAZAS DE EJEMPLO ───
-  console.log('\n🐄 Insertando razas de ganado...');
-  const razasData = [
-    { nombreRaza: 'Holstein' },
-    { nombreRaza: 'Simmental' },
-    { nombreRaza: 'Angus' },
-    { nombreRaza: 'Hereford' },
-    { nombreRaza: 'Brahman' },
-    { nombreRaza: 'Charolais' },
-    { nombreRaza: 'Jersey' },
-    { nombreRaza: 'Limousin' },
-  ];
-
-  for (const razaData of razasData) {
-    const raza = await prisma.raza.upsert({
-      where: { idRaza: razasData.indexOf(razaData) + 1 },
-      update: razaData,
-      create: razaData,
-    });
-    console.log(`   ✓ ${raza.nombreRaza}`);
+  console.log('\nAjustando catalogo de razas de Tabasco...');
+  const razasCreadas = await seedBreedCatalog();
+  for (const raza of razasCreadas) {
+    console.log(`  OK ${raza.nombreRaza}`);
   }
 
-  console.log('\n✅ Seed completado exitosamente');
-  console.log('═══════════════════════════════════════');
+  console.log('\nSeed completado exitosamente');
   console.log('Para iniciar el servidor: npm run dev');
   console.log('Para login: POST /api/auth/login');
   console.log('  { "username": "admin", "password": "SiggabAdmin2026!" }');
-  console.log('═══════════════════════════════════════');
 }
 
 main()
-  .catch((e) => {
-    console.error('❌ Error en seed:', e);
+  .catch((error) => {
+    console.error('Error en seed:', error);
     process.exit(1);
   })
   .finally(async () => {

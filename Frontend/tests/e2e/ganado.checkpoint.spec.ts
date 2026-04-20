@@ -24,7 +24,8 @@ async function registerAnimal(page: Page, numeroArete: string, procedencia: stri
   await page.getByTestId('input-peso').fill('250');
   await page.getByTestId('input-edad').fill('18');
   await selectAnyRaza(page);
-  await page.getByTestId('input-procedencia').fill(procedencia);
+  await page.getByTestId('select-sexo').selectOption('HEMBRA');
+  await page.getByTestId('input-procedencia').selectOption('ADQUIRIDA');
   await page.getByTestId('input-sanitario').fill('Sin hallazgos relevantes al ingreso.');
   await page.getByTestId('btn-submit').click();
 }
@@ -90,11 +91,11 @@ test.describe('Checkpoint Ganado', () => {
     await expect(page.getByTestId(`card-${animal.numeroArete}`)).toBeVisible();
 
     await page.getByTestId(`btn-editar-${animal.numeroArete}`).click();
-    const procedenciaActualizada = `${animal.procedencia} Sector Norte`;
-    await page.getByTestId('input-procedencia').fill(procedenciaActualizada);
+    const procedenciaActualizada = 'NACIDA';
+    await page.getByTestId('input-procedencia').selectOption(procedenciaActualizada);
     await page.getByTestId('btn-submit').click();
     await expect(page.getByTestId('ganado-form-message')).toContainText('Animal actualizado correctamente.');
-    await expect(page.getByTestId(`card-${animal.numeroArete}`)).toContainText(procedenciaActualizada);
+    await expect(page.getByTestId(`card-${animal.numeroArete}`)).toContainText('Nacida en rancho');
 
     await page.getByTestId(`btn-baja-${animal.numeroArete}`).click();
     await page.getByTestId('select-motivo').selectOption('MUERTO');
@@ -131,7 +132,7 @@ test.describe('Checkpoint Ganado', () => {
     await registerAnimal(page, animal.numeroArete, animal.procedencia);
     await expect(page.getByTestId('ganado-form-message')).toContainText('registrado correctamente');
 
-    await registerAnimal(page, animal.numeroArete, `${animal.procedencia} DUP`);
+    await registerAnimal(page, animal.numeroArete, animal.procedencia);
     await expect(page.getByTestId('ganado-form-message')).toContainText(/arete|existe|registrado/i);
     await expect(page.getByTestId(`card-${animal.numeroArete}`)).toHaveCount(1);
   });

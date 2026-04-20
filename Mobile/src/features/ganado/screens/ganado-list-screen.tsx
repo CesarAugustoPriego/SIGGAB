@@ -30,7 +30,10 @@ import { ganadoApi } from '../ganado-api';
 import type { Animal, EstadoAnimal } from '../ganado-types';
 import {
   filterAnimalesByArete,
+  formatAreteDisplay,
   formatEstadoAnimal,
+  formatProcedenciaAnimal,
+  formatSexoAnimal,
   getEstadoColor,
   getGanadoErrorMessage,
   toNumeric,
@@ -144,7 +147,7 @@ export function GanadoListScreen() {
 
     Alert.alert(
       'Acciones de ganado',
-      `Arete: ${animal.numeroArete}`,
+      `Arete: ${formatAreteDisplay(animal.numeroArete)}`,
       actions
     );
   };
@@ -243,11 +246,20 @@ export function GanadoListScreen() {
                   onLongPress={() => onLongPressAnimal(animal)}
                   style={({ pressed }) => [styles.itemCard, pressed ? styles.itemCardPressed : null]}>
                   <View style={styles.itemLeft}>
-                    <MaterialCommunityIcons name="cow" size={18} color="#2E8D48" />
+                    {animal.fotoUrl ? (
+                      <Image source={{ uri: animal.fotoUrl }} style={styles.itemPhoto} />
+                    ) : (
+                      <View style={styles.itemPhotoFallback}>
+                        <MaterialCommunityIcons name="cow" size={18} color="#2E8D48" />
+                      </View>
+                    )}
                     <View style={styles.itemTextWrap}>
                       <Text style={styles.itemArete}>{animal.numeroArete}</Text>
                       <Text style={styles.itemSubline}>
-                        {animal.raza?.nombreRaza || 'Sin raza'} - {toNumeric(animal.pesoInicial)}kg
+                        {animal.raza?.nombreRaza || 'Sin raza'} - {formatSexoAnimal(animal.sexo)}
+                      </Text>
+                      <Text style={styles.itemSubline}>
+                        {formatProcedenciaAnimal(animal.procedencia)} - {toNumeric(animal.pesoInicial)}kg
                       </Text>
                     </View>
                   </View>
@@ -390,6 +402,19 @@ const styles = StyleSheet.create({
   },
   itemTextWrap: {
     flex: 1,
+  },
+  itemPhoto: {
+    width: 42,
+    height: 42,
+    borderRadius: 10,
+  },
+  itemPhotoFallback: {
+    width: 42,
+    height: 42,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EDF6EF',
   },
   itemArete: {
     color: '#141A14',

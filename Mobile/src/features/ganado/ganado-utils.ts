@@ -1,15 +1,36 @@
 import { ApiClientError } from '@/src/types/api';
 
-import type { Animal, EstadoAnimal } from './ganado-types';
+import type { Animal, EstadoAnimal, ProcedenciaAnimal, SexoAnimal } from './ganado-types';
+
+// ── Constantes SINIIGA Tabasco ─────────────────────────────────────────
+export const ARETE_PREFIX = '27';
+export const ARETE_LENGTH = 10;
+export const ARETE_REGEX = /^27\d{8}$/;
+
+/** Valida que el arete tenga el formato SINIIGA Tabasco: 27XXXXXXXX (10 dígitos) */
+export function isValidAreteFormat(value: string) {
+  return ARETE_REGEX.test(value.trim());
+}
+
+/** Formatea 2712345678 → "27 1234 5678" para lectura legible */
+export function formatAreteDisplay(arete: string) {
+  const clean = arete.trim();
+  if (clean.length !== 10) return clean;
+  return `${clean.slice(0, 2)} ${clean.slice(2, 6)} ${clean.slice(6)}`;
+}
 
 export interface AnimalFormState {
   numeroArete: string;
   fechaIngreso: string;
   pesoInicial: string;
   idRaza: string;
-  procedencia: string;
+  sexo: SexoAnimal;
+  procedencia: ProcedenciaAnimal;
   edadEstimada: string;
   estadoSanitarioInicial: string;
+  fotoBase64: string;
+  fotoPreviewUrl: string;
+  eliminarFoto: boolean;
 }
 
 export interface AnimalFormErrors {
@@ -17,6 +38,7 @@ export interface AnimalFormErrors {
   fechaIngreso?: string;
   pesoInicial?: string;
   idRaza?: string;
+  sexo?: string;
   procedencia?: string;
   edadEstimada?: string;
   estadoSanitarioInicial?: string;
@@ -38,9 +60,13 @@ export const EMPTY_ANIMAL_FORM: AnimalFormState = {
   fechaIngreso: '',
   pesoInicial: '',
   idRaza: '',
-  procedencia: '',
+  sexo: 'HEMBRA',
+  procedencia: 'ADQUIRIDA',
   edadEstimada: '',
   estadoSanitarioInicial: '',
+  fotoBase64: '',
+  fotoPreviewUrl: '',
+  eliminarFoto: false,
 };
 
 export const DEFAULT_BAJA_FORM: BajaFormState = {
@@ -67,6 +93,14 @@ export function formatEstadoAnimal(estado: EstadoAnimal) {
   return estado;
 }
 
+export function formatSexoAnimal(sexo: SexoAnimal) {
+  return sexo === 'HEMBRA' ? 'Hembra' : 'Macho';
+}
+
+export function formatProcedenciaAnimal(procedencia: ProcedenciaAnimal) {
+  return procedencia === 'NACIDA' ? 'Nacida en rancho' : 'Adquirida';
+}
+
 export function getEstadoColor(estado: EstadoAnimal) {
   if (estado === 'ACTIVO') return '#1D8A42';
   if (estado === 'VENDIDO') return '#3B82F6';
@@ -91,8 +125,11 @@ export function getGanadoErrorMessage(error: unknown) {
 export function validateAnimalForm(form: AnimalFormState): AnimalFormErrors {
   const errors: AnimalFormErrors = {};
 
-  if (!form.numeroArete.trim()) errors.numeroArete = 'El numero de arete es obligatorio.';
-  if (form.numeroArete.trim().length > 50) errors.numeroArete = 'Maximo 50 caracteres.';
+  if (!form.numeroArete.trim()) {
+    errors.numeroArete = 'El numero de arete es obligatorio.';
+  } else if (!isValidAreteFormat(form.numeroArete)) {
+    errors.numeroArete = 'El arete SINIIGA debe ser 10 digitos comenzando con 27.';
+  }
   if (!form.fechaIngreso || !/^\d{4}-\d{2}-\d{2}$/.test(form.fechaIngreso)) {
     errors.fechaIngreso = 'Fecha invalida (YYYY-MM-DD).';
   }
@@ -102,8 +139,8 @@ export function validateAnimalForm(form: AnimalFormState): AnimalFormErrors {
   if (!form.idRaza || Number(form.idRaza) <= 0) {
     errors.idRaza = 'Selecciona una raza valida.';
   }
-  if (!form.procedencia.trim()) errors.procedencia = 'La procedencia es obligatoria.';
-  if (form.procedencia.trim().length > 100) errors.procedencia = 'Maximo 100 caracteres.';
+  if (!form.sexo) errors.sexo = 'Selecciona el sexo del animal.';
+  if (!form.procedencia) errors.procedencia = 'La procedencia es obligatoria.';
   if (!form.edadEstimada.trim() || !Number.isInteger(Number(form.edadEstimada)) || Number(form.edadEstimada) < 0) {
     errors.edadEstimada = 'Edad en meses: entero >= 0.';
   }
@@ -126,8 +163,8 @@ export function validateAnimalUpdateForm(form: AnimalFormState): AnimalFormError
   if (!form.idRaza || Number(form.idRaza) <= 0) {
     errors.idRaza = 'Selecciona una raza valida.';
   }
-  if (!form.procedencia.trim()) errors.procedencia = 'La procedencia es obligatoria.';
-  if (form.procedencia.trim().length > 100) errors.procedencia = 'Maximo 100 caracteres.';
+  if (!form.sexo) errors.sexo = 'Selecciona el sexo del animal.';
+  if (!form.procedencia) errors.procedencia = 'La procedencia es obligatoria.';
   if (!form.edadEstimada.trim() || !Number.isInteger(Number(form.edadEstimada)) || Number(form.edadEstimada) < 0) {
     errors.edadEstimada = 'Edad en meses: entero >= 0.';
   }
@@ -157,9 +194,13 @@ export function toAnimalFormState(animal: Animal): AnimalFormState {
     fechaIngreso: toInputDate(animal.fechaIngreso),
     pesoInicial: String(toNumeric(animal.pesoInicial)),
     idRaza: String(animal.idRaza),
+    sexo: animal.sexo,
     procedencia: animal.procedencia,
     edadEstimada: String(animal.edadEstimada),
     estadoSanitarioInicial: animal.estadoSanitarioInicial,
+    fotoBase64: '',
+    fotoPreviewUrl: animal.fotoUrl || '',
+    eliminarFoto: false,
   };
 }
 
@@ -178,6 +219,7 @@ export function mapServerFieldErrors(error: unknown) {
     if (campo === 'fechaIngreso' && !map.fechaIngreso) map.fechaIngreso = mensaje;
     if (campo === 'pesoInicial' && !map.pesoInicial) map.pesoInicial = mensaje;
     if (campo === 'idRaza' && !map.idRaza) map.idRaza = mensaje;
+    if (campo === 'sexo' && !map.sexo) map.sexo = mensaje;
     if (campo === 'procedencia' && !map.procedencia) map.procedencia = mensaje;
     if (campo === 'edadEstimada' && !map.edadEstimada) map.edadEstimada = mensaje;
     if (campo === 'estadoSanitarioInicial' && !map.estadoSanitarioInicial) map.estadoSanitarioInicial = mensaje;

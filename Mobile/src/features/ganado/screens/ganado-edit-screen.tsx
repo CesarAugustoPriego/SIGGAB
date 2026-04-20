@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import {
   ActivityIndicator,
   Alert,
@@ -20,7 +21,7 @@ import { useAuth } from '@/src/features/auth/auth-context';
 import { canEditAnimal } from '@/src/features/auth/role-permissions';
 
 import { ganadoApi } from '../ganado-api';
-import type { Animal, Raza, UpdateAnimalInput } from '../ganado-types';
+import type { Animal, ProcedenciaAnimal, Raza, SexoAnimal, UpdateAnimalInput } from '../ganado-types';
 import {
   type AnimalFormErrors,
   type AnimalFormState,
@@ -32,11 +33,18 @@ import {
   validateAnimalUpdateForm,
 } from '../ganado-utils';
 
+const SEXO_OPTIONS: SexoAnimal[] = ['HEMBRA', 'MACHO'];
+const PROCEDENCIA_OPTIONS: Array<{ value: ProcedenciaAnimal; label: string }> = [
+  { value: 'ADQUIRIDA', label: 'Adquirida' },
+  { value: 'NACIDA', label: 'Nacida en rancho' },
+];
+
 function hasChanges(form: AnimalFormState, animal: Animal) {
   if (form.fechaIngreso !== toInputDate(animal.fechaIngreso)) return true;
   if (Number(form.pesoInicial) !== toNumeric(animal.pesoInicial)) return true;
   if (Number(form.idRaza) !== animal.idRaza) return true;
-  if (form.procedencia.trim() !== animal.procedencia) return true;
+  if (form.sexo !== animal.sexo) return true;
+  if (form.procedencia !== animal.procedencia) return true;
   if (Number(form.edadEstimada) !== animal.edadEstimada) return true;
   if (form.estadoSanitarioInicial.trim() !== animal.estadoSanitarioInicial) return true;
   return false;
@@ -48,13 +56,53 @@ function buildUpdatePayload(form: AnimalFormState, animal: Animal): UpdateAnimal
   if (form.fechaIngreso !== toInputDate(animal.fechaIngreso)) payload.fechaIngreso = form.fechaIngreso;
   if (Number(form.pesoInicial) !== toNumeric(animal.pesoInicial)) payload.pesoInicial = Number(form.pesoInicial);
   if (Number(form.idRaza) !== animal.idRaza) payload.idRaza = Number(form.idRaza);
-  if (form.procedencia.trim() !== animal.procedencia) payload.procedencia = form.procedencia.trim();
+  if (form.sexo !== animal.sexo) payload.sexo = form.sexo;
+  if (form.procedencia !== animal.procedencia) payload.procedencia = form.procedencia;
   if (Number(form.edadEstimada) !== animal.edadEstimada) payload.edadEstimada = Number(form.edadEstimada);
   if (form.estadoSanitarioInicial.trim() !== animal.estadoSanitarioInicial) {
     payload.estadoSanitarioInicial = form.estadoSanitarioInicial.trim();
   }
+  if (form.fotoBase64) payload.fotoBase64 = form.fotoBase64;
+  if (form.eliminarFoto) payload.eliminarFoto = true;
 
   return payload;
+}
+
+async function pickImageFromGallery() {
+  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (!permission.granted) {
+    Alert.alert('Permiso requerido', 'Se necesita acceso a la galería para seleccionar una foto.');
+    return null;
+  }
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ['images'],
+    allowsEditing: true,
+    aspect: [1, 1],
+    quality: 0.7,
+    base64: true,
+  });
+  if (result.canceled || !result.assets[0]?.base64) return null;
+  const asset = result.assets[0];
+  const mimeType = asset.mimeType || 'image/jpeg';
+  return { base64: `data:${mimeType};base64,${asset.base64}`, uri: asset.uri };
+}
+
+async function takePhotoWithCamera() {
+  const permission = await ImagePicker.requestCameraPermissionsAsync();
+  if (!permission.granted) {
+    Alert.alert('Permiso requerido', 'Se necesita acceso a la cámara para tomar una foto.');
+    return null;
+  }
+  const result = await ImagePicker.launchCameraAsync({
+    allowsEditing: true,
+    aspect: [1, 1],
+    quality: 0.7,
+    base64: true,
+  });
+  if (result.canceled || !result.assets[0]?.base64) return null;
+  const asset = result.assets[0];
+  const mimeType = asset.mimeType || 'image/jpeg';
+  return { base64: `data:${mimeType};base64,${asset.base64}`, uri: asset.uri };
 }
 
 export function GanadoEditScreen() {
@@ -72,9 +120,13 @@ export function GanadoEditScreen() {
     fechaIngreso: '',
     pesoInicial: '',
     idRaza: '',
-    procedencia: '',
+    sexo: 'HEMBRA',
+    procedencia: 'ADQUIRIDA',
     edadEstimada: '',
     estadoSanitarioInicial: '',
+    fotoBase64: '',
+    fotoPreviewUrl: '',
+    eliminarFoto: false,
   });
   const [errors, setErrors] = useState<AnimalFormErrors>({});
   const [loading, setLoading] = useState(true);
@@ -121,9 +173,28 @@ export function GanadoEditScreen() {
 
   const updateField = (field: keyof AnimalFormState, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
+    const errorField = field as keyof AnimalFormErrors;
+    if (errors[errorField]) {
+      setErrors((prev) => ({ ...prev, [errorField]: undefined }));
     }
+  };
+
+  const onPickFromGallery = async () => {
+    const result = await pickImageFromGallery();
+    if (result) {
+      setForm((prev) => ({ ...prev, fotoBase64: result.base64, fotoPreviewUrl: result.uri, eliminarFoto: false }));
+    }
+  };
+
+  const onTakePhoto = async () => {
+    const result = await takePhotoWithCamera();
+    if (result) {
+      setForm((prev) => ({ ...prev, fotoBase64: result.base64, fotoPreviewUrl: result.uri, eliminarFoto: false }));
+    }
+  };
+
+  const onRemovePhoto = () => {
+    setForm((prev) => ({ ...prev, fotoBase64: '', fotoPreviewUrl: '', eliminarFoto: Boolean(animal?.fotoUrl) }));
   };
 
   const onSave = async () => {
@@ -304,14 +375,36 @@ export function GanadoEditScreen() {
             </View>
 
             <View style={styles.fieldWrap}>
+              <Text style={styles.fieldLabel}>Sexo</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.razaChips}>
+                {SEXO_OPTIONS.map((sexo) => (
+                  <Pressable
+                    key={sexo}
+                    onPress={() => updateField('sexo', sexo)}
+                    style={[styles.razaChip, form.sexo === sexo ? styles.razaChipActive : null]}>
+                    <Text style={[styles.razaChipText, form.sexo === sexo ? styles.razaChipTextActive : null]}>
+                      {sexo === 'HEMBRA' ? 'Hembra' : 'Macho'}
+                    </Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+              {errors.sexo ? <Text style={styles.errorText}>{errors.sexo}</Text> : null}
+            </View>
+
+            <View style={styles.fieldWrap}>
               <Text style={styles.fieldLabel}>Procedencia</Text>
-              <TextInput
-                value={form.procedencia}
-                onChangeText={(v) => updateField('procedencia', v)}
-                style={styles.inputPill}
-                placeholder="Origen del animal"
-                placeholderTextColor="#9EA89E"
-              />
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.razaChips}>
+                {PROCEDENCIA_OPTIONS.map((option) => (
+                  <Pressable
+                    key={option.value}
+                    onPress={() => updateField('procedencia', option.value)}
+                    style={[styles.razaChip, form.procedencia === option.value ? styles.razaChipActive : null]}>
+                    <Text style={[styles.razaChipText, form.procedencia === option.value ? styles.razaChipTextActive : null]}>
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
               {errors.procedencia ? <Text style={styles.errorText}>{errors.procedencia}</Text> : null}
             </View>
 
@@ -328,6 +421,30 @@ export function GanadoEditScreen() {
                 placeholderTextColor="#9EA89E"
               />
               {errors.estadoSanitarioInicial ? <Text style={styles.errorText}>{errors.estadoSanitarioInicial}</Text> : null}
+            </View>
+
+            {/* ── Foto del ejemplar ── */}
+            <View style={styles.fieldWrap}>
+              <Text style={styles.fieldLabel}>Foto del ejemplar</Text>
+              {form.fotoPreviewUrl ? (
+                <View style={styles.photoPreviewWrap}>
+                  <Image source={{ uri: form.fotoPreviewUrl }} style={styles.photoPreview} />
+                  <Pressable style={styles.photoRemoveBtn} onPress={onRemovePhoto}>
+                    <Feather name="x" size={16} color="#B42318" />
+                    <Text style={styles.photoRemoveBtnText}>Quitar foto</Text>
+                  </Pressable>
+                </View>
+              ) : null}
+              <View style={styles.photoActions}>
+                <Pressable style={styles.photoActionBtn} onPress={onTakePhoto}>
+                  <Feather name="camera" size={18} color="#2F9B47" />
+                  <Text style={styles.photoActionText}>Tomar foto</Text>
+                </Pressable>
+                <Pressable style={styles.photoActionBtn} onPress={onPickFromGallery}>
+                  <Feather name="image" size={18} color="#2F9B47" />
+                  <Text style={styles.photoActionText}>Galería</Text>
+                </Pressable>
+              </View>
             </View>
 
             {message ? <Text style={styles.errorText}>{message}</Text> : null}
@@ -498,5 +615,54 @@ const styles = StyleSheet.create({
   centerText: {
     color: '#667266',
     textAlign: 'center',
+  },
+  // ── Photo section ──
+  photoPreviewWrap: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  photoPreview: {
+    width: 140,
+    height: 140,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#D2D8D2',
+  },
+  photoRemoveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    backgroundColor: '#FEF2F2',
+  },
+  photoRemoveBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#B42318',
+  },
+  photoActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  photoActionBtn: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#C7E0CC',
+    backgroundColor: '#F2FBF4',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  photoActionText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#2F9B47',
   },
 });

@@ -22,6 +22,7 @@ generated/
 
 # ─── Backups ───
 backups/
+Backend/uploads/
 
 # ─── OS ───
 .DS_Store

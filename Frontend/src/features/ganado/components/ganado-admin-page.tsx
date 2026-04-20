@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { useAuth } from '../../auth/auth-context';
 import { getVisibleNavItemsForRole } from '../../auth/navigation-utils';
 import { Button, NAV_ITEMS, LogOut, Pencil, Save, Plus, X, Search, FilterX, History, UserMinus, Check } from '../../../shared/ui';
@@ -7,10 +7,11 @@ import { ganadoApi } from '../ganado-api';
 import type {
   Animal,
   BajaAnimalInput,
-  CreateAnimalInput,
   EstadoAnimal,
   HistorialAnimalResponse,
+  ProcedenciaAnimal,
   Raza,
+  SexoAnimal,
   UpdateAnimalInput,
 } from '../ganado-types';
 import {
@@ -19,9 +20,14 @@ import {
   canEditAnimal,
   canViewAnimalHistorial,
   canViewGanado,
+  findAnimalByArete,
+  formatAreteDisplay,
   formatEstadoAnimal,
+  formatProcedenciaAnimal,
+  formatSexoAnimal,
   getGanadoErrorMessage,
   getGanadoFieldErrors,
+  isValidAreteFormat,
   toInputDate,
   toNumeric,
 } from '../ganado-utils';
@@ -37,9 +43,13 @@ interface AnimalFormState {
   fechaIngreso: string;
   pesoInicial: string;
   idRaza: string;
-  procedencia: string;
+  sexo: SexoAnimal;
+  procedencia: ProcedenciaAnimal;
   edadEstimada: string;
   estadoSanitarioInicial: string;
+  fotoBase64: string;
+  fotoPreviewUrl: string;
+  eliminarFoto: boolean;
 }
 
 interface AnimalFormErrors {
@@ -47,6 +57,7 @@ interface AnimalFormErrors {
   fechaIngreso?: string;
   pesoInicial?: string;
   idRaza?: string;
+  sexo?: string;
   procedencia?: string;
   edadEstimada?: string;
   estadoSanitarioInicial?: string;
@@ -63,17 +74,15 @@ interface UiMessage {
   text: string;
 }
 
+const SEXO_OPTIONS: Array<{ value: SexoAnimal; label: string }> = [
+  { value: 'HEMBRA', label: 'Hembra' },
+  { value: 'MACHO', label: 'Macho' },
+];
 
-
-const EMPTY_FORM: AnimalFormState = {
-  numeroArete: '',
-  fechaIngreso: '',
-  pesoInicial: '',
-  idRaza: '',
-  procedencia: '',
-  edadEstimada: '',
-  estadoSanitarioInicial: '',
-};
+const PROCEDENCIA_OPTIONS: Array<{ value: ProcedenciaAnimal; label: string }> = [
+  { value: 'ADQUIRIDA', label: 'Adquirida' },
+  { value: 'NACIDA', label: 'Nacida en rancho' },
+];
 
 const DEFAULT_BAJA_FORM: BajaFormState = {
   estadoActual: 'VENDIDO',
@@ -81,30 +90,51 @@ const DEFAULT_BAJA_FORM: BajaFormState = {
   fechaBaja: new Date().toISOString().slice(0, 10),
 };
 
-function toFormState(animal: Animal): AnimalFormState {
+function buildEmptyForm(defaultRazaId = ''): AnimalFormState {
   return {
-    numeroArete: animal.numeroArete,
-    fechaIngreso: toInputDate(animal.fechaIngreso),
-    pesoInicial: String(toNumeric(animal.pesoInicial)),
-    idRaza: String(animal.idRaza),
-    procedencia: animal.procedencia,
-    edadEstimada: String(animal.edadEstimada),
-    estadoSanitarioInicial: animal.estadoSanitarioInicial,
+    numeroArete: '',
+    fechaIngreso: new Date().toISOString().slice(0, 10),
+    pesoInicial: '',
+    idRaza: defaultRazaId,
+    sexo: 'HEMBRA',
+    procedencia: 'ADQUIRIDA',
+    edadEstimada: '',
+    estadoSanitarioInicial: '',
+    fotoBase64: '',
+    fotoPreviewUrl: '',
+    eliminarFoto: false,
   };
 }
 
-function validateAnimalForm(form: AnimalFormState, isEditing: boolean): AnimalFormErrors {
+function getEstadoClass(estadoActual: EstadoAnimal) {
+  if (estadoActual === 'ACTIVO') return 'is-active';
+  if (estadoActual === 'VENDIDO') return 'is-sold';
+  if (estadoActual === 'MUERTO') return 'is-dead';
+  return 'is-transferred';
+}
+
+function animalSummary(animal: Animal) {
+  return `${animal.raza?.nombreRaza || 'Tabasquena'} · ${formatSexoAnimal(animal.sexo)} · ${toNumeric(animal.pesoInicial)} kg · ${animal.edadEstimada} meses`;
+}
+
+function validateAnimalForm(form: AnimalFormState): AnimalFormErrors {
   const errors: AnimalFormErrors = {};
-  if (!form.numeroArete.trim()) errors.numeroArete = 'El numero de arete es obligatorio.';
-  if (!isEditing && form.numeroArete.trim().length > 50) errors.numeroArete = 'El numero de arete no puede exceder 50 caracteres.';
+
+  if (!form.numeroArete.trim()) {
+    errors.numeroArete = 'El numero de arete es obligatorio.';
+  } else if (!isValidAreteFormat(form.numeroArete)) {
+    errors.numeroArete = 'El arete SINIIGA debe ser 10 digitos numericos comenzando con 27. Ej: 2712345678';
+  }
   if (!form.fechaIngreso || !/^\d{4}-\d{2}-\d{2}$/.test(form.fechaIngreso)) errors.fechaIngreso = 'Fecha invalida (YYYY-MM-DD).';
   if (!form.pesoInicial.trim() || Number(form.pesoInicial) <= 0) errors.pesoInicial = 'El peso debe ser mayor a 0.';
-  if (!form.idRaza || Number(form.idRaza) <= 0) errors.idRaza = 'Selecciona una raza valida.';
-  if (!form.procedencia.trim()) errors.procedencia = 'La procedencia es obligatoria.';
+  if (!form.idRaza || Number(form.idRaza) <= 0) errors.idRaza = 'Selecciona la raza disponible.';
+  if (!form.sexo) errors.sexo = 'Selecciona si el animal es hembra o macho.';
+  if (!form.procedencia) errors.procedencia = 'Selecciona la procedencia del animal.';
   if (!form.edadEstimada.trim() || !Number.isInteger(Number(form.edadEstimada)) || Number(form.edadEstimada) < 0) {
-    errors.edadEstimada = 'La edad debe ser entero mayor o igual a 0.';
+    errors.edadEstimada = 'La edad debe ser un entero mayor o igual a 0.';
   }
   if (!form.estadoSanitarioInicial.trim()) errors.estadoSanitarioInicial = 'El estado sanitario inicial es obligatorio.';
+
   return errors;
 }
 
@@ -115,11 +145,125 @@ function validateBajaForm(form: BajaFormState) {
   return errors;
 }
 
-function getEstadoClass(estadoActual: EstadoAnimal) {
-  if (estadoActual === 'ACTIVO') return 'is-active';
-  if (estadoActual === 'VENDIDO') return 'is-sold';
-  if (estadoActual === 'MUERTO') return 'is-dead';
-  return 'is-transferred';
+function toFormState(animal: Animal): AnimalFormState {
+  return {
+    numeroArete: animal.numeroArete,
+    fechaIngreso: toInputDate(animal.fechaIngreso),
+    pesoInicial: String(toNumeric(animal.pesoInicial)),
+    idRaza: String(animal.idRaza),
+    sexo: animal.sexo,
+    procedencia: animal.procedencia,
+    edadEstimada: String(animal.edadEstimada),
+    estadoSanitarioInicial: animal.estadoSanitarioInicial,
+    fotoBase64: '',
+    fotoPreviewUrl: animal.fotoUrl || '',
+    eliminarFoto: false,
+  };
+}
+
+function buildUpdatePayload(form: AnimalFormState, animal: Animal): UpdateAnimalInput | null {
+  const payload: UpdateAnimalInput = {};
+
+  if (form.fechaIngreso !== toInputDate(animal.fechaIngreso)) payload.fechaIngreso = form.fechaIngreso;
+  if (Number(form.pesoInicial) !== toNumeric(animal.pesoInicial)) payload.pesoInicial = Number(form.pesoInicial);
+  if (Number(form.idRaza) !== animal.idRaza) payload.idRaza = Number(form.idRaza);
+  if (form.sexo !== animal.sexo) payload.sexo = form.sexo;
+  if (form.procedencia !== animal.procedencia) payload.procedencia = form.procedencia;
+  if (Number(form.edadEstimada) !== animal.edadEstimada) payload.edadEstimada = Number(form.edadEstimada);
+  if (form.estadoSanitarioInicial.trim() !== animal.estadoSanitarioInicial) payload.estadoSanitarioInicial = form.estadoSanitarioInicial.trim();
+  if (form.fotoBase64) payload.fotoBase64 = form.fotoBase64;
+  if (form.eliminarFoto) payload.eliminarFoto = true;
+
+  return Object.keys(payload).length > 0 ? payload : null;
+}
+
+function readFileAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error('No fue posible leer la foto seleccionada.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function AnimalPhoto({ animal, className }: { animal: Animal | null; className: string }) {
+  if (animal?.fotoUrl) {
+    return <img src={animal.fotoUrl} alt={`Ejemplar ${animal.numeroArete}`} className={className} />;
+  }
+
+  return (
+    <div className={`${className} ganado-photo-placeholder`} aria-hidden="true">
+      <span>{animal ? animal.numeroArete.slice(0, 2).toUpperCase() : 'SG'}</span>
+    </div>
+  );
+}
+
+function AreteBandera({ arete, compact = false }: { arete: string; compact?: boolean }) {
+  const codigoEstado = arete.slice(0, 2);
+  const matricula = arete.slice(2);
+  const formattedMatricula = matricula.length === 8
+    ? `${matricula.slice(0, 2)} ${matricula.slice(2, 4)} ${matricula.slice(4, 6)} ${matricula.slice(6)}`
+    : matricula;
+
+  if (compact) {
+    return (
+      <div className="arete-bandera arete-bandera--compact">
+        <span className="arete-bandera__mx">MX</span>
+        <span className="arete-bandera__estado">{codigoEstado}</span>
+        <span className="arete-bandera__matricula">{formattedMatricula}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="arete-bandera">
+      <div className="arete-bandera__header">
+        <span className="arete-bandera__mx">MX</span>
+        <span className="arete-bandera__sader">SADER</span>
+      </div>
+      <div className="arete-bandera__body">
+        <span className="arete-bandera__estado">{codigoEstado}</span>
+        <span className="arete-bandera__matricula">{formattedMatricula}</span>
+      </div>
+      <div className="arete-bandera__barcode" aria-hidden="true">
+        {'▌▐▌▐▌▌▐▌▐▌▌▐▌▐▌▌▐▌'}
+      </div>
+    </div>
+  );
+}
+
+function formatHistoryDate(value?: string | null) {
+  const normalized = toInputDate(value);
+  if (!normalized) return 'Sin fecha';
+  const [year, month, day] = normalized.split('-');
+  return `${day}/${month}/${year}`;
+}
+
+function describeSanitarioEvento(item: Record<string, unknown>) {
+  const tipoEvento = item.tipoEvento as { nombreTipo?: string } | undefined;
+  return `${tipoEvento?.nombreTipo || 'Evento sanitario'} · ${formatHistoryDate(String(item.fechaEvento || ''))}`;
+}
+
+function describeCalendarioEvento(item: Record<string, unknown>) {
+  const tipoEvento = item.tipoEvento as { nombreTipo?: string } | undefined;
+  return `${tipoEvento?.nombreTipo || 'Evento programado'} · ${formatHistoryDate(String(item.fechaProgramada || ''))}`;
+}
+
+function describePeso(item: Record<string, unknown>) {
+  return `${toNumeric(String(item.peso || 0))} kg · ${formatHistoryDate(String(item.fechaRegistro || ''))}`;
+}
+
+function describeLeche(item: Record<string, unknown>) {
+  return `${toNumeric(String(item.litrosProducidos || 0))} L · ${formatHistoryDate(String(item.fechaRegistro || ''))}`;
+}
+
+function describeReproductivo(item: Record<string, unknown>) {
+  return `${String(item.tipoEvento || 'Evento')} · ${formatHistoryDate(String(item.fechaEvento || ''))}`;
+}
+
+function getNavTestId(moduleName: string) {
+  if (moduleName === 'Productivo') return 'ganado-nav-produccion';
+  return `ganado-nav-${moduleName.toLowerCase()}`;
 }
 
 export function GanadoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: GanadoAdminPageProps) {
@@ -134,7 +278,7 @@ export function GanadoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: 
   const [message, setMessage] = useState<UiMessage | null>(null);
 
   const [filters, setFilters] = useState({ estadoActual: 'ACTIVO' as EstadoAnimal | 'TODOS', idRaza: '', arete: '' });
-  const [form, setForm] = useState<AnimalFormState>(EMPTY_FORM);
+  const [form, setForm] = useState<AnimalFormState>(buildEmptyForm());
   const [formErrors, setFormErrors] = useState<AnimalFormErrors>({});
   const [editingAnimalId, setEditingAnimalId] = useState<number | null>(null);
 
@@ -158,8 +302,16 @@ export function GanadoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: 
   const canBaja = useMemo(() => canBajaAnimal(user?.rol), [user?.rol]);
   const canHistorial = useMemo(() => canViewAnimalHistorial(user?.rol), [user?.rol]);
 
-  const isEditing = editingAnimalId !== null;
-  const editingAnimal = useMemo(() => (editingAnimalId ? animales.find((a) => a.idAnimal === editingAnimalId) || null : null), [animales, editingAnimalId]);
+  const editingAnimal = useMemo(() => (
+    editingAnimalId ? animales.find((animal) => animal.idAnimal === editingAnimalId) || null : null
+  ), [animales, editingAnimalId]);
+  const defaultRazaId = useMemo(() => (razas[0] ? String(razas[0].idRaza) : ''), [razas]);
+
+  const filteredAnimales = useMemo(() => {
+    const term = filters.arete.trim().toLowerCase();
+    if (!term) return animales;
+    return animales.filter((animal) => animal.numeroArete.toLowerCase().includes(term));
+  }, [animales, filters.arete]);
 
   const handleApiError = useCallback(async (error: unknown) => {
     setMessage({ type: 'error', text: getGanadoErrorMessage(error) });
@@ -167,7 +319,11 @@ export function GanadoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: 
   }, [logout]);
 
   const loadRazas = useCallback(async () => {
-    try { setRazas(await ganadoApi.getRazas()); } catch (error) { await handleApiError(error); }
+    try {
+      setRazas(await ganadoApi.getRazas());
+    } catch (error) {
+      await handleApiError(error);
+    }
   }, [handleApiError]);
 
   const loadAnimales = useCallback(async () => {
@@ -186,124 +342,170 @@ export function GanadoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: 
   }, [filters.estadoActual, filters.idRaza, handleApiError]);
 
   useEffect(() => {
-    if (!canView) { setLoadingInit(false); setLoadingList(false); return; }
-    void Promise.all([loadRazas(), loadAnimales()]).finally(() => setLoadingInit(false));
-  }, [canView, loadAnimales, loadRazas]);
+    if (!canView) {
+      setLoadingInit(false);
+      return;
+    }
+
+    void (async () => {
+      try {
+        setLoadingInit(true);
+        await loadRazas();
+      } finally {
+        setLoadingInit(false);
+      }
+    })();
+  }, [canView, loadRazas]);
 
   useEffect(() => {
-    if (!canView || loadingInit) return;
+    if (!canView) return;
     void loadAnimales();
-  }, [canView, loadingInit, loadAnimales]);
+  }, [canView, loadAnimales]);
 
-  const filteredAnimales = useMemo(() => {
-    if (!filters.arete.trim()) return animales;
-    const lower = filters.arete.trim().toLowerCase();
-    return animales.filter((a) => a.numeroArete.toLowerCase().includes(lower));
-  }, [animales, filters.arete]);
+  useEffect(() => {
+    if (!defaultRazaId || editingAnimalId !== null) return;
+    setForm((prev) => (prev.idRaza ? prev : { ...prev, idRaza: defaultRazaId }));
+  }, [defaultRazaId, editingAnimalId]);
+
+  const resetForm = useCallback(() => {
+    setEditingAnimalId(null);
+    setFormErrors({});
+    setForm(buildEmptyForm(defaultRazaId));
+  }, [defaultRazaId]);
 
   const onNavigate = (moduleName: string) => {
-    if (moduleName === 'Usuarios' && onGoUsersAdmin) return onGoUsersAdmin();
-    if (onNavigateModule) return onNavigateModule(moduleName);
-    return onGoHome();
+    if (moduleName === 'Usuarios' && onGoUsersAdmin) {
+      onGoUsersAdmin();
+      return;
+    }
+
+    if (onNavigateModule) {
+      onNavigateModule(moduleName);
+      return;
+    }
+
+    onGoHome();
   };
 
-  const resetForm = () => { setForm(EMPTY_FORM); setFormErrors({}); setEditingAnimalId(null); };
+  const onSelectEdit = (animal: Animal) => {
+    setEditingAnimalId(animal.idAnimal);
+    setFormErrors({});
+    setMessage(null);
+    setForm(toFormState(animal));
+  };
+
+  const onFieldChange = (field: keyof AnimalFormState, value: string | boolean) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    if (field in formErrors) {
+      setFormErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  const onPhotoSelected = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      setForm((prev) => ({
+        ...prev,
+        fotoBase64: dataUrl,
+        fotoPreviewUrl: dataUrl,
+        eliminarFoto: false,
+      }));
+    } catch (error) {
+      setMessage({ type: 'error', text: getGanadoErrorMessage(error) });
+    } finally {
+      event.target.value = '';
+    }
+  };
+
+  const onRemovePhoto = () => {
+    setForm((prev) => ({
+      ...prev,
+      fotoBase64: '',
+      fotoPreviewUrl: '',
+      eliminarFoto: Boolean(editingAnimal?.fotoUrl),
+    }));
+  };
 
   const onSave = async () => {
-    const validationErrors = validateAnimalForm(form, isEditing);
-    setFormErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) return;
+    const errors = validateAnimalForm(form);
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
+    if (editingAnimalId && !canEdit) {
+      setMessage({ type: 'warn', text: 'Solo Administrador puede editar animales.' });
+      return;
+    }
+
+    if (!editingAnimalId && !canCreate) {
+      setMessage({ type: 'warn', text: 'Tu rol no puede registrar animales.' });
+      return;
+    }
 
     try {
       setSaving(true);
       setMessage(null);
 
-      if (isEditing && editingAnimal) {
-        const payload: UpdateAnimalInput = {
-          fechaIngreso: form.fechaIngreso,
-          pesoInicial: Number(form.pesoInicial),
-          idRaza: Number(form.idRaza),
-          procedencia: form.procedencia.trim(),
-          edadEstimada: Number(form.edadEstimada),
-          estadoSanitarioInicial: form.estadoSanitarioInicial.trim(),
-        };
-        const updated = await ganadoApi.updateAnimal(editingAnimal.idAnimal, payload);
-        setAnimales((prev) => prev.map((a) => (a.idAnimal === updated.idAnimal ? updated : a)));
-        if (searchResult?.idAnimal === updated.idAnimal) setSearchResult(updated);
+      if (editingAnimalId) {
+        const targetAnimal = editingAnimal || findAnimalByArete(animales, form.numeroArete);
+        if (!targetAnimal) {
+          setMessage({ type: 'error', text: 'No se encontro el animal para actualizar.' });
+          return;
+        }
+
+        const payload = buildUpdatePayload(form, targetAnimal);
+        if (!payload) {
+          setMessage({ type: 'warn', text: 'No hay cambios por guardar.' });
+          return;
+        }
+
+        await ganadoApi.updateAnimal(editingAnimalId, payload);
         setMessage({ type: 'success', text: 'Animal actualizado correctamente.' });
       } else {
-        const payload: CreateAnimalInput = {
+        await ganadoApi.createAnimal({
           numeroArete: form.numeroArete.trim(),
           fechaIngreso: form.fechaIngreso,
           pesoInicial: Number(form.pesoInicial),
           idRaza: Number(form.idRaza),
-          procedencia: form.procedencia.trim(),
+          sexo: form.sexo,
+          procedencia: form.procedencia,
           edadEstimada: Number(form.edadEstimada),
           estadoSanitarioInicial: form.estadoSanitarioInicial.trim(),
-        };
-        const created = await ganadoApi.createAnimal(payload);
-        setAnimales((prev) => [created, ...prev]);
-        setSearchResult(created);
+          fotoBase64: form.fotoBase64 || undefined,
+        });
         setMessage({ type: 'success', text: 'Animal registrado correctamente.' });
       }
 
       resetForm();
+      await loadAnimales();
     } catch (error) {
-      const fe = getGanadoFieldErrors(error);
-      setFormErrors((prev) => ({
-        ...prev,
-        numeroArete: fe.numeroArete || prev.numeroArete,
-        fechaIngreso: fe.fechaIngreso || prev.fechaIngreso,
-        pesoInicial: fe.pesoInicial || prev.pesoInicial,
-        idRaza: fe.idRaza || prev.idRaza,
-        procedencia: fe.procedencia || prev.procedencia,
-        edadEstimada: fe.edadEstimada || prev.edadEstimada,
-        estadoSanitarioInicial: fe.estadoSanitarioInicial || prev.estadoSanitarioInicial,
-      }));
+      setFormErrors((prev) => ({ ...prev, ...getGanadoFieldErrors(error) }));
       await handleApiError(error);
-    } finally { setSaving(false); }
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const onSearchByArete = async () => {
-    if (!searchArete.trim()) return;
+  const onSearch = async () => {
+    if (!searchArete.trim()) {
+      setSearchResult(null);
+      setMessage({ type: 'warn', text: 'Escribe un numero de arete para buscar.' });
+      return;
+    }
+
     try {
       setSearching(true);
-      setSearchResult(await ganadoApi.getAnimalByArete(searchArete.trim()));
       setMessage(null);
+      const animal = await ganadoApi.getAnimalByArete(searchArete.trim());
+      setSearchResult(animal);
     } catch (error) {
       setSearchResult(null);
       await handleApiError(error);
-    } finally { setSearching(false); }
-  };
-
-  const onOpenBaja = (animal: Animal) => {
-    setBajaTarget(animal);
-    setBajaErrors({});
-    setBajaForm({ ...DEFAULT_BAJA_FORM, fechaBaja: new Date().toISOString().slice(0, 10) });
-  };
-
-  const onConfirmBaja = async () => {
-    if (!bajaTarget) return;
-    const validationErrors = validateBajaForm(bajaForm);
-    setBajaErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) return;
-
-    try {
-      setSubmittingBaja(true);
-      const payload: BajaAnimalInput = {
-        estadoActual: bajaForm.estadoActual,
-        motivoBaja: bajaForm.motivoBaja.trim(),
-        fechaBaja: bajaForm.fechaBaja,
-      };
-      const updated = await ganadoApi.bajaAnimal(bajaTarget.idAnimal, payload);
-      setAnimales((prev) => prev.map((a) => (a.idAnimal === updated.idAnimal ? updated : a)));
-      if (searchResult?.idAnimal === updated.idAnimal) setSearchResult(updated);
-      setMessage({ type: 'success', text: `Animal ${updated.numeroArete} dado de baja correctamente.` });
-      await loadAnimales();
-      setBajaTarget(null);
-    } catch (error) {
-      await handleApiError(error);
-    } finally { setSubmittingBaja(false); }
+    } finally {
+      setSearching(false);
+    }
   };
 
   const onOpenHistorial = async (animal: Animal) => {
@@ -311,126 +513,606 @@ export function GanadoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: 
       setHistorialModalOpen(true);
       setHistorialLoading(true);
       setHistorialError(null);
-      setHistorialData(await ganadoApi.getHistorialByArete(animal.numeroArete));
-    } catch (error) {
       setHistorialData(null);
+      const data = await ganadoApi.getHistorialByArete(animal.numeroArete);
+      setHistorialData(data);
+    } catch (error) {
       setHistorialError(getGanadoErrorMessage(error));
-    } finally { setHistorialLoading(false); }
+      if (error instanceof ApiClientError && error.status === 401) await logout();
+    } finally {
+      setHistorialLoading(false);
+    }
   };
+
+  const onOpenBaja = (animal: Animal) => {
+    setBajaTarget(animal);
+    setBajaErrors({});
+    setBajaForm({
+      ...DEFAULT_BAJA_FORM,
+      fechaBaja: new Date().toISOString().slice(0, 10),
+    });
+  };
+
+  const onConfirmBaja = async () => {
+    if (!bajaTarget) return;
+
+    const errors = validateBajaForm(bajaForm);
+    setBajaErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
+    try {
+      setSubmittingBaja(true);
+      setMessage(null);
+      const payload: BajaAnimalInput = {
+        estadoActual: bajaForm.estadoActual,
+        motivoBaja: bajaForm.motivoBaja.trim(),
+        fechaBaja: bajaForm.fechaBaja,
+      };
+      await ganadoApi.bajaAnimal(bajaTarget.idAnimal, payload);
+      setMessage({ type: 'success', text: `Animal ${bajaTarget.numeroArete} dado de baja correctamente.` });
+      setBajaTarget(null);
+      await loadAnimales();
+    } catch (error) {
+      await handleApiError(error);
+    } finally {
+      setSubmittingBaja(false);
+    }
+  };
+
+  const razasDisponibles = razas.length > 0 ? razas : [{ idRaza: 0, nombreRaza: 'Tabasquena' }];
+
+  if (!canView) {
+    return (
+      <section className="users-admin-shell">
+        <main className="users-admin-main">
+          <header className="users-admin-main__header" data-testid="ganado-admin-header">
+            <h1>Ganado</h1>
+            <p>Registro y trazabilidad del hato</p>
+          </header>
+          <div className="users-admin-main__body">
+            <article className="users-admin-empty">
+              <h2>Acceso restringido</h2>
+              <p>Tu rol no tiene permisos para consultar el modulo de ganado.</p>
+              <Button type="button" variant="ghost" onClick={onGoHome}>Volver</Button>
+            </article>
+          </div>
+        </main>
+      </section>
+    );
+  }
 
   return (
     <section className="users-admin-shell">
       <aside className="users-admin-sidebar">
-        <div className="users-admin-sidebar__logo"><img src="/branding/logo-rancho-los-alpes.png" alt="Logo Rancho Los Alpes" /></div>
+        <div className="users-admin-sidebar__logo">
+          <img src="/branding/logo-rancho-los-alpes.png" alt="Logo Rancho Los Alpes" />
+        </div>
+
         <nav className="users-admin-sidebar__nav" aria-label="Navegacion de modulos">
           {visibleNavItems.map((item) => {
             const Icon = item.icon;
+            const isActive = item.label === 'Ganado';
             return (
-            <button
-              key={item.label}
-              type="button"
-              data-testid={`ganado-nav-${item.label.toLowerCase()}`}
-              className={`users-admin-sidebar__nav-item ${item.label === 'Ganado' ? 'is-active' : ''}`}
-              onClick={item.label === 'Ganado' ? undefined : () => onNavigate(item.label)}
-            >
-              <Icon size={18} aria-hidden /> {item.label}
-            </button>
+              <button
+                key={item.label}
+                type="button"
+                data-testid={getNavTestId(item.label)}
+                className={`users-admin-sidebar__nav-item ${isActive ? 'is-active' : ''}`}
+                onClick={isActive ? undefined : () => onNavigate(item.label)}
+              >
+                <Icon size={18} aria-hidden /> {item.label}
+              </button>
             );
           })}
         </nav>
+
         <footer className="users-admin-sidebar__footer">
           <p>{user?.nombreCompleto || 'Usuario'}</p>
           <small>{user?.rol || 'Sin rol'}</small>
-          <Button type="button" className="users-admin-sidebar__logout" onClick={logout} data-testid="ganado-sidebar-logout-button"><LogOut size={15} aria-hidden /> Cerrar sesion</Button>
+          <Button type="button" className="users-admin-sidebar__logout" onClick={logout}>
+            <LogOut size={15} aria-hidden /> Cerrar sesion
+          </Button>
         </footer>
       </aside>
 
       <main className="users-admin-main">
         <header className="users-admin-main__header" data-testid="ganado-admin-header">
-          <h1>Ganado</h1><p>Gestion de ganado bovino</p>
+          <h1>Ganado</h1>
+          <p>Alta de ejemplares, foto individual y control operativo del hato.</p>
         </header>
 
         <div className="users-admin-main__body">
-          {!canView ? (
-            <article className="users-admin-empty"><h2>Acceso restringido</h2><p>Tu rol no tiene permisos para ganado.</p><Button type="button" variant="ghost" onClick={onGoHome}>Volver</Button></article>
-          ) : loadingInit ? (
-            <article className="users-admin-empty"><h2>Cargando ganado...</h2><p>Preparando datos iniciales.</p></article>
+          {loadingInit ? (
+            <article className="users-admin-empty">
+              <h2>Cargando modulo de ganado...</h2>
+              <p>Preparando catalogos y configuracion del registro.</p>
+            </article>
           ) : (
             <div className="ganado-grid">
-              <article className="ganado-card">
-                <div className="users-admin-card__title"><h2>{isEditing ? 'Editar animal' : 'Alta de ganado'}</h2>{isEditing ? <Button type="button" variant="ghost" onClick={resetForm}><X size={15} aria-hidden /> Cancelar</Button> : null}</div>
-                {!canCreate && !canEdit ? <p className="ganado-helper-message">Tu rol solo puede consultar.</p> : (
-                  <>
-                    <label className="ganado-field"><span>Numero de arete</span><input data-testid="input-arete" value={form.numeroArete} onChange={(e)=>setForm((p)=>({...p,numeroArete:e.target.value}))} readOnly={isEditing} placeholder="MX-AGS-1001" />{formErrors.numeroArete ? <small data-testid="arete-error">{formErrors.numeroArete}</small> : null}</label>
-                    <label className="ganado-field"><span>Fecha de ingreso</span><input data-testid="input-fecha" type="date" value={form.fechaIngreso} onChange={(e)=>setForm((p)=>({...p,fechaIngreso:e.target.value}))} />{formErrors.fechaIngreso ? <small data-testid="fecha-error">{formErrors.fechaIngreso}</small> : null}</label>
-                    <div className="ganado-field-row">
-                      <label className="ganado-field"><span>Peso inicial (kg)</span><input data-testid="input-peso" type="number" min={0.1} step={0.1} value={form.pesoInicial} onChange={(e)=>setForm((p)=>({...p,pesoInicial:e.target.value}))} />{formErrors.pesoInicial ? <small data-testid="peso-error">{formErrors.pesoInicial}</small> : null}</label>
-                      <label className="ganado-field"><span>Edad estimada (meses)</span><input data-testid="input-edad" type="number" min={0} step={1} value={form.edadEstimada} onChange={(e)=>setForm((p)=>({...p,edadEstimada:e.target.value}))} />{formErrors.edadEstimada ? <small data-testid="edad-error">{formErrors.edadEstimada}</small> : null}</label>
-                    </div>
-                    <label className="ganado-field"><span>Raza</span><select data-testid="select-raza" value={form.idRaza} onChange={(e)=>setForm((p)=>({...p,idRaza:e.target.value}))}><option value="">Selecciona una raza</option>{razas.map((r)=><option key={r.idRaza} value={r.idRaza}>{r.nombreRaza}</option>)}</select>{formErrors.idRaza ? <small data-testid="raza-error">{formErrors.idRaza}</small> : null}</label>
-                    <label className="ganado-field"><span>Procedencia</span><input data-testid="input-procedencia" value={form.procedencia} onChange={(e)=>setForm((p)=>({...p,procedencia:e.target.value}))} />{formErrors.procedencia ? <small data-testid="procedencia-error">{formErrors.procedencia}</small> : null}</label>
-                    <label className="ganado-field"><span>Estado sanitario inicial</span><textarea data-testid="input-sanitario" rows={3} value={form.estadoSanitarioInicial} onChange={(e)=>setForm((p)=>({...p,estadoSanitarioInicial:e.target.value}))} />{formErrors.estadoSanitarioInicial ? <small data-testid="sanitario-error">{formErrors.estadoSanitarioInicial}</small> : null}</label>
-                    <Button type="button" fullWidth disabled={saving} onClick={onSave} data-testid="btn-submit">{saving ? 'Guardando...' : isEditing ? <><Save size={15} aria-hidden /> Guardar cambios</> : <><Plus size={15} aria-hidden /> Registrar animal</>}</Button>
-                  </>
-                )}
-                {message ? <p className={`users-message users-message--${message.type}`} data-testid="ganado-form-message">{message.text}</p> : null}
-              </article>
+              <div className="ganado-column">
+                <article className="ganado-card">
+                  <div className="users-admin-card__title">
+                    <h2>{editingAnimalId ? 'Editar ejemplar' : 'Registrar ejemplar'}</h2>
+                    {editingAnimalId ? (
+                      <Button type="button" variant="ghost" onClick={resetForm}>
+                        <X size={15} aria-hidden /> Cancelar
+                      </Button>
+                    ) : null}
+                  </div>
 
-              <article className="ganado-card">
-                <label className="ganado-search"><span>Busqueda por arete</span><div className="ganado-search__controls"><input data-testid="input-buscar-arete" value={searchArete} onChange={(e)=>setSearchArete(e.target.value)} placeholder="MX-AGS-1001" /><Button type="button" onClick={onSearchByArete} disabled={searching} data-testid="btn-buscar"><Search size={15} aria-hidden /> {searching ? 'Buscando...' : 'Buscar'}</Button></div></label>
-                {searchResult ? (
-                  <article className="ganado-search-result"><div><strong>{searchResult.numeroArete}</strong><p>{searchResult.raza?.nombreRaza || 'Sin raza'} · {toNumeric(searchResult.pesoInicial)} kg · {searchResult.edadEstimada} meses</p></div><div className="ganado-search-result__actions">{canHistorial ? <Button type="button" variant="ghost" onClick={()=>void onOpenHistorial(searchResult)}><History size={14} aria-hidden /> Ver historial</Button> : null}{canEdit && searchResult.estadoActual==='ACTIVO' ? <Button type="button" variant="ghost" onClick={()=>{setEditingAnimalId(searchResult.idAnimal);setForm(toFormState(searchResult));}}><Pencil size={14} aria-hidden /> Editar</Button> : null}</div></article>
-                ) : null}
+                  {!canCreate && !editingAnimalId ? (
+                    <p className="ganado-helper-message">Tu rol puede consultar el hato, pero no registrar nuevos ejemplares.</p>
+                  ) : (
+                    <>
+                      <label className="ganado-field">
+                        <span>Numero de arete SINIIGA</span>
+                        <input
+                          type="text"
+                          data-testid="input-arete"
+                          value={form.numeroArete}
+                          onChange={(event) => onFieldChange('numeroArete', event.target.value.replace(/\D/g, '').slice(0, 10))}
+                          placeholder="2712345678"
+                          maxLength={10}
+                          disabled={editingAnimalId !== null}
+                        />
+                        <small className="ganado-field-hint">Formato SINIIGA Tabasco: 27 + 8 digitos (ej: 2712345678)</small>
+                        {formErrors.numeroArete ? <small>{formErrors.numeroArete}</small> : null}
+                      </label>
 
-                <div className="ganado-filters">
-                  <label className="ganado-field"><span>Estado</span><select data-testid="filter-estado" value={filters.estadoActual} onChange={(e)=>setFilters((p)=>({...p,estadoActual:e.target.value as EstadoAnimal|'TODOS'}))}><option value="ACTIVO">Activo</option><option value="TODOS">Todos</option><option value="VENDIDO">Vendido</option><option value="MUERTO">Muerto</option><option value="TRANSFERIDO">Transferido</option></select></label>
-                  <label className="ganado-field"><span>Raza</span><select data-testid="filter-raza" value={filters.idRaza} onChange={(e)=>setFilters((p)=>({...p,idRaza:e.target.value}))}><option value="">Todas</option>{razas.map((r)=><option key={r.idRaza} value={r.idRaza}>{r.nombreRaza}</option>)}</select></label>
-                  <label className="ganado-field"><span>Arete</span><input data-testid="filter-arete" value={filters.arete} onChange={(e)=>setFilters((p)=>({...p,arete:e.target.value}))} placeholder="Buscar por arete"/></label>
-                  <Button type="button" variant="ghost" data-testid="btn-limpiar-filtros" onClick={()=>setFilters({estadoActual:'ACTIVO',idRaza:'',arete:''})}><FilterX size={14} aria-hidden /> Limpiar</Button>
-                </div>
+                      <div className="ganado-field-row">
+                        <label className="ganado-field">
+                          <span>Fecha de ingreso</span>
+                          <input
+                            type="date"
+                            data-testid="input-fecha"
+                            value={form.fechaIngreso}
+                            onChange={(event) => onFieldChange('fechaIngreso', event.target.value)}
+                          />
+                          {formErrors.fechaIngreso ? <small>{formErrors.fechaIngreso}</small> : null}
+                        </label>
 
-                <div className="ganado-list">
-                  {loadingList ? <p className="ganado-helper-message">Cargando ganado...</p> : filteredAnimales.length===0 ? <p className="ganado-helper-message">No hay animales con estos filtros.</p> : filteredAnimales.map((a)=>(
-                    <article key={a.idAnimal} className="ganado-item" data-testid={`card-${a.numeroArete}`}>
-                      <div className="ganado-item__head"><strong>{a.numeroArete}</strong><span className={`ganado-status ${getEstadoClass(a.estadoActual)}`}>{formatEstadoAnimal(a.estadoActual)}</span></div>
-                      <p>{a.raza?.nombreRaza || 'Sin raza'} · {toNumeric(a.pesoInicial)} kg · {a.edadEstimada} meses</p>
-                      <p>Ingreso: {toInputDate(a.fechaIngreso)} · Procedencia: {a.procedencia}</p>
-                      {a.motivoBaja ? <p>Baja: {a.motivoBaja} ({toInputDate(a.fechaBaja)})</p> : null}
-                      <div className="ganado-item__actions">
-                        {canHistorial ? <Button type="button" variant="ghost" data-testid={`btn-historial-${a.numeroArete}`} onClick={()=>void onOpenHistorial(a)}><History size={14} aria-hidden /> Historial</Button> : null}
-                        {canEdit && a.estadoActual==='ACTIVO' ? <Button type="button" variant="ghost" data-testid={`btn-editar-${a.numeroArete}`} onClick={()=>{setEditingAnimalId(a.idAnimal);setForm(toFormState(a));}}><Pencil size={14} aria-hidden /> Editar</Button> : null}
-                        {canBaja && a.estadoActual==='ACTIVO' ? <Button type="button" variant="ghost" className="users-btn-danger" data-testid={`btn-baja-${a.numeroArete}`} onClick={()=>onOpenBaja(a)}><UserMinus size={14} aria-hidden /> Dar baja</Button> : null}
+                        <label className="ganado-field">
+                          <span>Peso inicial (kg)</span>
+                          <input
+                            type="number"
+                            min="0.1"
+                            step="0.1"
+                            data-testid="input-peso"
+                            value={form.pesoInicial}
+                            onChange={(event) => onFieldChange('pesoInicial', event.target.value)}
+                            placeholder="350.0"
+                          />
+                          {formErrors.pesoInicial ? <small>{formErrors.pesoInicial}</small> : null}
+                        </label>
                       </div>
-                    </article>
-                  ))}
-                </div>
-              </article>
+
+                      <div className="ganado-field-row">
+                        <label className="ganado-field">
+                          <span>Edad estimada (meses)</span>
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            data-testid="input-edad"
+                            value={form.edadEstimada}
+                            onChange={(event) => onFieldChange('edadEstimada', event.target.value)}
+                            placeholder="24"
+                          />
+                          {formErrors.edadEstimada ? <small>{formErrors.edadEstimada}</small> : null}
+                        </label>
+
+                        <label className="ganado-field">
+                          <span>Raza</span>
+                          <select
+                            data-testid="select-raza"
+                            value={form.idRaza}
+                            onChange={(event) => onFieldChange('idRaza', event.target.value)}
+                          >
+                            <option value="">Selecciona la raza</option>
+                            {razasDisponibles.map((raza) => (
+                              <option key={raza.idRaza || raza.nombreRaza} value={raza.idRaza || ''}>
+                                {raza.nombreRaza}
+                              </option>
+                            ))}
+                          </select>
+                          {formErrors.idRaza ? <small>{formErrors.idRaza}</small> : null}
+                        </label>
+                      </div>
+
+                      <div className="ganado-field-row">
+                        <label className="ganado-field">
+                          <span>Sexo</span>
+                          <select
+                            data-testid="select-sexo"
+                            value={form.sexo}
+                            onChange={(event) => onFieldChange('sexo', event.target.value as SexoAnimal)}
+                          >
+                            {SEXO_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>{option.label}</option>
+                            ))}
+                          </select>
+                          {formErrors.sexo ? <small>{formErrors.sexo}</small> : null}
+                        </label>
+
+                        <label className="ganado-field">
+                          <span>Procedencia</span>
+                          <select
+                            data-testid="input-procedencia"
+                            value={form.procedencia}
+                            onChange={(event) => onFieldChange('procedencia', event.target.value as ProcedenciaAnimal)}
+                          >
+                            {PROCEDENCIA_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>{option.label}</option>
+                            ))}
+                          </select>
+                          {formErrors.procedencia ? <small>{formErrors.procedencia}</small> : null}
+                        </label>
+                      </div>
+
+                      <label className="ganado-field">
+                        <span>Estado sanitario inicial</span>
+                        <textarea
+                          rows={3}
+                          data-testid="input-sanitario"
+                          value={form.estadoSanitarioInicial}
+                          onChange={(event) => onFieldChange('estadoSanitarioInicial', event.target.value)}
+                          placeholder="Describe el estado general al ingreso"
+                        />
+                        {formErrors.estadoSanitarioInicial ? <small>{formErrors.estadoSanitarioInicial}</small> : null}
+                      </label>
+
+                      <div className="ganado-photo-field">
+                        <div className="ganado-photo-field__preview">
+                          {form.fotoPreviewUrl ? (
+                            <img src={form.fotoPreviewUrl} alt="Vista previa del ejemplar" className="ganado-photo-preview" />
+                          ) : (
+                            <div className="ganado-photo-preview ganado-photo-placeholder" aria-hidden="true">
+                              <span>{form.numeroArete.trim() ? form.numeroArete.trim().slice(0, 2).toUpperCase() : 'SG'}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="ganado-photo-field__controls">
+                          <label className="ganado-field">
+                            <span>Foto del ejemplar</span>
+                            <input type="file" accept="image/png,image/jpeg,image/webp" data-testid="input-foto" onChange={(event) => void onPhotoSelected(event)} />
+                          </label>
+                          <div className="ganado-search-result__actions">
+                            <Button type="button" variant="ghost" onClick={onRemovePhoto} disabled={!form.fotoPreviewUrl}>
+                              <X size={15} aria-hidden /> Quitar foto
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <Button type="button" fullWidth disabled={saving} onClick={onSave} data-testid="btn-submit">
+                        {saving
+                          ? 'Guardando...'
+                          : editingAnimalId
+                            ? <><Save size={15} aria-hidden /> Guardar cambios</>
+                            : <><Plus size={15} aria-hidden /> Guardar ejemplar</>}
+                      </Button>
+                    </>
+                  )}
+
+                  {message ? (
+                    <p className={`users-message users-message--${message.type}`} data-testid="ganado-form-message">
+                      {message.text}
+                    </p>
+                  ) : null}
+                </article>
+
+                <article className="ganado-card">
+                  <div className="users-admin-card__title">
+                    <h2>Busqueda por arete</h2>
+                    <small>Consulta puntual</small>
+                  </div>
+
+                  <label className="ganado-search">
+                    <span>Numero de arete</span>
+                    <div className="ganado-search__controls">
+                      <input
+                        type="text"
+                        data-testid="input-buscar-arete"
+                        value={searchArete}
+                        onChange={(event) => setSearchArete(event.target.value)}
+                        placeholder="Busca un arete exacto"
+                      />
+                      <Button type="button" onClick={onSearch} disabled={searching} data-testid="btn-buscar">
+                        <Search size={15} aria-hidden /> {searching ? 'Buscando...' : 'Buscar'}
+                      </Button>
+                    </div>
+                  </label>
+
+                  {searchResult ? (
+                    <div className="ganado-search-result">
+                      <div className="ganado-search-result__summary">
+                        <AnimalPhoto animal={searchResult} className="ganado-search-result__photo" />
+                        <div>
+                          <AreteBandera arete={searchResult.numeroArete} compact />
+                          <strong>{formatAreteDisplay(searchResult.numeroArete)}</strong>
+                          <p>{animalSummary(searchResult)}</p>
+                          <p>{formatProcedenciaAnimal(searchResult.procedencia)} · Estado {formatEstadoAnimal(searchResult.estadoActual)}</p>
+                        </div>
+                      </div>
+                      <div className="ganado-search-result__actions">
+                        {canHistorial ? (
+                          <Button type="button" variant="ghost" onClick={() => void onOpenHistorial(searchResult)}>
+                            <History size={14} aria-hidden /> Ver historial
+                          </Button>
+                        ) : null}
+                        {canEdit && searchResult.estadoActual === 'ACTIVO' ? (
+                          <Button type="button" variant="ghost" onClick={() => onSelectEdit(searchResult)}>
+                            <Pencil size={14} aria-hidden /> Editar
+                          </Button>
+                        ) : null}
+                      </div>
+                    </div>
+                  ) : null}
+                </article>
+              </div>
+
+              <div className="ganado-column">
+                <article className="ganado-card">
+                  <div className="users-admin-card__title">
+                    <h2>Hato registrado</h2>
+                    <small>{filteredAnimales.length} ejemplares visibles</small>
+                  </div>
+                  <div className="ganado-filters">
+                    <label className="ganado-field">
+                      <span>Estado</span>
+                      <select
+                        data-testid="filter-estado"
+                        value={filters.estadoActual}
+                        onChange={(event) => setFilters((prev) => ({ ...prev, estadoActual: event.target.value as EstadoAnimal | 'TODOS' }))}
+                      >
+                        <option value="ACTIVO">ACTIVO</option>
+                        <option value="TODOS">TODOS</option>
+                        <option value="VENDIDO">VENDIDO</option>
+                        <option value="MUERTO">MUERTO</option>
+                        <option value="TRANSFERIDO">TRANSFERIDO</option>
+                      </select>
+                    </label>
+
+                    <label className="ganado-field">
+                      <span>Raza</span>
+                      <select
+                        data-testid="filter-raza"
+                        value={filters.idRaza}
+                        onChange={(event) => setFilters((prev) => ({ ...prev, idRaza: event.target.value }))}
+                      >
+                        <option value="">Todas</option>
+                        {razas.map((raza) => (
+                          <option key={raza.idRaza} value={raza.idRaza}>{raza.nombreRaza}</option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label className="ganado-field">
+                      <span>Filtrar por arete</span>
+                      <input
+                        type="text"
+                        data-testid="filter-arete"
+                        value={filters.arete}
+                        onChange={(event) => setFilters((prev) => ({ ...prev, arete: event.target.value }))}
+                        placeholder="Coincidencia parcial"
+                      />
+                    </label>
+
+                    <div className="ganado-field">
+                      <span>Acciones</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => setFilters({ estadoActual: 'ACTIVO', idRaza: '', arete: '' })}
+                        data-testid="btn-limpiar-filtros"
+                      >
+                        <FilterX size={15} aria-hidden /> Limpiar filtros
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="ganado-list">
+                    {loadingList ? (
+                      <p className="ganado-helper-message">Cargando animales registrados...</p>
+                    ) : filteredAnimales.length === 0 ? (
+                      <p className="ganado-helper-message">No hay animales para los filtros seleccionados.</p>
+                    ) : filteredAnimales.map((animal) => (
+                      <article key={animal.idAnimal} className="ganado-item" data-testid={`card-${animal.numeroArete}`}>
+                        <div className="ganado-item__layout">
+                          <AnimalPhoto animal={animal} className="ganado-item__photo" />
+                          <div className="ganado-item__body">
+                            <div className="ganado-item__head">
+                              <strong>{formatAreteDisplay(animal.numeroArete)}</strong>
+                              <span className={`ganado-status ${getEstadoClass(animal.estadoActual)}`}>
+                                {formatEstadoAnimal(animal.estadoActual)}
+                              </span>
+                            </div>
+                            <p>{animalSummary(animal)}</p>
+                            <p>{formatProcedenciaAnimal(animal.procedencia)} · Sanitario inicial: {animal.estadoSanitarioInicial}</p>
+                          </div>
+                        </div>
+
+                        <div className="ganado-item__actions">
+                          {canEdit && animal.estadoActual === 'ACTIVO' ? (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              data-testid={`btn-editar-${animal.numeroArete}`}
+                              onClick={() => onSelectEdit(animal)}
+                            >
+                              <Pencil size={14} aria-hidden /> Editar
+                            </Button>
+                          ) : null}
+
+                          {canBaja && animal.estadoActual === 'ACTIVO' ? (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              className="users-btn-danger"
+                              data-testid={`btn-baja-${animal.numeroArete}`}
+                              onClick={() => onOpenBaja(animal)}
+                            >
+                              <UserMinus size={14} aria-hidden /> Dar de baja
+                            </Button>
+                          ) : null}
+
+                          {canHistorial ? (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              data-testid={`btn-historial-${animal.numeroArete}`}
+                              onClick={() => void onOpenHistorial(animal)}
+                            >
+                              <History size={14} aria-hidden /> Historial
+                            </Button>
+                          ) : null}
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </article>
+              </div>
             </div>
           )}
         </div>
       </main>
 
       {bajaTarget ? (
-        <div className="ganado-modal-backdrop" role="dialog" aria-modal="true">
-          <article className="ganado-modal">
-            <header><h3>Dar de baja · {bajaTarget.numeroArete}</h3></header>
-            <label className="ganado-field"><span>Estado de baja</span><select data-testid="select-motivo" value={bajaForm.estadoActual} onChange={(e)=>setBajaForm((p)=>({...p,estadoActual:e.target.value as Exclude<EstadoAnimal,'ACTIVO'>}))}><option value="VENDIDO">Vendido</option><option value="MUERTO">Muerto</option><option value="TRANSFERIDO">Transferido</option></select></label>
-            <label className="ganado-field"><span>Motivo de baja</span><textarea data-testid="input-baja-motivo" rows={3} value={bajaForm.motivoBaja} onChange={(e)=>{setBajaForm((p)=>({...p,motivoBaja:e.target.value}));setBajaErrors((p)=>({...p,motivoBaja:undefined}));}} />{bajaErrors.motivoBaja ? <small data-testid="baja-motivo-error">{bajaErrors.motivoBaja}</small> : null}</label>
-            <label className="ganado-field"><span>Fecha de baja</span><input data-testid="input-baja-fecha" type="date" value={bajaForm.fechaBaja} onChange={(e)=>{setBajaForm((p)=>({...p,fechaBaja:e.target.value}));setBajaErrors((p)=>({...p,fechaBaja:undefined}));}} />{bajaErrors.fechaBaja ? <small>{bajaErrors.fechaBaja}</small> : null}</label>
-            <div className="ganado-modal__actions"><Button type="button" variant="ghost" onClick={()=>setBajaTarget(null)}><X size={14} aria-hidden /> Cancelar</Button><Button type="button" className="users-btn-danger" onClick={onConfirmBaja} disabled={submittingBaja} data-testid="btn-confirmar-baja">{submittingBaja ? 'Procesando...' : <><Check size={14} aria-hidden /> Confirmar baja</>}</Button></div>
-          </article>
+        <div className="ganado-modal-backdrop" role="presentation">
+          <div className="ganado-modal" role="dialog" aria-modal="true" aria-labelledby="ganado-baja-title">
+            <header>
+              <h3 id="ganado-baja-title">Dar de baja a {bajaTarget.numeroArete}</h3>
+            </header>
+
+            <label className="ganado-field">
+              <span>Estado de salida</span>
+              <select
+                data-testid="select-motivo"
+                value={bajaForm.estadoActual}
+                onChange={(event) => setBajaForm((prev) => ({ ...prev, estadoActual: event.target.value as BajaFormState['estadoActual'] }))}
+              >
+                <option value="VENDIDO">VENDIDO</option>
+                <option value="MUERTO">MUERTO</option>
+                <option value="TRANSFERIDO">TRANSFERIDO</option>
+              </select>
+            </label>
+
+            <label className="ganado-field">
+              <span>Motivo de baja</span>
+              <textarea
+                rows={3}
+                data-testid="input-baja-motivo"
+                value={bajaForm.motivoBaja}
+                onChange={(event) => {
+                  setBajaForm((prev) => ({ ...prev, motivoBaja: event.target.value }));
+                  setBajaErrors((prev) => ({ ...prev, motivoBaja: undefined }));
+                }}
+              />
+              {bajaErrors.motivoBaja ? <small>{bajaErrors.motivoBaja}</small> : null}
+            </label>
+
+            <label className="ganado-field">
+              <span>Fecha de baja</span>
+              <input
+                type="date"
+                data-testid="input-baja-fecha"
+                value={bajaForm.fechaBaja}
+                onChange={(event) => {
+                  setBajaForm((prev) => ({ ...prev, fechaBaja: event.target.value }));
+                  setBajaErrors((prev) => ({ ...prev, fechaBaja: undefined }));
+                }}
+              />
+              {bajaErrors.fechaBaja ? <small>{bajaErrors.fechaBaja}</small> : null}
+            </label>
+
+            <div className="ganado-modal__actions">
+              <Button type="button" variant="ghost" onClick={() => setBajaTarget(null)}>
+                <X size={15} aria-hidden /> Cancelar
+              </Button>
+              <Button type="button" disabled={submittingBaja} onClick={() => void onConfirmBaja()} data-testid="btn-confirmar-baja">
+                {submittingBaja ? 'Procesando...' : <><Check size={15} aria-hidden /> Confirmar baja</>}
+              </Button>
+            </div>
+          </div>
         </div>
       ) : null}
 
       {historialModalOpen ? (
-        <div className="ganado-modal-backdrop" role="dialog" aria-modal="true">
-          <article className="ganado-modal">
-            <header><h3>Historial por arete</h3></header>
-            {historialLoading ? <p className="ganado-helper-message">Cargando historial...</p> : historialError ? <p className="users-message users-message--error">{historialError}</p> : historialData ? (
-              <div className="ganado-historial"><p><strong>{historialData.animal.numeroArete}</strong> · {historialData.animal.raza?.nombreRaza || 'Sin raza'}</p><ul><li>Eventos sanitarios: {historialData.historial.resumen.totalEventosSanitarios}</li><li>Calendario sanitario: {historialData.historial.sanitario.calendario.length}</li><li>Registros de peso: {historialData.historial.resumen.totalRegistrosPeso}</li><li>Registros de leche: {historialData.historial.resumen.totalRegistrosLeche}</li><li>Eventos reproductivos: {historialData.historial.resumen.totalEventosReproductivos}</li></ul></div>
+        <div className="ganado-modal-backdrop" role="presentation">
+          <div className="ganado-modal ganado-historial" role="dialog" aria-modal="true" aria-labelledby="ganado-historial-title">
+            <header>
+              <h3 id="ganado-historial-title">Historial por arete</h3>
+            </header>
+
+            {historialLoading ? (
+              <p className="ganado-helper-message">Cargando historial...</p>
+            ) : historialError ? (
+              <p className="users-message users-message--error">{historialError}</p>
+            ) : historialData ? (
+              <>
+                <div className="ganado-historial__hero">
+                  <AnimalPhoto animal={historialData.animal} className="ganado-historial__photo" />
+                  <div>
+                    <AreteBandera arete={historialData.animal.numeroArete} compact />
+                    <strong>{formatAreteDisplay(historialData.animal.numeroArete)}</strong>
+                    <p>{animalSummary(historialData.animal)}</p>
+                    <p>{formatProcedenciaAnimal(historialData.animal.procedencia)} · {formatEstadoAnimal(historialData.animal.estadoActual)}</p>
+                  </div>
+                </div>
+
+                <div className="ganado-historial__summary">
+                  <p>Eventos sanitarios: {historialData.historial.resumen.totalEventosSanitarios}</p>
+                  <p>Pesajes: {historialData.historial.resumen.totalRegistrosPeso}</p>
+                  <p>Registros de leche: {historialData.historial.resumen.totalRegistrosLeche}</p>
+                  <p>Eventos reproductivos: {historialData.historial.resumen.totalEventosReproductivos}</p>
+                </div>
+
+                <div className="ganado-historial__sections">
+                  <section>
+                    <strong>Sanitario</strong>
+                    <ul>
+                      {historialData.historial.sanitario.eventos.length === 0 ? <li>Sin eventos sanitarios.</li> : historialData.historial.sanitario.eventos.slice(0, 5).map((item, index) => <li key={`se-${index}`}>{describeSanitarioEvento(item as Record<string, unknown>)}</li>)}
+                    </ul>
+                  </section>
+
+                  <section>
+                    <strong>Calendario</strong>
+                    <ul>
+                      {historialData.historial.sanitario.calendario.length === 0 ? <li>Sin calendario sanitario.</li> : historialData.historial.sanitario.calendario.slice(0, 5).map((item, index) => <li key={`ca-${index}`}>{describeCalendarioEvento(item as Record<string, unknown>)}</li>)}
+                    </ul>
+                  </section>
+
+                  <section>
+                    <strong>Peso</strong>
+                    <ul>
+                      {historialData.historial.productivo.registrosPeso.length === 0 ? <li>Sin registros de peso.</li> : historialData.historial.productivo.registrosPeso.slice(0, 5).map((item, index) => <li key={`pe-${index}`}>{describePeso(item as Record<string, unknown>)}</li>)}
+                    </ul>
+                  </section>
+
+                  <section>
+                    <strong>Leche</strong>
+                    <ul>
+                      {historialData.historial.productivo.produccionesLeche.length === 0 ? <li>Sin registros de leche.</li> : historialData.historial.productivo.produccionesLeche.slice(0, 5).map((item, index) => <li key={`le-${index}`}>{describeLeche(item as Record<string, unknown>)}</li>)}
+                    </ul>
+                  </section>
+
+                  <section>
+                    <strong>Reproductivo</strong>
+                    <ul>
+                      {historialData.historial.productivo.eventosReproductivos.length === 0 ? <li>Sin eventos reproductivos.</li> : historialData.historial.productivo.eventosReproductivos.slice(0, 5).map((item, index) => <li key={`re-${index}`}>{describeReproductivo(item as Record<string, unknown>)}</li>)}
+                    </ul>
+                  </section>
+                </div>
+              </>
             ) : null}
-            <div className="ganado-modal__actions"><Button type="button" onClick={()=>setHistorialModalOpen(false)}>Cerrar</Button></div>
-          </article>
+
+            <div className="ganado-modal__actions">
+              <Button type="button" variant="ghost" onClick={() => setHistorialModalOpen(false)}>
+                <X size={15} aria-hidden /> Cerrar
+              </Button>
+            </div>
+          </div>
         </div>
       ) : null}
     </section>

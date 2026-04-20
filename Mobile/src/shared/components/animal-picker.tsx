@@ -26,6 +26,8 @@ export interface AnimalPickerProps {
   selectedAnimal: Animal | null;
   /** Called when the user selects (or clears) an animal */
   onSelect: (animal: Animal | null) => void;
+  /** Optional filter for sex-specific workflows */
+  filterSex?: Animal['sexo'];
 }
 
 /**
@@ -33,7 +35,7 @@ export interface AnimalPickerProps {
  *   1. Lists all ACTIVO animals (filterable by arete / raza)
  *   2. Has a camera 📷 button to scan a barcode instead
  */
-export function AnimalPicker({ accentColor = '#2F9B47', selectedAnimal, onSelect }: AnimalPickerProps) {
+export function AnimalPicker({ accentColor = '#2F9B47', selectedAnimal, onSelect, filterSex }: AnimalPickerProps) {
   const [modalOpen, setModalOpen] = useState(false);
 
   const open = () => setModalOpen(true);
@@ -79,6 +81,7 @@ export function AnimalPicker({ accentColor = '#2F9B47', selectedAnimal, onSelect
       <AnimalListModal
         visible={modalOpen}
         accentColor={accentColor}
+        filterSex={filterSex}
         onSelect={handleSelect}
         onClose={close}
       />
@@ -91,11 +94,13 @@ export function AnimalPicker({ accentColor = '#2F9B47', selectedAnimal, onSelect
 function AnimalListModal({
   visible,
   accentColor,
+  filterSex,
   onSelect,
   onClose,
 }: {
   visible: boolean;
   accentColor: string;
+  filterSex?: Animal['sexo'];
   onSelect: (a: Animal) => void;
   onClose: () => void;
 }) {
@@ -135,13 +140,14 @@ function AnimalListModal({
   // Filter
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
-    if (!q) return animales;
-    return animales.filter(
+    const bySex = filterSex ? animales.filter((animal) => animal.sexo === filterSex) : animales;
+    if (!q) return bySex;
+    return bySex.filter(
       (a) =>
         a.numeroArete.toLowerCase().includes(q) ||
         (a.raza?.nombreRaza?.toLowerCase().includes(q) ?? false),
     );
-  }, [animales, query]);
+  }, [animales, filterSex, query]);
 
   // ─── Camera ───────────────────────────────────────────────────────────────
 

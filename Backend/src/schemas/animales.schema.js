@@ -1,10 +1,27 @@
 const { z } = require('zod');
 
+const sexoAnimalSchema = z.enum(['HEMBRA', 'MACHO'], {
+  required_error: 'El sexo del animal es obligatorio',
+  invalid_type_error: 'Sexo invalido. Valores permitidos: HEMBRA, MACHO',
+});
+
+const procedenciaAnimalSchema = z.enum(['NACIDA', 'ADQUIRIDA'], {
+  required_error: 'La procedencia es obligatoria',
+  invalid_type_error: 'Procedencia invalida. Valores permitidos: NACIDA, ADQUIRIDA',
+});
+
+const fotoBase64Schema = z
+  .string()
+  .regex(
+    /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/,
+    'La foto debe ser una imagen JPG, PNG o WEBP en base64'
+  )
+  .max(7_000_000, 'La foto del animal es demasiado grande');
+
 const createAnimalSchema = z.object({
   numeroArete: z
     .string({ required_error: 'El numero de arete es obligatorio' })
-    .min(1, 'El numero de arete no puede estar vacio')
-    .max(50, 'El numero de arete no puede exceder 50 caracteres'),
+    .regex(/^27\d{8}$/, 'El arete SINIIGA debe tener 10 digitos numericos y comenzar con 27 (Tabasco). Ejemplo: 2712345678'),
   fechaIngreso: z
     .string({ required_error: 'La fecha de ingreso es obligatoria' })
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'La fecha debe estar en formato YYYY-MM-DD'),
@@ -15,10 +32,8 @@ const createAnimalSchema = z.object({
     .number({ required_error: 'La raza es obligatoria' })
     .int('El ID de raza debe ser un numero entero')
     .positive('El ID de raza debe ser positivo'),
-  procedencia: z
-    .string({ required_error: 'La procedencia es obligatoria' })
-    .min(1, 'La procedencia no puede estar vacia')
-    .max(100, 'La procedencia no puede exceder 100 caracteres'),
+  sexo: sexoAnimalSchema,
+  procedencia: procedenciaAnimalSchema,
   edadEstimada: z
     .number({ required_error: 'La edad estimada es obligatoria' })
     .int('La edad debe ser un numero entero')
@@ -26,6 +41,7 @@ const createAnimalSchema = z.object({
   estadoSanitarioInicial: z
     .string({ required_error: 'El estado sanitario inicial es obligatorio' })
     .min(1, 'El estado sanitario inicial no puede estar vacio'),
+  fotoBase64: fotoBase64Schema.optional(),
 });
 
 const updateAnimalSchema = z.object({
@@ -42,10 +58,8 @@ const updateAnimalSchema = z.object({
     .int('El ID de raza debe ser un numero entero')
     .positive('El ID de raza debe ser positivo')
     .optional(),
-  procedencia: z
-    .string()
-    .max(100, 'La procedencia no puede exceder 100 caracteres')
-    .optional(),
+  sexo: sexoAnimalSchema.optional(),
+  procedencia: procedenciaAnimalSchema.optional(),
   edadEstimada: z
     .number()
     .int('La edad debe ser un numero entero')
@@ -54,6 +68,8 @@ const updateAnimalSchema = z.object({
   estadoSanitarioInicial: z
     .string()
     .optional(),
+  fotoBase64: fotoBase64Schema.optional(),
+  eliminarFoto: z.boolean().optional(),
 }).refine((data) => Object.keys(data).length > 0, {
   message: 'Debe proporcionar al menos un campo para actualizar',
 });

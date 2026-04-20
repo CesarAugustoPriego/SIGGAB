@@ -1,4 +1,6 @@
 export type EstadoAnimal = 'ACTIVO' | 'VENDIDO' | 'MUERTO' | 'TRANSFERIDO';
+export type SexoAnimal = 'HEMBRA' | 'MACHO';
+export type ProcedenciaAnimal = 'NACIDA' | 'ADQUIRIDA';
 
 export interface Raza {
   idRaza: number;
@@ -13,9 +15,11 @@ export interface Animal {
   fechaIngreso: string;
   pesoInicial: number | string;
   idRaza: number;
-  procedencia: string;
+  sexo: SexoAnimal;
+  procedencia: ProcedenciaAnimal;
   edadEstimada: number;
   estadoSanitarioInicial: string;
+  fotoUrl: string | null;
   estadoActual: EstadoAnimal;
   motivoBaja: string | null;
   fechaBaja: string | null;
@@ -27,18 +31,23 @@ export interface CreateAnimalInput {
   fechaIngreso: string;
   pesoInicial: number;
   idRaza: number;
-  procedencia: string;
+  sexo: SexoAnimal;
+  procedencia: ProcedenciaAnimal;
   edadEstimada: number;
   estadoSanitarioInicial: string;
+  fotoBase64?: string;
 }
 
 export interface UpdateAnimalInput {
   fechaIngreso?: string;
   pesoInicial?: number;
   idRaza?: number;
-  procedencia?: string;
+  sexo?: SexoAnimal;
+  procedencia?: ProcedenciaAnimal;
   edadEstimada?: number;
   estadoSanitarioInicial?: string;
+  fotoBase64?: string;
+  eliminarFoto?: boolean;
 }
 
 export interface BajaAnimalInput {

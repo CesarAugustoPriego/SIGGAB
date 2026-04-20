@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import {
   ActivityIndicator,
   Alert,
@@ -20,7 +21,7 @@ import { canCreateAnimal } from '@/src/features/auth/role-permissions';
 import { useAuth } from '@/src/features/auth/auth-context';
 
 import { ganadoApi } from '../ganado-api';
-import type { CreateAnimalInput, Raza } from '../ganado-types';
+import type { CreateAnimalInput, ProcedenciaAnimal, Raza, SexoAnimal } from '../ganado-types';
 import {
   EMPTY_ANIMAL_FORM,
   getGanadoErrorMessage,
@@ -29,6 +30,59 @@ import {
   type AnimalFormState,
   validateAnimalForm,
 } from '../ganado-utils';
+
+const SEXO_OPTIONS: SexoAnimal[] = ['HEMBRA', 'MACHO'];
+const PROCEDENCIA_OPTIONS: Array<{ value: ProcedenciaAnimal; label: string }> = [
+  { value: 'ADQUIRIDA', label: 'Adquirida' },
+  { value: 'NACIDA', label: 'Nacida en rancho' },
+];
+
+async function pickImageFromGallery() {
+  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (!permission.granted) {
+    Alert.alert('Permiso requerido', 'Se necesita acceso a la galería para seleccionar una foto.');
+    return null;
+  }
+
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ['images'],
+    allowsEditing: true,
+    aspect: [1, 1],
+    quality: 0.7,
+    base64: true,
+  });
+
+  if (result.canceled || !result.assets[0]?.base64) return null;
+  const asset = result.assets[0];
+  const mimeType = asset.mimeType || 'image/jpeg';
+  return {
+    base64: `data:${mimeType};base64,${asset.base64}`,
+    uri: asset.uri,
+  };
+}
+
+async function takePhotoWithCamera() {
+  const permission = await ImagePicker.requestCameraPermissionsAsync();
+  if (!permission.granted) {
+    Alert.alert('Permiso requerido', 'Se necesita acceso a la cámara para tomar una foto.');
+    return null;
+  }
+
+  const result = await ImagePicker.launchCameraAsync({
+    allowsEditing: true,
+    aspect: [1, 1],
+    quality: 0.7,
+    base64: true,
+  });
+
+  if (result.canceled || !result.assets[0]?.base64) return null;
+  const asset = result.assets[0];
+  const mimeType = asset.mimeType || 'image/jpeg';
+  return {
+    base64: `data:${mimeType};base64,${asset.base64}`,
+    uri: asset.uri,
+  };
+}
 
 export function GanadoRegisterScreen() {
   const router = useRouter();
@@ -65,11 +119,51 @@ export function GanadoRegisterScreen() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!form.idRaza && razas[0]) {
+      setForm((prev) => ({ ...prev, idRaza: String(razas[0].idRaza) }));
+    }
+  }, [form.idRaza, razas]);
+
   const updateField = (field: keyof AnimalFormState, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
+    const errorField = field as keyof AnimalFormErrors;
+    if (errors[errorField]) {
+      setErrors((prev) => ({ ...prev, [errorField]: undefined }));
     }
+  };
+
+  const onPickFromGallery = async () => {
+    const result = await pickImageFromGallery();
+    if (result) {
+      setForm((prev) => ({
+        ...prev,
+        fotoBase64: result.base64,
+        fotoPreviewUrl: result.uri,
+        eliminarFoto: false,
+      }));
+    }
+  };
+
+  const onTakePhoto = async () => {
+    const result = await takePhotoWithCamera();
+    if (result) {
+      setForm((prev) => ({
+        ...prev,
+        fotoBase64: result.base64,
+        fotoPreviewUrl: result.uri,
+        eliminarFoto: false,
+      }));
+    }
+  };
+
+  const onRemovePhoto = () => {
+    setForm((prev) => ({
+      ...prev,
+      fotoBase64: '',
+      fotoPreviewUrl: '',
+      eliminarFoto: false,
+    }));
   };
 
   const onSave = async () => {
@@ -86,9 +180,11 @@ export function GanadoRegisterScreen() {
         fechaIngreso: form.fechaIngreso,
         pesoInicial: Number(form.pesoInicial),
         idRaza: Number(form.idRaza),
-        procedencia: form.procedencia.trim(),
+        sexo: form.sexo,
+        procedencia: form.procedencia,
         edadEstimada: Number(form.edadEstimada),
         estadoSanitarioInicial: form.estadoSanitarioInicial.trim(),
+        fotoBase64: form.fotoBase64 || undefined,
       };
 
       await ganadoApi.createAnimal(payload);
@@ -146,15 +242,19 @@ export function GanadoRegisterScreen() {
         <Text style={styles.screenTitle}>Registrar</Text>
 
         <View style={styles.formCard}>
+          {/* ── Arete SINIIGA ── */}
           <View style={styles.fieldWrap}>
-            <Text style={styles.fieldLabel}>Arete:</Text>
+            <Text style={styles.fieldLabel}>Arete SINIIGA:</Text>
             <TextInput
               value={form.numeroArete}
-              onChangeText={(v) => updateField('numeroArete', v)}
+              onChangeText={(v) => updateField('numeroArete', v.replace(/\D/g, '').slice(0, 10))}
               style={styles.inputPill}
-              placeholder="MX-AGS-1001"
+              placeholder="2712345678"
               placeholderTextColor="#9EA89E"
+              keyboardType="number-pad"
+              maxLength={10}
             />
+            <Text style={styles.hintText}>Formato: 27 + 8 dígitos (código Tabasco)</Text>
             {errors.numeroArete ? <Text style={styles.errorText}>{errors.numeroArete}</Text> : null}
           </View>
 
@@ -224,14 +324,36 @@ export function GanadoRegisterScreen() {
           </View>
 
           <View style={styles.fieldWrap}>
+            <Text style={styles.fieldLabel}>Sexo:</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.razaChips}>
+              {SEXO_OPTIONS.map((sexo) => (
+                <Pressable
+                  key={sexo}
+                  onPress={() => updateField('sexo', sexo)}
+                  style={[styles.razaChip, form.sexo === sexo ? styles.razaChipActive : null]}>
+                  <Text style={[styles.razaChipText, form.sexo === sexo ? styles.razaChipTextActive : null]}>
+                    {sexo === 'HEMBRA' ? 'Hembra' : 'Macho'}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+            {errors.sexo ? <Text style={styles.errorText}>{errors.sexo}</Text> : null}
+          </View>
+
+          <View style={styles.fieldWrap}>
             <Text style={styles.fieldLabel}>Procedencia:</Text>
-            <TextInput
-              value={form.procedencia}
-              onChangeText={(v) => updateField('procedencia', v)}
-              style={styles.inputPill}
-              placeholder="Origen del animal"
-              placeholderTextColor="#9EA89E"
-            />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.razaChips}>
+              {PROCEDENCIA_OPTIONS.map((option) => (
+                <Pressable
+                  key={option.value}
+                  onPress={() => updateField('procedencia', option.value)}
+                  style={[styles.razaChip, form.procedencia === option.value ? styles.razaChipActive : null]}>
+                  <Text style={[styles.razaChipText, form.procedencia === option.value ? styles.razaChipTextActive : null]}>
+                    {option.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
             {errors.procedencia ? <Text style={styles.errorText}>{errors.procedencia}</Text> : null}
           </View>
 
@@ -248,6 +370,30 @@ export function GanadoRegisterScreen() {
               placeholderTextColor="#9EA89E"
             />
             {errors.estadoSanitarioInicial ? <Text style={styles.errorText}>{errors.estadoSanitarioInicial}</Text> : null}
+          </View>
+
+          {/* ── Foto del ejemplar ── */}
+          <View style={styles.fieldWrap}>
+            <Text style={styles.fieldLabel}>Foto del ejemplar:</Text>
+            {form.fotoPreviewUrl ? (
+              <View style={styles.photoPreviewWrap}>
+                <Image source={{ uri: form.fotoPreviewUrl }} style={styles.photoPreview} />
+                <Pressable style={styles.photoRemoveBtn} onPress={onRemovePhoto}>
+                  <Feather name="x" size={16} color="#B42318" />
+                  <Text style={styles.photoRemoveBtnText}>Quitar</Text>
+                </Pressable>
+              </View>
+            ) : null}
+            <View style={styles.photoActions}>
+              <Pressable style={styles.photoActionBtn} onPress={onTakePhoto}>
+                <Feather name="camera" size={18} color="#2F9B47" />
+                <Text style={styles.photoActionText}>Tomar foto</Text>
+              </Pressable>
+              <Pressable style={styles.photoActionBtn} onPress={onPickFromGallery}>
+                <Feather name="image" size={18} color="#2F9B47" />
+                <Text style={styles.photoActionText}>Galería</Text>
+              </Pressable>
+            </View>
           </View>
 
           {message ? <Text style={styles.errorText}>{message}</Text> : null}
@@ -326,6 +472,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1F251F',
   },
+  hintText: {
+    fontSize: 11,
+    color: '#8A938A',
+    fontStyle: 'italic',
+  },
   row: {
     flexDirection: 'row',
     gap: 8,
@@ -381,6 +532,56 @@ const styles = StyleSheet.create({
   razaChipTextActive: {
     color: '#FFFFFF',
   },
+  // ── Photo section ──
+  photoPreviewWrap: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  photoPreview: {
+    width: 140,
+    height: 140,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#D2D8D2',
+  },
+  photoRemoveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    backgroundColor: '#FEF2F2',
+  },
+  photoRemoveBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#B42318',
+  },
+  photoActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  photoActionBtn: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#C7E0CC',
+    backgroundColor: '#F2FBF4',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  photoActionText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#2F9B47',
+  },
+  // ── Buttons ──
   saveButton: {
     minHeight: 44,
     borderRadius: 999,

@@ -37,6 +37,12 @@ body {
 }
 
 /* 3. Navigation Items */
+.users-admin-sidebar__nav {
+  align-content: start !important;
+  gap: 12px !important;
+  padding-top: 24px !important;
+}
+
 .users-admin-sidebar__nav-item {
   background: transparent !important;
   color: var(--text-dark) !important;

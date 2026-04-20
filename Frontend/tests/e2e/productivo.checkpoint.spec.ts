@@ -32,7 +32,8 @@ async function registerAnimalForProductivo(page: import('@playwright/test').Page
     await razaSelect.selectOption({ index: 1 });
   }
 
-  await page.getByTestId('input-procedencia').fill('Rancho Productivo QA');
+  await page.getByTestId('select-sexo').selectOption('HEMBRA');
+  await page.getByTestId('input-procedencia').selectOption('ADQUIRIDA');
   await page.getByTestId('input-sanitario').fill('Sano al ingreso para test productivo');
   await page.getByTestId('btn-submit').click();
   await expect(page.getByTestId('ganado-form-message')).toContainText('registrado correctamente');

@@ -30,6 +30,20 @@ enum EstadoAnimal {
   @@map("estado_animal")
 }
 
+enum SexoAnimal {
+  HEMBRA
+  MACHO
+
+  @@map("sexo_animal")
+}
+
+enum ProcedenciaAnimal {
+  NACIDA
+  ADQUIRIDA
+
+  @@map("procedencia_animal")
+}
+
 enum TipoMovimiento {
   ENTRADA
   SALIDA
@@ -158,9 +172,11 @@ model Animal {
   fechaIngreso           DateTime     @map("fecha_ingreso") @db.Date
   pesoInicial            Decimal      @map("peso_inicial")
   idRaza                 Int          @map("id_raza")
-  procedencia            String?      @db.VarChar(100)
+  sexo                   SexoAnimal   @default(HEMBRA)
+  procedencia            ProcedenciaAnimal @default(ADQUIRIDA)
   edadEstimada           Int?         @map("edad_estimada")
   estadoSanitarioInicial String?      @map("estado_sanitario_inicial") @db.Text
+  fotoUrl                String?      @map("foto_url") @db.VarChar(255)
   estadoActual           EstadoAnimal @default(ACTIVO) @map("estado_actual")
   motivoBaja             String?      @map("motivo_baja") @db.Text
   fechaBaja              DateTime?    @map("fecha_baja") @db.Date
@@ -176,6 +192,7 @@ model Animal {
 
   @@index([idRaza])
   @@index([estadoActual])
+  @@index([sexo])
   @@map("animales")
 }
 

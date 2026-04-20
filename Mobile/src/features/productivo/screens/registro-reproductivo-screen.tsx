@@ -117,6 +117,7 @@ export function RegistroReproductivoScreen() {
             <AnimalPicker
               accentColor={ACCENT}
               selectedAnimal={animal}
+              filterSex="HEMBRA"
               onSelect={(a) => void onAnimalSelected(a)}
             />
           </View>

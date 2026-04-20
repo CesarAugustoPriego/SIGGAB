@@ -45,6 +45,7 @@ interface AnimalOption {
   idAnimal: number;
   numeroArete: string;
   nombreRaza: string;
+  sexo: 'HEMBRA' | 'MACHO';
 }
 
 
@@ -64,6 +65,7 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
   // ─── Shared data ──────────────────────────────────────────────────────────
   const [lotes, setLotes] = useState<LoteProductivo[]>([]);
   const [animales, setAnimales] = useState<AnimalOption[]>([]);
+  const hembras = useMemo(() => animales.filter((animal) => animal.sexo === 'HEMBRA'), [animales]);
 
   // ─── Lotes state ──────────────────────────────────────────────────────────
   const [loteForm, setLoteForm] = useState({ fechaInicio: '', fechaFin: '' });
@@ -120,8 +122,13 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
   const loadAnimales = useCallback(async () => {
     try {
       const { httpClient } = await import('../../../lib/http-client');
-      const data = await httpClient.get<{ idAnimal: number; numeroArete: string; raza?: { nombreRaza: string } | null }[]>('/animales?estado=ACTIVO');
-      setAnimales(data.map((a) => ({ idAnimal: a.idAnimal, numeroArete: a.numeroArete, nombreRaza: a.raza?.nombreRaza || 'Sin raza' })));
+      const data = await httpClient.get<{ idAnimal: number; numeroArete: string; sexo: 'HEMBRA' | 'MACHO'; raza?: { nombreRaza: string } | null }[]>('/animales?estado=ACTIVO');
+      setAnimales(data.map((a) => ({
+        idAnimal: a.idAnimal,
+        numeroArete: a.numeroArete,
+        nombreRaza: a.raza?.nombreRaza || 'Sin raza',
+        sexo: a.sexo,
+      })));
     } catch (error) { await handleApiError(error); }
   }, [handleApiError]);
 
@@ -550,8 +557,8 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
                       <div className="productivo-field-row">
                         <label className="productivo-field"><span>Animal</span>
                           <select value={lecheForm.idAnimal} onChange={(e) => setLecheForm((p) => ({ ...p, idAnimal: e.target.value }))} disabled={!!editingLecheId} data-testid="leche-animal">
-                            <option value="">Selecciona un animal</option>
-                            {animales.map((a) => <option key={a.idAnimal} value={a.idAnimal}>{a.numeroArete} - {a.nombreRaza}</option>)}
+                            <option value="">Selecciona una hembra</option>
+                            {hembras.map((a) => <option key={a.idAnimal} value={a.idAnimal}>{a.numeroArete} - {a.nombreRaza}</option>)}
                           </select>
                         </label>
                         <label className="productivo-field"><span>Lote de validacion</span>
@@ -619,8 +626,8 @@ export function ProductivoAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
                       <div className="productivo-field-row">
                         <label className="productivo-field"><span>Animal</span>
                           <select value={eventoForm.idAnimal} onChange={(e) => setEventoForm((p) => ({ ...p, idAnimal: e.target.value }))} disabled={!!editingEventoId} data-testid="evento-animal">
-                            <option value="">Selecciona un animal</option>
-                            {animales.map((a) => <option key={a.idAnimal} value={a.idAnimal}>{a.numeroArete} - {a.nombreRaza}</option>)}
+                            <option value="">Selecciona una hembra</option>
+                            {hembras.map((a) => <option key={a.idAnimal} value={a.idAnimal}>{a.numeroArete} - {a.nombreRaza}</option>)}
                           </select>
                         </label>
                         <label className="productivo-field"><span>Lote de validacion</span>

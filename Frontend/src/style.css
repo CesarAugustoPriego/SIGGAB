@@ -1137,6 +1137,99 @@ select {
   margin-top: 12px;
 }
 
+.ganado-column {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.ganado-photo-field {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 12px;
+  align-items: start;
+  margin: 12px 0;
+}
+
+.ganado-photo-field__preview,
+.ganado-photo-field__controls {
+  min-width: 0;
+}
+
+.ganado-photo-preview,
+.ganado-photo-placeholder,
+.ganado-item__photo,
+.ganado-search-result__photo,
+.ganado-historial__photo {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid #d8e3d4;
+  background: #f5f9f4;
+}
+
+.ganado-photo-placeholder {
+  display: grid;
+  place-items: center;
+  color: #2e8b2e;
+  font-weight: 800;
+  font-size: 1.15rem;
+}
+
+.ganado-item__layout,
+.ganado-search-result__summary,
+.ganado-historial__hero {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.ganado-item__body {
+  min-width: 0;
+}
+
+.ganado-item__photo,
+.ganado-search-result__photo,
+.ganado-historial__photo {
+  width: 92px;
+}
+
+.ganado-historial__summary {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ganado-historial__summary p {
+  margin: 0;
+  border: 1px solid #d8e3d4;
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: #f8faf8;
+  font-size: 0.82rem;
+}
+
+.ganado-historial__sections {
+  margin-top: 12px;
+  display: grid;
+  gap: 12px;
+}
+
+.ganado-historial__sections section {
+  border: 1px solid #d8e3d4;
+  border-radius: 10px;
+  padding: 10px;
+  background: #fbfdfb;
+}
+
+.ganado-historial__sections strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
 .ganado-historial p {
   margin: 0;
 }
@@ -1715,6 +1808,10 @@ select {
     grid-template-columns: 1fr 1fr;
   }
 
+  .ganado-photo-field {
+    grid-template-columns: 120px 1fr;
+  }
+
   .sanitario-grid {
     grid-template-columns: 1fr;
   }
@@ -1816,6 +1913,21 @@ select {
   .ganado-filters,
   .ganado-search__controls {
     grid-template-columns: 1fr;
+  }
+
+  .ganado-photo-field,
+  .ganado-item__layout,
+  .ganado-search-result__summary,
+  .ganado-historial__hero,
+  .ganado-historial__summary {
+    grid-template-columns: 1fr;
+  }
+
+  .ganado-item__photo,
+  .ganado-search-result__photo,
+  .ganado-historial__photo {
+    width: 100%;
+    max-width: 180px;
   }
 
   .sanitario-field-row,
@@ -2852,4 +2964,83 @@ select {
     grid-template-columns: 1fr;
     align-items: flex-start;
   }
+}
+
+/* ── Arete SINIIGA Bandera ────────────────────────────────────── */
+
+.arete-bandera {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: linear-gradient(135deg, #FAFDF9 0%, #EFF6ED 100%);
+  border: 2px solid #2e8b2e;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  min-width: 120px;
+}
+
+.arete-bandera--compact {
+  flex-direction: row;
+  gap: 6px;
+  padding: 3px 8px;
+  min-width: auto;
+  font-size: 0.7rem;
+  border-width: 1.5px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+}
+
+.arete-bandera__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.arete-bandera__mx {
+  font-weight: 900;
+  color: #166534;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+}
+
+.arete-bandera__sader {
+  font-weight: 600;
+  color: #6b7280;
+  font-size: 0.6rem;
+  letter-spacing: 0.04em;
+}
+
+.arete-bandera__body {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.arete-bandera__estado {
+  font-weight: 900;
+  color: #c2410c;
+  font-size: 0.82rem;
+}
+
+.arete-bandera__matricula {
+  font-weight: 700;
+  color: #1f2937;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+}
+
+.arete-bandera__barcode {
+  font-size: 0.5rem;
+  letter-spacing: -1px;
+  color: #1f2937;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.ganado-field-hint {
+  color: #6b7280 !important;
+  font-size: 0.7rem !important;
+  font-style: italic;
 }

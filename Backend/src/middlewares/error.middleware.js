@@ -1,5 +1,9 @@
 const { sendError } = require('../utils/response');
 
+function isDatabaseUnavailableError(err) {
+  return err?.code === 'P1001' || /can't reach database server/i.test(err?.message || '');
+}
+
 /**
  * Middleware global de captura de errores.
  * Formato estandarizado. No expone stack traces en producción.
@@ -26,6 +30,13 @@ function errorMiddleware(err, req, res, _next) {
   }
 
   // Error genérico
+  if (isDatabaseUnavailableError(err)) {
+    const message = process.env.NODE_ENV === 'production'
+      ? 'Base de datos no disponible'
+      : 'Base de datos no disponible. Verifica DATABASE_URL y la conectividad con PostgreSQL/Supabase.';
+    return sendError(res, message, 503);
+  }
+
   const statusCode = err.statusCode || 500;
   const message =
     process.env.NODE_ENV === 'production'

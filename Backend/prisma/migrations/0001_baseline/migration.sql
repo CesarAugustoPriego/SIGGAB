@@ -281,7 +281,7 @@ CREATE INDEX "idx_animales_estado" ON "public"."animales"("estado_actual" ASC);
 CREATE INDEX "idx_animales_raza" ON "public"."animales"("id_raza" ASC);
 
 -- CreateIndex
-CREATE INDEX "idx_bitacora_detalles" ON "public"."bitacora" USING GIN ("detalles" jsonb_ops ASC);
+CREATE INDEX "idx_bitacora_detalles" ON "public"."bitacora" USING GIN ("detalles" jsonb_ops);
 
 -- CreateIndex
 CREATE INDEX "idx_bitacora_fecha" ON "public"."bitacora"("fecha_hora" ASC);

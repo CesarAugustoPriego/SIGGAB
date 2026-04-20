@@ -1,4 +1,5 @@
 const { Router } = require('express');
+const prisma = require('../repositories/prisma');
 
 // Fase 1
 const authRoutes = require('./auth.routes');
@@ -53,8 +54,24 @@ router.use('/reportes', reportesRoutes);
 router.use('/respaldos', respaldosRoutes);
 
 // Health check
-router.get('/health', (req, res) => {
-  res.json({ success: true, message: 'SIGGAB API funcionando correctamente', timestamp: new Date().toISOString() });
+router.get('/health', async (_req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    return res.json({
+      success: true,
+      message: 'SIGGAB API funcionando correctamente',
+      database: 'ok',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    return res.status(503).json({
+      success: false,
+      message: 'Base de datos no disponible',
+      database: 'unreachable',
+      timestamp: new Date().toISOString(),
+      errors: process.env.NODE_ENV === 'development' ? error.message : null,
+    });
+  }
 });
 
 module.exports = router;

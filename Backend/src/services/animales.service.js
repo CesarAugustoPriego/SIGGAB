@@ -1,6 +1,15 @@
 const animalesRepository = require('../repositories/animales.repository');
 const prisma = require('../repositories/prisma');
 const { registrarAccion } = require('./bitacora.service');
+const { persistAnimalPhoto, removeManagedAnimalPhoto } = require('./animal-photos.service');
+
+async function validateRaza(idRaza) {
+  const raza = await prisma.raza.findUnique({ where: { idRaza } });
+  if (!raza || !raza.activo) {
+    throw Object.assign(new Error('La raza seleccionada no existe o no está activa.'), { statusCode: 400 });
+  }
+  return raza;
+}
 
 /**
  * Listar todos los animales, con filtros opcionales.
@@ -109,25 +118,48 @@ async function getHistorialByArete(numeroArete) {
  * Crear un nuevo animal.
  */
 async function create(data, idUsuario) {
-  const raza = await prisma.raza.findUnique({ where: { idRaza: data.idRaza } });
-  if (!raza) {
-    throw Object.assign(new Error('La raza especificada no existe'), { statusCode: 400 });
+  const raza = await validateRaza(data.idRaza);
+  let fotoUrl = null;
+
+  try {
+    fotoUrl = await persistAnimalPhoto({
+      fotoBase64: data.fotoBase64,
+      numeroArete: data.numeroArete,
+    });
+
+    const animal = await animalesRepository.create({
+      numeroArete: data.numeroArete,
+      fechaIngreso: new Date(data.fechaIngreso),
+      pesoInicial: data.pesoInicial,
+      idRaza: raza.idRaza,
+      sexo: data.sexo,
+      procedencia: data.procedencia,
+      edadEstimada: data.edadEstimada,
+      estadoSanitarioInicial: data.estadoSanitarioInicial,
+      fotoUrl,
+    });
+
+    await registrarAccion({
+      idUsuario,
+      accion: 'CREAR',
+      tablaAfectada: 'animales',
+      idRegistro: animal.idAnimal,
+      detalles: {
+        numeroArete: animal.numeroArete,
+        raza: raza.nombreRaza,
+        sexo: animal.sexo,
+        procedencia: animal.procedencia,
+        foto: Boolean(animal.fotoUrl),
+      },
+    });
+
+    return animal;
+  } catch (error) {
+    if (fotoUrl) {
+      await removeManagedAnimalPhoto(fotoUrl);
+    }
+    throw error;
   }
-
-  const animal = await animalesRepository.create({
-    ...data,
-    fechaIngreso: new Date(data.fechaIngreso),
-  });
-
-  await registrarAccion({
-    idUsuario,
-    accion: 'CREAR',
-    tablaAfectada: 'animales',
-    idRegistro: animal.idAnimal,
-    detalles: { numeroArete: animal.numeroArete, raza: raza.nombreRaza },
-  });
-
-  return animal;
 }
 
 /**
@@ -143,15 +175,24 @@ async function update(id, data, idUsuario) {
     throw Object.assign(new Error('No se puede modificar un animal dado de baja'), { statusCode: 400 });
   }
 
-  if (data.idRaza) {
-    const raza = await prisma.raza.findUnique({ where: { idRaza: data.idRaza } });
-    if (!raza) {
-      throw Object.assign(new Error('La raza especificada no existe'), { statusCode: 400 });
-    }
+  if (data.idRaza !== undefined) {
+    await validateRaza(data.idRaza);
   }
 
   const updateData = { ...data };
+  delete updateData.fotoBase64;
+  delete updateData.eliminarFoto;
+
   if (data.fechaIngreso) updateData.fechaIngreso = new Date(data.fechaIngreso);
+
+  if (data.fotoBase64 !== undefined || data.eliminarFoto === true) {
+    updateData.fotoUrl = await persistAnimalPhoto({
+      fotoBase64: data.fotoBase64,
+      numeroArete: existente.numeroArete,
+      currentFotoUrl: existente.fotoUrl,
+      eliminarFoto: data.eliminarFoto === true,
+    });
+  }
 
   const animal = await animalesRepository.update(id, updateData);
 

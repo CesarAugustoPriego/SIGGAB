@@ -224,11 +224,11 @@ async function main() {
   res = await request('POST', '/animales', {
     token: adminToken,
     body: {
-      numeroArete: `F3-PROD-${RUN_ID}`,
+      numeroArete: `27${String(RUN_ID+3).slice(-8).padStart(8,"0")}`,
       fechaIngreso: '2024-01-01',
       pesoInicial: 320,
       idRaza: 1,
-      procedencia: 'Rancho Test Fase 3',
+      procedencia: 'ADQUIRIDA',
       edadEstimada: 22,
       estadoSanitarioInicial: 'Apto para manejo',
     },
@@ -357,7 +357,7 @@ async function main() {
   });
   test('Admin puede validar evento reproductivo (RF12)', res.status === 200, `status=${res.status}`);
 
-  res = await request('GET', `/animales/arete/F3-PROD-${RUN_ID}/historial`, {
+  res = await request('GET', `/animales/arete/27${String(RUN_ID+3).slice(-8).padStart(8,"0")}/historial`, {
     token: produccionToken,
   });
   test(

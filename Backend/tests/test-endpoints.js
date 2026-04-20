@@ -231,10 +231,10 @@ async function main() {
   console.log('\n🐮 ANIMALES MODULE');
 
   // 5.1 Crear animal (arete único por corrida)
-  const areteTest = `TEST-${RUN_ID}`;
+  const areteTest = `27${String(RUN_ID).slice(-8).padStart(8,"0")}`;
   res = await request('POST', '/animales', {
     numeroArete: areteTest,
-    procedencia: 'Rancho Externo',
+    procedencia: 'ADQUIRIDA',
     edadEstimada: 18,
     estadoSanitarioInicial: 'Sano al ingreso',
     fechaIngreso: '2024-01-15',
@@ -261,10 +261,10 @@ async function main() {
   // 5.5 Actualizar animal (campos que SÍ existen: procedencia, edadEstimada)
   if (createdAnimalId) {
     res = await request('PATCH', `/animales/${createdAnimalId}`, {
-      procedencia: 'Rancho Los Alpes - Sector Norte',
+      procedencia: 'ADQUIRIDA',
       edadEstimada: 24,
     }, accessToken);
-    test('PATCH /animales/:id actualiza', res.status === 200 && res.data.data?.procedencia === 'Rancho Los Alpes - Sector Norte');
+    test('PATCH /animales/:id actualiza', res.status === 200 && res.data.data?.procedencia === 'ADQUIRIDA');
   }
 
   // 5.6 Filtrar por estado
@@ -301,8 +301,8 @@ async function main() {
 
   // Crear animal activo para eventos (arete único por corrida)
   res = await request('POST', '/animales', {
-    numeroArete: `SANI-${RUN_ID}`,
-    procedencia: 'Potrero Este',
+    numeroArete: `27${String(RUN_ID+1).slice(-8).padStart(8,"0")}`,
+    procedencia: 'NACIDA',
     edadEstimada: 26,
     estadoSanitarioInicial: 'Sin signos clinicos',
     fechaIngreso: '2024-01-01',
@@ -709,10 +709,10 @@ async function main() {
   console.log('\n⚖️  PRODUCTIVO — REGISTROS DE PESO');
 
   // Creamos animal activo para registros productivos
-  const areteProd = `PROD-${RUN_ID}`;
+  const areteProd = `27${String(RUN_ID+2).slice(-8).padStart(8,"0")}`;
   res = await request('POST', '/animales', {
     numeroArete: areteProd,
-    procedencia: 'Modulo productivo',
+    procedencia: 'NACIDA',
     edadEstimada: 20,
     estadoSanitarioInicial: 'Apto para produccion',
     fechaIngreso: '2024-01-01',

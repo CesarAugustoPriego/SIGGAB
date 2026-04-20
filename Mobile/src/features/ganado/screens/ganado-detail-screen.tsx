@@ -24,7 +24,16 @@ import {
 
 import { ganadoApi } from '../ganado-api';
 import type { Animal, HistorialAnimalResponse } from '../ganado-types';
-import { formatEstadoAnimal, getEstadoColor, getGanadoErrorMessage, toInputDate, toNumeric } from '../ganado-utils';
+import {
+  formatAreteDisplay,
+  formatEstadoAnimal,
+  formatProcedenciaAnimal,
+  formatSexoAnimal,
+  getEstadoColor,
+  getGanadoErrorMessage,
+  toInputDate,
+  toNumeric,
+} from '../ganado-utils';
 
 type DetailTab = 'general' | 'produccion' | 'sanidad';
 
@@ -141,16 +150,20 @@ export function GanadoDetailScreen() {
 
         <View style={styles.heroCard}>
           <View style={styles.heroLeft}>
+            <View style={{flexDirection:"row",alignItems:"center",gap:4,marginBottom:2}}><Text style={{fontSize:10,fontWeight:"900",color:"#F0FBF2"}}>MX</Text><Text style={{fontSize:9,fontWeight:"600",color:"#D0E8D4"}}>SADER</Text></View>
             <Text style={styles.heroLabel}>Arete:</Text>
             <Text style={styles.heroArete} numberOfLines={2}>
-              {animal.numeroArete}
+              {formatAreteDisplay(animal.numeroArete)}
             </Text>
             <Text style={[styles.heroStatusChip, { color: getEstadoColor(animal.estadoActual) }]}>
               {formatEstadoAnimal(animal.estadoActual)}
             </Text>
           </View>
 
-          <Image source={require('../../../../assets/images/auth-hero-register.jpg')} style={styles.heroAnimal} />
+          <Image
+            source={animal.fotoUrl ? { uri: animal.fotoUrl } : require('../../../../assets/images/auth-hero-register.jpg')}
+            style={styles.heroAnimal}
+          />
         </View>
 
         {(canEdit || canBaja) ? (
@@ -190,7 +203,8 @@ export function GanadoDetailScreen() {
         {activeTab === 'general' ? (
           <View style={styles.sectionCard}>
             <InfoRow label="Raza" value={animal.raza?.nombreRaza || 'Sin raza'} />
-            <InfoRow label="Procedencia" value={animal.procedencia} />
+            <InfoRow label="Sexo" value={formatSexoAnimal(animal.sexo)} />
+            <InfoRow label="Procedencia" value={formatProcedenciaAnimal(animal.procedencia)} />
             <InfoRow label="Ingreso" value={toInputDate(animal.fechaIngreso)} />
             <InfoRow label="Peso inicial" value={`${toNumeric(animal.pesoInicial)} kg`} />
             <InfoRow label="Edad estimada" value={`${animal.edadEstimada} meses`} />

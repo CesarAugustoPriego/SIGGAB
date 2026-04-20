@@ -1,12 +1,30 @@
 import { ApiClientError } from '../../types/api';
 import { getApiErrorMessage } from '../../shared/errors/api-error-messages';
-import type { Animal, EstadoAnimal } from './ganado-types';
+import type { Animal, EstadoAnimal, ProcedenciaAnimal, SexoAnimal } from './ganado-types';
+
+// ── Constantes SINIIGA Tabasco ─────────────────────────────────────────
+export const ARETE_PREFIX = '27';
+export const ARETE_LENGTH = 10;
+export const ARETE_REGEX = /^27\d{8}$/;
+
+/** Valida que el arete tenga el formato SINIIGA Tabasco: 27XXXXXXXX (10 dígitos) */
+export function isValidAreteFormat(value: string) {
+  return ARETE_REGEX.test(value.trim());
+}
+
+/** Formatea 2712345678 → "27 1234 5678" para lectura legible */
+export function formatAreteDisplay(arete: string) {
+  const clean = arete.trim();
+  if (clean.length !== 10) return clean;
+  return `${clean.slice(0, 2)} ${clean.slice(2, 6)} ${clean.slice(6)}`;
+}
 
 type GanadoFieldErrorKey =
   | 'numeroArete'
   | 'fechaIngreso'
   | 'pesoInicial'
   | 'idRaza'
+  | 'sexo'
   | 'procedencia'
   | 'edadEstimada'
   | 'estadoSanitarioInicial'
@@ -42,6 +60,7 @@ function toFieldKey(campo: string): GanadoFieldErrorKey | null {
   if (campo === 'fechaIngreso') return 'fechaIngreso';
   if (campo === 'pesoInicial') return 'pesoInicial';
   if (campo === 'idRaza') return 'idRaza';
+  if (campo === 'sexo') return 'sexo';
   if (campo === 'procedencia') return 'procedencia';
   if (campo === 'edadEstimada') return 'edadEstimada';
   if (campo === 'estadoSanitarioInicial') return 'estadoSanitarioInicial';
@@ -128,6 +147,14 @@ export function formatEstadoAnimal(estado: EstadoAnimal) {
   if (estado === 'MUERTO') return 'MUERTO';
   if (estado === 'TRANSFERIDO') return 'TRANSFERIDO';
   return estado;
+}
+
+export function formatSexoAnimal(sexo: SexoAnimal) {
+  return sexo === 'HEMBRA' ? 'Hembra' : 'Macho';
+}
+
+export function formatProcedenciaAnimal(procedencia: ProcedenciaAnimal) {
+  return procedencia === 'NACIDA' ? 'Nacida en rancho' : 'Adquirida';
 }
 
 export function toInputDate(value: string | null | undefined) {

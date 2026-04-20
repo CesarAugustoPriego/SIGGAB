@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
+const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
 const routes = require('./routes');
@@ -16,6 +17,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(sanitizeMiddleware);
 app.use(csrfMiddleware);
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // Logging de requests (solo en development)
 if (process.env.NODE_ENV !== 'production') {
