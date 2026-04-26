@@ -1,103 +1,114 @@
 import { httpClient } from './http-client';
 
-// ── Tipos de retorno por endpoint ─────────────────────────────────────────
-
 export interface HomeStats {
-  /** Total de animales con estadoActual = ACTIVO */
+  /** Total de animales activos visibles para el rol. */
   totalHato: number;
-  /** Etiqueta dinámica para el segundo stat */
+  /** Etiqueta dinamica para el segundo stat. */
   secondLabel: string;
-  /** Valor del segundo stat */
+  /** Valor del segundo stat. */
   secondValue: number;
+  /** Aviso no bloqueante cuando alguna metrica no pudo cargarse. */
+  warning?: string;
 }
 
 interface ResumenPayload {
   totalAnimalesActivos?: number;
   alertasProximas7Dias?: number;
-  pesosPendientesValidar?: number;
-  solicitudesCompraPendientes?: number;
-  insumosStockAgotado?: number;
-}
-
-interface GanadoPayload {
-  porEstado?: { estadoActual: string; _count: { idAnimal: number } }[];
 }
 
 interface SanitarioPayload {
   proximosEventos?: unknown[];
-  pendientesAprobacion?: unknown[];
 }
 
 interface InventarioPayload {
   agotados?: unknown[];
-  bajoStock?: unknown[];
 }
 
 interface ProduccionPayload {
   leche?: { totalRegistros?: number };
-  peso?: { totalRegistros?: number };
 }
 
-// ── Helper: cuenta animales activos vía /dashboard/ganado ─────────────────
-async function fetchTotalHatoFromGanado(): Promise<number> {
-  try {
-    const data = await httpClient.get<GanadoPayload>('/dashboard/ganado');
-    const activos = data.porEstado?.find((e) => e.estadoActual === 'ACTIVO');
-    return activos?._count?.idAnimal ?? 0;
-  } catch {
-    return 0;
-  }
+function normalizeRole(rol: string | undefined) {
+  return (rol || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
-// ── Stats para cada rol ───────────────────────────────────────────────────
+async function fetchActiveAnimalCount(): Promise<number> {
+  const animales = await httpClient.get<unknown[]>('/animales?estado=ACTIVO');
+  return Array.isArray(animales) ? animales.length : 0;
+}
 
-/** Administrador / Propietario — usan /dashboard/resumen */
 async function fetchStatsForAdmin(): Promise<HomeStats> {
   try {
     const data = await httpClient.get<ResumenPayload>('/dashboard/resumen');
     return {
       totalHato: data.totalAnimalesActivos ?? 0,
-      secondLabel: 'ALERTAS (7 DÍAS)',
+      secondLabel: 'ALERTAS (7 DIAS)',
       secondValue: data.alertasProximas7Dias ?? 0,
     };
   } catch {
-    return { totalHato: 0, secondLabel: 'ALERTAS (7 DÍAS)', secondValue: 0 };
+    return {
+      totalHato: 0,
+      secondLabel: 'ALERTAS (7 DIAS)',
+      secondValue: 0,
+      warning: 'No se pudieron cargar las metricas generales.',
+    };
   }
 }
 
-/** Veterinario — usa /dashboard/sanitario para segundo stat */
 async function fetchStatsForVeterinario(): Promise<HomeStats> {
   const [hato, sanitario] = await Promise.allSettled([
-    fetchTotalHatoFromGanado(),
+    fetchActiveAnimalCount(),
     httpClient.get<SanitarioPayload>('/dashboard/sanitario'),
   ]);
 
-  const totalHato = hato.status === 'fulfilled' ? hato.value : 0;
-  const pendientes =
-    sanitario.status === 'fulfilled'
+  return {
+    totalHato: hato.status === 'fulfilled' ? hato.value : 0,
+    secondLabel: 'PROXIMOS EVENTOS',
+    secondValue: sanitario.status === 'fulfilled'
       ? (sanitario.value.proximosEventos?.length ?? 0)
-      : 0;
-
-  return { totalHato, secondLabel: 'PRÓXIMOS EVENTOS', secondValue: pendientes };
+      : 0,
+    warning: hato.status === 'rejected' || sanitario.status === 'rejected'
+      ? 'No se pudieron cargar todas las metricas sanitarias.'
+      : undefined,
+  };
 }
 
-/** Producción / Campo — usa /dashboard/produccion para segundo stat */
 async function fetchStatsForProduccion(): Promise<HomeStats> {
   const [hato, produccion] = await Promise.allSettled([
-    fetchTotalHatoFromGanado(),
+    fetchActiveAnimalCount(),
     httpClient.get<ProduccionPayload>('/dashboard/produccion'),
   ]);
 
-  const totalHato = hato.status === 'fulfilled' ? hato.value : 0;
-  const registros =
-    produccion.status === 'fulfilled'
+  return {
+    totalHato: hato.status === 'fulfilled' ? hato.value : 0,
+    secondLabel: 'REGISTROS (30d)',
+    secondValue: produccion.status === 'fulfilled'
       ? (produccion.value.leche?.totalRegistros ?? 0)
-      : 0;
-
-  return { totalHato, secondLabel: 'REGISTROS (30d)', secondValue: registros };
+      : 0,
+    warning: hato.status === 'rejected' || produccion.status === 'rejected'
+      ? 'No se pudieron cargar todas las metricas productivas.'
+      : undefined,
+  };
 }
 
-/** Almacén — usa /dashboard/inventario para segundo stat (insumos agotados) */
+async function fetchStatsForCampo(): Promise<HomeStats> {
+  try {
+    const totalHato = await fetchActiveAnimalCount();
+    return {
+      totalHato,
+      secondLabel: 'CAPTURA ACTIVA',
+      secondValue: totalHato,
+    };
+  } catch {
+    return {
+      totalHato: 0,
+      secondLabel: 'CAPTURA ACTIVA',
+      secondValue: 0,
+      warning: 'No se pudieron cargar las metricas de campo.',
+    };
+  }
+}
+
 async function fetchStatsForAlmacen(): Promise<HomeStats> {
   try {
     const data = await httpClient.get<InventarioPayload>('/dashboard/inventario');
@@ -107,13 +118,13 @@ async function fetchStatsForAlmacen(): Promise<HomeStats> {
       secondValue: data.agotados?.length ?? 0,
     };
   } catch {
-    return { totalHato: 0, secondLabel: 'INSUMOS AGOTADOS', secondValue: 0 };
+    return {
+      totalHato: 0,
+      secondLabel: 'INSUMOS AGOTADOS',
+      secondValue: 0,
+      warning: 'No se pudieron cargar las metricas de inventario.',
+    };
   }
-}
-
-// ── Función principal: elige el endpoint correcto según el rol ─────────────
-function normalizeRole(rol: string | undefined) {
-  return (rol || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
 export async function fetchHomeStats(rol: string | undefined): Promise<HomeStats> {
@@ -122,17 +133,27 @@ export async function fetchHomeStats(rol: string | undefined): Promise<HomeStats
   if (r === 'administrador' || r === 'propietario') {
     return fetchStatsForAdmin();
   }
+
   if (r === 'medico veterinario' || r === 'veterinario') {
     return fetchStatsForVeterinario();
   }
-  if (r === 'produccion' || r === 'campo') {
+
+  if (r === 'produccion') {
     return fetchStatsForProduccion();
   }
+
+  if (r === 'campo') {
+    return fetchStatsForCampo();
+  }
+
   if (r === 'almacen') {
     return fetchStatsForAlmacen();
   }
 
-  // Fallback: solo total hato
-  const totalHato = await fetchTotalHatoFromGanado().catch(() => 0);
-  return { totalHato, secondLabel: 'ACTIVOS', secondValue: totalHato };
+  return {
+    totalHato: 0,
+    secondLabel: 'SIN METRICAS',
+    secondValue: 0,
+    warning: 'No hay metricas configuradas para este rol.',
+  };
 }

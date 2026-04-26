@@ -23,7 +23,6 @@ import { canViewRespaldos } from '../features/respaldos/respaldos-utils';
 import { isAdministratorRole } from '../features/users/users-utils';
 import {
   getAuthViewFromRoute,
-  getDefaultProtectedRoute,
   getDefaultPublicRoute,
   getRouteFromAuthView,
   isProtectedRoute,

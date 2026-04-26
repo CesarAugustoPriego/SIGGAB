@@ -5,8 +5,8 @@ import { Button, TextField, User, Lock, Eye, EyeOff, ArrowRight, ShieldCheck } f
 
 export function LoginView() {
   const { login, apiError, clearApiError, status } = useAuth();
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('SiggabAdmin2026!');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 

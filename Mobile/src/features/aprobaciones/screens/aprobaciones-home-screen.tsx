@@ -32,20 +32,23 @@ export function AprobacionesHomeScreen() {
   const [inbox, setInbox] = useState<InboxItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   
   const canView = canViewAprobaciones(user?.rol);
 
   const loadInbox = useCallback(async () => {
     if (!canView) { setLoading(false); return; }
+    setLoadError(null);
     try {
-      const pending = await aprobacionesApi.getPendingInbox();
+      const pending = await aprobacionesApi.getPendingInbox(user?.rol);
       setInbox(pending);
     } catch (err: any) {
       if (err?.status === 401) { await logout(); }
+      setLoadError(err?.message || 'No se pudieron cargar las aprobaciones.');
     } finally {
       setLoading(false);
     }
-  }, [canView, logout]);
+  }, [canView, logout, user?.rol]);
 
   useFocusEffect(useCallback(() => {
     setLoading(true);
@@ -133,11 +136,18 @@ export function AprobacionesHomeScreen() {
 
         <Text style={styles.listLabel}>TUS PENDIENTES</Text>
 
+        {loadError ? (
+          <View style={styles.errorBox}>
+            <Feather name="alert-circle" size={16} color="#C0392B" />
+            <Text style={styles.errorText}>{loadError}</Text>
+          </View>
+        ) : null}
+
         {loading ? (
           <View style={[styles.centerBox, { marginTop: 40 }]}>
             <ActivityIndicator color="#5DADE2" size="large" />
           </View>
-        ) : inbox.length === 0 ? (
+        ) : loadError ? null : inbox.length === 0 ? (
           <View style={styles.emptyCard}>
             <MaterialCommunityIcons name="check-all" size={48} color="#27AE60" />
             <Text style={styles.emptyTitle}>¡Todo al día!</Text>
@@ -230,6 +240,8 @@ const styles = StyleSheet.create({
   badgeText: { color: '#FFF', fontWeight: '800', fontSize: 16 },
 
   listLabel: { fontSize: 12, fontWeight: '700', color: '#5A6A5A', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, marginLeft: 4 },
+  errorBox: { backgroundColor: '#FDECEA', borderWidth: 1, borderColor: '#F5B7B1', borderRadius: 10, padding: 12, flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
+  errorText: { color: '#C0392B', fontSize: 12, fontWeight: '600', flex: 1 },
 
   list: { gap: 12 },
   card: {

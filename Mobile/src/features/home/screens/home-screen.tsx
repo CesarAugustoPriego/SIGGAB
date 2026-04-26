@@ -17,6 +17,7 @@ import { useAuth } from '@/src/features/auth/auth-context';
 import {
   canViewAprobaciones,
   canViewCalendarioSanitario,
+  canCreateProductivoRegistros,
   canViewEventosReproductivos,
   canViewGanado,
   canViewInventario,
@@ -60,8 +61,8 @@ function getQuickActions(rol: string | undefined): QuickAction[] {
     });
   }
 
-  // Productivo: registro de peso y leche
-  if (canViewProductivo(rol)) {
+  // Productivo: registro operativo de peso y leche
+  if (canCreateProductivoRegistros(rol)) {
     actions.push({
       key: 'peso',
       label: 'Pesar',
@@ -302,6 +303,10 @@ export function HomeScreen() {
           </View>
         </Animated.View>
 
+        {stats?.warning ? (
+          <Text style={styles.statsWarning}>{stats.warning}</Text>
+        ) : null}
+
         {/* ── Accesos Rápidos ────────────────────────── */}
         {quickActions.length > 0 && (
           <View style={styles.section}>
@@ -493,6 +498,7 @@ const styles = StyleSheet.create({
   statNumberDark: { fontSize: 32, fontWeight: '900', color: '#1B241B', letterSpacing: -1 },
   statLabelLight: { fontSize: 10, fontWeight: '700', color: 'rgba(255,255,255,0.7)', letterSpacing: 0.8 },
   statLabelDark: { fontSize: 10, fontWeight: '700', color: '#7A8A7A', letterSpacing: 0.8 },
+  statsWarning: { color: '#C0392B', fontSize: 12, fontWeight: '600', marginTop: -8 },
 
   // Section
   section: { gap: 10 },

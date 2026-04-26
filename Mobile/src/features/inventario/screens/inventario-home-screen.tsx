@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/src/features/auth/auth-context';
-import { canViewInventario } from '@/src/features/auth/role-permissions';
+import { canCreateInventarioMovimiento, canViewInventario } from '@/src/features/auth/role-permissions';
 import { inventarioApi } from '../inventario-api';
 import type { Insumo, MovimientoInventario, TipoInsumo } from '../inventario-types';
 
@@ -30,6 +30,10 @@ function toNum(val: number | string): number {
   return typeof val === 'string' ? parseFloat(val) : val;
 }
 
+function isLowStock(stock: number): boolean {
+  return stock <= 50;
+}
+
 export function InventarioHomeScreen() {
   const router = useRouter();
   const { user, logout } = useAuth();
@@ -42,6 +46,7 @@ export function InventarioHomeScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const canView = useMemo(() => canViewInventario(user?.rol), [user?.rol]);
+  const canCreateMovimiento = useMemo(() => canCreateInventarioMovimiento(user?.rol), [user?.rol]);
 
   const loadData = useCallback(async () => {
     if (!canView) { setLoading(false); return; }
@@ -71,7 +76,7 @@ export function InventarioHomeScreen() {
 
   // ── Metrics ─────────────────────────────────────────────────────────────
   
-  const lowStockCount = insumos.filter(i => toNum(i.stockActual) <= 5).length;
+  const lowStockCount = insumos.filter(i => isLowStock(toNum(i.stockActual))).length;
   // Let's get "Movimientos hoy"
   const today = new Date().toISOString().slice(0, 10);
   const todaysMovs = movimientos.filter(m => m.fechaMovimiento.slice(0, 10) === today).length;
@@ -158,15 +163,17 @@ export function InventarioHomeScreen() {
         </View>
 
         {/* ── FAB ── */}
-        <View style={styles.actionsRow}>
-          <Pressable
-            style={styles.primaryFab}
-            onPress={() => router.push('/(app)/inventario/registro-movimiento' as any)}
-          >
-            <Feather name="file-text" size={16} color="#FFF" />
-            <Text style={styles.primaryFabText}>Reportar movimiento</Text>
-          </Pressable>
-        </View>
+        {canCreateMovimiento ? (
+          <View style={styles.actionsRow}>
+            <Pressable
+              style={styles.primaryFab}
+              onPress={() => router.push('/(app)/inventario/registro-movimiento' as any)}
+            >
+              <Feather name="file-text" size={16} color="#FFF" />
+              <Text style={styles.primaryFabText}>Reportar movimiento</Text>
+            </Pressable>
+          </View>
+        ) : null}
 
         {error && <Text style={styles.errorText}>{error}</Text>}
 
@@ -196,7 +203,7 @@ function InsumosList({ items }: { items: Insumo[] }) {
     <View style={styles.list}>
       {items.map(m => {
         const stock = toNum(m.stockActual);
-        const low = stock <= 5;
+        const low = isLowStock(stock);
         return (
           <View key={m.idInsumo} style={styles.recordCard}>
             <View style={styles.recordLeft}>

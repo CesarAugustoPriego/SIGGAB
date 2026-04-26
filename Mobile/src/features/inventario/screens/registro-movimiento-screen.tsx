@@ -16,6 +16,8 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useAuth } from '@/src/features/auth/auth-context';
+import { canCreateInventarioMovimiento } from '@/src/features/auth/role-permissions';
 import { inventarioApi } from '../inventario-api';
 import type { Insumo, TipoMovimiento } from '../inventario-types';
 
@@ -24,6 +26,8 @@ const ACCENT = '#D35400';
 export function RegistroMovimientoScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { user, logout } = useAuth();
+  const canCreate = useMemo(() => canCreateInventarioMovimiento(user?.rol), [user?.rol]);
   
   const [insumos, setInsumos] = useState<Insumo[]>([]);
   const [pickerVisible, setPickerVisible] = useState(false);
@@ -32,7 +36,7 @@ export function RegistroMovimientoScreen() {
   const [selectedInsumo, setSelectedInsumo] = useState<Insumo | null>(null);
   const [tipoMovimiento, setTipoMovimiento] = useState<TipoMovimiento>('SALIDA');
   const [cantidad, setCantidad] = useState('');
-  const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10));
+  const [fecha] = useState(new Date().toISOString().slice(0, 10));
   
   const [submitting, setSubmitting] = useState(false);
   const [globalError, setGlobalError] = useState<string | null>(null);
@@ -43,34 +47,70 @@ export function RegistroMovimientoScreen() {
       .catch(() => setGlobalError('No se pudieron cargar los insumos'));
   }, []);
 
+  const cantidadNum = useMemo(() => Number(cantidad), [cantidad]);
+  const stockDisponible = selectedInsumo ? Number(selectedInsumo.stockActual) : 0;
+  const stockInsuficiente = Boolean(
+    selectedInsumo
+    && tipoMovimiento === 'SALIDA'
+    && Number.isFinite(cantidadNum)
+    && cantidadNum > stockDisponible
+  );
+
   const canSave = useMemo(() => {
-    return selectedInsumo && cantidad.trim() && parseFloat(cantidad) > 0 && fecha.trim();
-  }, [selectedInsumo, cantidad, fecha]);
+    return Boolean(canCreate
+      && selectedInsumo
+      && cantidad.trim()
+      && Number.isFinite(cantidadNum)
+      && cantidadNum > 0
+      && fecha.trim()
+      && !stockInsuficiente);
+  }, [canCreate, selectedInsumo, cantidad, cantidadNum, fecha, stockInsuficiente]);
 
   const onSubmit = useCallback(async () => {
     if (!canSave || !selectedInsumo) return;
     setSubmitting(true);
     setGlobalError(null);
     try {
+      if (stockInsuficiente) {
+        setGlobalError('La salida supera el stock disponible.');
+        return;
+      }
+
       await inventarioApi.createMovimiento({
         idInsumo: selectedInsumo.idInsumo,
         tipoMovimiento,
-        cantidad: parseFloat(cantidad),
+        cantidad: cantidadNum,
         fechaMovimiento: fecha,
       });
       Alert.alert('Movimiento registrado', `Se registró la ${tipoMovimiento.toLowerCase()} de ${cantidad} ${selectedInsumo.unidadMedida}.`, [
         { text: 'OK', onPress: () => router.back() },
       ]);
     } catch (err: any) {
+      if (err?.status === 401) { await logout(); return; }
       setGlobalError(err?.data?.error || 'Error al guardar el movimiento. Revisa el stock disponible.');
     } finally {
       setSubmitting(false);
     }
-  }, [canSave, selectedInsumo, tipoMovimiento, cantidad, fecha, router]);
+  }, [canSave, selectedInsumo, stockInsuficiente, tipoMovimiento, cantidad, cantidadNum, fecha, logout, router]);
 
   const filteredInsumos = insumos.filter(i =>
     i.nombreInsumo.toLowerCase().includes(insumosQuery.toLowerCase())
   );
+
+  if (!canCreate) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <View style={styles.centerBox}>
+          <MaterialCommunityIcons name="lock-outline" size={40} color="#A0A8A0" />
+          <Text style={styles.centerTitle}>Acceso restringido</Text>
+          <Text style={styles.centerText}>Tu rol no tiene permisos para registrar movimientos.</Text>
+          <Pressable style={styles.backButton} onPress={() => router.replace('/(app)/home')}>
+            <Text style={styles.backButtonText}>Volver al inicio</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -139,6 +179,9 @@ export function RegistroMovimientoScreen() {
                   <Text style={styles.bigInputUnit}>{selectedInsumo.unidadMedida}</Text>
                 </View>
                 <Text style={styles.fieldHint}>Stock actual: {selectedInsumo.stockActual} {selectedInsumo.unidadMedida}</Text>
+                {stockInsuficiente ? (
+                  <Text style={styles.fieldError}>La salida supera el stock disponible.</Text>
+                ) : null}
               </View>
             )}
 
@@ -238,6 +281,7 @@ const styles = StyleSheet.create({
   fieldSection: { gap: 8 },
   label: { fontSize: 13, fontWeight: '700', color: '#3A2E26' },
   fieldHint: { fontSize: 12, color: '#8A7A71', marginTop: -2 },
+  fieldError: { color: '#C0392B', fontSize: 12, fontWeight: '600' },
   
   inputBox: { minHeight: 48, backgroundColor: '#FAFCFA', borderWidth: 1, borderColor: '#DCDCDC', borderRadius: 12, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   inputText: { fontSize: 15, color: '#1B241B', flex: 1 },
@@ -274,4 +318,9 @@ const styles = StyleSheet.create({
   modalItemName: { fontSize: 16, color: '#1A1A1A', fontWeight: '600' },
   modalItemSub: { fontSize: 12, color: '#8A8A8A', marginTop: 4 },
   modalEmpty: { textAlign: 'center', marginTop: 40, color: '#8A8A8A' },
+  centerBox: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 28 },
+  centerTitle: { fontSize: 18, fontWeight: '800', color: '#2A1A1A', textAlign: 'center' },
+  centerText: { fontSize: 13, color: '#77625A', textAlign: 'center' },
+  backButton: { marginTop: 8, backgroundColor: ACCENT, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 28 },
+  backButtonText: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
 });

@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/src/features/auth/auth-context';
+import { canCreateProductivoRegistros } from '@/src/features/auth/role-permissions';
 import type { Animal } from '@/src/features/ganado/ganado-types';
 import { AnimalPicker } from '@/src/shared/components/animal-picker';
 import { productivoApi } from '../productivo-api';
@@ -25,7 +26,8 @@ const ACCENT = '#1A8FC0';
 
 export function RegistroLecheScreen() {
   const router = useRouter();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
+  const canCreate = useMemo(() => canCreateProductivoRegistros(user?.rol), [user?.rol]);
 
   const [animal, setAnimal] = useState<Animal | null>(null);
   const [lotes, setLotes] = useState<LoteProductivo[]>([]);
@@ -39,8 +41,8 @@ export function RegistroLecheScreen() {
   const [formError, setFormError] = useState<string | null>(null);
 
   const canSave = useMemo(
-    () => !!animal && !!selectedLote && !!litros.trim() && Number(litros) > 0 && !!fecha,
-    [animal, selectedLote, litros, fecha],
+    () => canCreate && !!animal && !!selectedLote && !!litros.trim() && Number(litros) > 0 && !!fecha,
+    [canCreate, animal, selectedLote, litros, fecha],
   );
 
   const onAnimalSelected = useCallback(async (selected: Animal | null) => {
@@ -85,6 +87,21 @@ export function RegistroLecheScreen() {
       setSaving(false);
     }
   }, [canSave, animal, selectedLote, litros, fecha, logout, router]);
+
+  if (!canCreate) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+        <View style={styles.centerBox}>
+          <MaterialCommunityIcons name="lock-outline" size={40} color="#A0A8A0" />
+          <Text style={styles.centerTitle}>Acceso restringido</Text>
+          <Text style={styles.centerText}>Tu rol no tiene permisos para registrar leche.</Text>
+          <Pressable style={styles.backButton} onPress={() => router.replace('/(app)/home')}>
+            <Text style={styles.backButtonText}>Volver al inicio</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
@@ -239,4 +256,9 @@ const styles = StyleSheet.create({
   },
   saveButtonDisabled: { opacity: 0.5 },
   saveButtonText: { color: '#FFF', fontWeight: '700', fontSize: 15 },
+  centerBox: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 28 },
+  centerTitle: { fontSize: 18, fontWeight: '800', color: '#1A2D40', textAlign: 'center' },
+  centerText: { fontSize: 13, color: '#667280', textAlign: 'center' },
+  backButton: { marginTop: 8, backgroundColor: ACCENT, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 28 },
+  backButtonText: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
 });

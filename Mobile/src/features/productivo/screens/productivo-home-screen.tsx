@@ -17,8 +17,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/src/features/auth/auth-context';
 import {
-  canCreateAnimal,
   canCreateEventoReproductivo,
+  canCreateProductivoRegistros,
   canViewEventosReproductivos,
   canViewProductivo,
 } from '@/src/features/auth/role-permissions';
@@ -115,7 +115,7 @@ export function ProductivoHomeScreen() {
 
   const canViewFullProductivo = useMemo(() => canViewProductivo(user?.rol), [user?.rol]);
   const canViewReproductivo = useMemo(() => canViewEventosReproductivos(user?.rol), [user?.rol]);
-  const canCreateFullRegistros = useMemo(() => canCreateAnimal(user?.rol), [user?.rol]);
+  const canCreateFullRegistros = useMemo(() => canCreateProductivoRegistros(user?.rol), [user?.rol]);
   const canCreateReproductivo = useMemo(() => canCreateEventoReproductivo(user?.rol), [user?.rol]);
   const canView = canViewFullProductivo || canViewReproductivo;
   const visibleTabs = useMemo(

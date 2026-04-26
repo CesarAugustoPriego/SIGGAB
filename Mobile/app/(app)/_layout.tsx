@@ -1,10 +1,69 @@
-import { Redirect, Stack } from 'expo-router';
+import { Redirect, Stack, useSegments } from 'expo-router';
 
 import { useAuth } from '@/src/features/auth/auth-context';
+import {
+  canApproveProductivo,
+  canApproveSanitario,
+  canBajaAnimal,
+  canCreateAnimal,
+  canCreateEventoReproductivo,
+  canCreateInventarioMovimiento,
+  canCreateProductivoRegistros,
+  canEditAnimal,
+  canViewEventosReproductivos,
+  canViewGanado,
+  canViewInventario,
+  canViewReportes,
+  canViewSanitario,
+} from '@/src/features/auth/role-permissions';
 import { LoadingScreen } from '@/src/shared/components/loading-screen';
 
+function canAccessRoute(roleName: string | undefined, segments: string[]) {
+  const route = segments.filter((segment) => !segment.startsWith('('));
+  const [moduleName, screenName] = route;
+
+  if (!moduleName || moduleName === 'home' || moduleName === 'perfil') return true;
+
+  if (moduleName === 'ganado') {
+    if (screenName === 'registrar') return canCreateAnimal(roleName);
+    if (screenName === 'editar') return canEditAnimal(roleName);
+    if (screenName === 'baja') return canBajaAnimal(roleName);
+    return canViewGanado(roleName);
+  }
+
+  if (moduleName === 'sanitario') {
+    return canViewSanitario(roleName);
+  }
+
+  if (moduleName === 'productivo') {
+    if (screenName === 'registro-peso' || screenName === 'registro-leche') {
+      return canCreateProductivoRegistros(roleName);
+    }
+    if (screenName === 'registro-reproductivo') {
+      return canCreateEventoReproductivo(roleName);
+    }
+    return canViewEventosReproductivos(roleName);
+  }
+
+  if (moduleName === 'inventario') {
+    if (screenName === 'registro-movimiento') return canCreateInventarioMovimiento(roleName);
+    return canViewInventario(roleName);
+  }
+
+  if (moduleName === 'aprobaciones') {
+    return canApproveProductivo(roleName) || canApproveSanitario(roleName);
+  }
+
+  if (moduleName === 'reportes') {
+    return canViewReportes(roleName);
+  }
+
+  return false;
+}
+
 export default function AppLayout() {
-  const { status } = useAuth();
+  const { status, user } = useAuth();
+  const segments = useSegments();
 
   if (status === 'booting') {
     return <LoadingScreen label="Preparando aplicacion..." />;
@@ -12,6 +71,10 @@ export default function AppLayout() {
 
   if (status === 'unauthenticated') {
     return <Redirect href="/(auth)/login" />;
+  }
+
+  if (!canAccessRoute(user?.rol, segments)) {
+    return <Redirect href="/(app)/home" />;
   }
 
   return (
