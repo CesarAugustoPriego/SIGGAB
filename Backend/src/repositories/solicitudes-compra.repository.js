@@ -9,6 +9,7 @@ async function findAll(filters = {}) {
       solicitante: { select: { idUsuario: true, nombreCompleto: true } },
       aprobador: { select: { idUsuario: true, nombreCompleto: true } },
       detalles: { include: { insumo: true } },
+      comprasRealizadas: { select: { idCompra: true } },
     },
     orderBy: { fechaSolicitud: 'desc' },
   });
@@ -32,7 +33,11 @@ async function create(solicitudData, detallesData) {
       ...solicitudData,
       detalles: { create: detallesData },
     },
-    include: { detalles: { include: { insumo: true } } },
+    include: {
+      solicitante: { select: { idUsuario: true, nombreCompleto: true } },
+      detalles: { include: { insumo: true } },
+      comprasRealizadas: { select: { idCompra: true } },
+    },
   });
 }
 
@@ -40,7 +45,12 @@ async function update(id, data) {
   return prisma.solicitudCompra.update({
     where: { idSolicitud: id },
     data,
-    include: { detalles: { include: { insumo: true } } },
+    include: {
+      solicitante: { select: { idUsuario: true, nombreCompleto: true } },
+      aprobador: { select: { idUsuario: true, nombreCompleto: true } },
+      detalles: { include: { insumo: true } },
+      comprasRealizadas: { select: { idCompra: true } },
+    },
   });
 }
 

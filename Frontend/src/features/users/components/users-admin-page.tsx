@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../../auth/auth-context';
 import { getVisibleNavItemsForRole } from '../../auth/navigation-utils';
 import { Button, NAV_ITEMS, Pencil, Save, X, LogOut, Plus, Check, XCircle } from '../../../shared/ui';
@@ -109,7 +109,8 @@ function validateForm(form: FormState, editingId: number | null): FormErrors {
 }
 
 export function UsersAdminPage({ onGoHome, onNavigateModule }: UsersAdminPageProps) {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshProfile } = useAuth();
+  const formCardRef = useRef<HTMLElement | null>(null);
 
   const [roles, setRoles] = useState<Rol[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -163,6 +164,9 @@ export function UsersAdminPage({ onGoHome, onNavigateModule }: UsersAdminPagePro
     });
     setErrors({});
     setMessage(null);
+    requestAnimationFrame(() => {
+      formCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   };
 
   const onCancelEdit = () => {
@@ -195,6 +199,10 @@ export function UsersAdminPage({ onGoHome, onNavigateModule }: UsersAdminPagePro
 
         const updatedUser = await usersApi.updateUsuario(editingId, payload);
         setUsuarios((prev) => prev.map((u) => (u.idUsuario === editingId ? updatedUser : u)));
+        await loadData();
+        if (user?.idUsuario === editingId) {
+          await refreshProfile().catch(() => undefined);
+        }
         setMessage({ type: 'success', text: 'Usuario actualizado correctamente.' });
       } else {
         const createdUser = await usersApi.createUsuario({
@@ -204,6 +212,7 @@ export function UsersAdminPage({ onGoHome, onNavigateModule }: UsersAdminPagePro
           password: form.password.trim(),
         });
         setUsuarios((prev) => [createdUser, ...prev]);
+        await loadData();
         setMessage({ type: 'success', text: 'Usuario creado correctamente.' });
       }
 
@@ -317,7 +326,7 @@ export function UsersAdminPage({ onGoHome, onNavigateModule }: UsersAdminPagePro
             </article>
           ) : (
             <div className="users-admin-grid">
-              <article className="users-admin-card">
+              <article className="users-admin-card" ref={formCardRef}>
                 <div className="users-admin-card__title">
                   <h2>{editingId ? 'Editar usuario' : 'Crear usuario'}</h2>
                   {editingId ? (
@@ -444,7 +453,7 @@ export function UsersAdminPage({ onGoHome, onNavigateModule }: UsersAdminPagePro
                             data-testid={`users-edit-button-${usuarioActual.idUsuario}`}
                             onClick={() => (isEditing(usuarioActual.idUsuario) ? onCancelEdit() : onSelectEdit(usuarioActual))}
                           >
-                            {isEditing(usuarioActual.idUsuario) ? <><X size={14} aria-hidden /> Cancelando...</> : <><Pencil size={14} aria-hidden /> Editar</>}
+                            {isEditing(usuarioActual.idUsuario) ? <><X size={14} aria-hidden /> Cancelar edicion</> : <><Pencil size={14} aria-hidden /> Editar</>}
                           </Button>
 
                           <Button

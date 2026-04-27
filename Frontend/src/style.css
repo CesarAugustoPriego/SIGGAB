@@ -1692,6 +1692,19 @@ select {
   font-size: 0.82rem;
 }
 
+.inventario-solicitud-detail {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(34, 139, 34, 0.14);
+  border-radius: 10px;
+  background: rgba(248, 251, 246, 0.95);
+}
+
+.inventario-solicitud-detail .productivo-subtitle {
+  margin: 0;
+}
+
 .productivo-table-value {
   font-weight: 800;
   color: #111827;

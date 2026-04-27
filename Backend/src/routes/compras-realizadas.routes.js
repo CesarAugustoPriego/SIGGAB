@@ -57,8 +57,8 @@ router.use(auth);
  *       400:
  *         description: Solicitud no aprobada o ya tiene compra (RN-17)
  */
-router.get('/', requireRole('Administrador', 'Propietario'), ctrl.getAll);
-router.post('/', requireRole('Administrador'), validate(createCompraSchema), ctrl.create);
+router.get('/', requireRole('Administrador', 'Almacén'), ctrl.getAll);
+router.post('/', requireRole('Almacén'), validate(createCompraSchema), ctrl.create);
 
 /**
  * @swagger
@@ -76,6 +76,6 @@ router.post('/', requireRole('Administrador'), validate(createCompraSchema), ctr
  *       200:
  *         description: Compra con detalles y movimientos de inventario
  */
-router.get('/:id', requireRole('Administrador', 'Propietario'), ctrl.getById);
+router.get('/:id', requireRole('Administrador', 'Almacén'), ctrl.getById);
 
 module.exports = router;

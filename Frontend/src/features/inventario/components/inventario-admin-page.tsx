@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/auth-context';
 import { getVisibleNavItemsForRole } from '../../auth/navigation-utils';
 import { Button, NAV_ITEMS, LogOut, Package, Tags, ArrowLeftRight, ShoppingCart, Receipt, AlertTriangle, X } from '../../../shared/ui';
@@ -70,6 +70,7 @@ export function InventarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
   const [solDetalles, setSolDetalles] = useState<{ idInsumo: string; cantidad: string; precioEstimado: string }[]>([]);
   const [savingSol, setSavingSol] = useState(false);
   const [solFilter, setSolFilter] = useState<EstadoSolicitud | 'TODOS'>('TODOS');
+  const [expandedSolicitudId, setExpandedSolicitudId] = useState<number | null>(null);
 
   // ── compras state ──
   const [compras, setCompras] = useState<CompraRealizada[]>([]);
@@ -77,6 +78,7 @@ export function InventarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
   const [compraForm, setCompraForm] = useState({ idSolicitud: '', fechaCompra: '' });
   const [compraDetalles, setCompraDetalles] = useState<{ idInsumo: string; cantidadReal: string; precioUnitario: string }[]>([]);
   const [savingCompra, setSavingCompra] = useState(false);
+  const [expandedCompraId, setExpandedCompraId] = useState<number | null>(null);
 
   // ── error handler ──
   const handleErr = useCallback(async (e: unknown) => {
@@ -135,7 +137,10 @@ export function InventarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
     if (tab === 'tipos') void loadTipos();
     if (tab === 'movimientos') void loadMovimientos();
     if (tab === 'solicitudes') void loadSolicitudes();
-    if (tab === 'compras' && canCom) void loadCompras();
+    if (tab === 'compras' && canCom) {
+      void loadCompras();
+      void loadSolicitudes();
+    }
   }, [tab, canView, canCom, initLoading, loadInsumos, loadTipos, loadMovimientos, loadSolicitudes, loadCompras]);
 
   // ── nav ──
@@ -238,11 +243,12 @@ export function InventarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
       setSolicitudes(prev => [c, ...prev]);
       setSolForm({ fechaSolicitud: '', observaciones: '' }); setSolDetalles([]);
       setMsg({ type: 'success', text: 'Solicitud de compra creada - pendiente de aprobacion.' });
+      void loadSolicitudes();
     } catch (e) { await handleErr(e); } finally { setSavingSol(false); }
   };
 
   const onAprobarSolicitud = async (id: number, estado: 'APROBADA' | 'RECHAZADA') => {
-    try { setMsg(null); const u = await inventarioApi.aprobarSolicitud(id, { estadoSolicitud: estado }); setSolicitudes(p => p.map(s => s.idSolicitud === u.idSolicitud ? u : s)); setMsg({ type: 'success', text: `Solicitud ${estado === 'APROBADA' ? 'aprobada' : 'rechazada'}.` }); }
+    try { setMsg(null); const u = await inventarioApi.aprobarSolicitud(id, { estadoSolicitud: estado }); setSolicitudes(p => p.map(s => s.idSolicitud === u.idSolicitud ? u : s)); setMsg({ type: 'success', text: `Solicitud ${estado === 'APROBADA' ? 'aprobada' : 'rechazada'}.` }); void loadSolicitudes(); }
     catch (e) { await handleErr(e); }
   };
 
@@ -529,24 +535,59 @@ export function InventarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
                         <table className="productivo-table">
                           <thead><tr><th>ID</th><th>Fecha</th><th>Solicitante</th><th>Items</th><th>Observaciones</th><th>Estado</th><th>Acciones</th></tr></thead>
                           <tbody>
-                            {solicitudes.length === 0 ? <tr><td colSpan={7} className="productivo-table-empty">No hay registros para mostrar.</td></tr> : solicitudes.map(s => (
-                              <tr key={s.idSolicitud}>
-                                <td className="productivo-table-id">S#{s.idSolicitud}</td>
-                                <td>{toInputDate(s.fechaSolicitud)}</td>
-                                <td>{s.solicitante?.nombreCompleto || 'N/A'}</td>
-                                <td>{s.detalles?.length || 0}</td>
-                                <td className="productivo-table-obs">{s.observaciones || '-'}</td>
-                                <td><span className={`productivo-status ${getEstadoSolicitudClass(s.estadoSolicitud)}`}>{s.estadoSolicitud}</span></td>
-                                <td>
-                                  {s.estadoSolicitud === 'PENDIENTE' && canApr ? (
-                                    <div className="productivo-table-actions">
-                                      <Button type="button" className="users-btn-success" onClick={() => void onAprobarSolicitud(s.idSolicitud, 'APROBADA')} data-testid={`btn-aprobar-sol-${s.idSolicitud}`}>Aprobar</Button>
-                                      <Button type="button" className="users-btn-danger" onClick={() => void onAprobarSolicitud(s.idSolicitud, 'RECHAZADA')} data-testid={`btn-rechazar-sol-${s.idSolicitud}`}>Rechazar</Button>
-                                    </div>
-                                  ) : <span className="productivo-immutable">{s.estadoSolicitud !== 'PENDIENTE' ? 'Procesada' : 'Sin acciones'}</span>}
-                                </td>
-                              </tr>
-                            ))}
+                            {solicitudes.length === 0 ? <tr><td colSpan={7} className="productivo-table-empty">No hay registros para mostrar.</td></tr> : solicitudes.map(s => {
+                              const isExpanded = expandedSolicitudId === s.idSolicitud;
+                              const totalEstimado = (s.detalles || []).reduce((sum, d) => sum + toNum(d.subtotalEstimado), 0);
+                              return (
+                                <Fragment key={s.idSolicitud}>
+                                  <tr>
+                                    <td className="productivo-table-id">S#{s.idSolicitud}</td>
+                                    <td>{toInputDate(s.fechaSolicitud)}</td>
+                                    <td>{s.solicitante?.nombreCompleto || 'N/A'}</td>
+                                    <td>{s.detalles?.length || 0}</td>
+                                    <td className="productivo-table-obs">{s.observaciones || '-'}</td>
+                                    <td><span className={`productivo-status ${getEstadoSolicitudClass(s.estadoSolicitud)}`}>{s.estadoSolicitud}</span></td>
+                                    <td>
+                                      <div className="productivo-table-actions">
+                                        <Button type="button" variant="ghost" onClick={() => setExpandedSolicitudId(isExpanded ? null : s.idSolicitud)} data-testid={`btn-ver-sol-${s.idSolicitud}`}>{isExpanded ? 'Ocultar detalle' : 'Ver detalle'}</Button>
+                                        {s.estadoSolicitud === 'PENDIENTE' && canApr ? (
+                                          <>
+                                            <Button type="button" className="users-btn-success" onClick={() => void onAprobarSolicitud(s.idSolicitud, 'APROBADA')} data-testid={`btn-aprobar-sol-${s.idSolicitud}`}>Aprobar</Button>
+                                            <Button type="button" className="users-btn-danger" onClick={() => void onAprobarSolicitud(s.idSolicitud, 'RECHAZADA')} data-testid={`btn-rechazar-sol-${s.idSolicitud}`}>Rechazar</Button>
+                                          </>
+                                        ) : null}
+                                      </div>
+                                    </td>
+                                  </tr>
+                                  {isExpanded ? (
+                                    <tr>
+                                      <td colSpan={7}>
+                                        <div className="inventario-solicitud-detail" data-testid={`sol-detalle-${s.idSolicitud}`}>
+                                          <div className="inventario-detalles-header">
+                                            <strong>Detalle de la solicitud S#{s.idSolicitud}</strong>
+                                            <span>Total estimado: {fmtCurrency(totalEstimado)}</span>
+                                          </div>
+                                          <table className="productivo-table">
+                                            <thead><tr><th>Insumo</th><th>Cantidad solicitada</th><th>Precio estimado</th><th>Subtotal</th></tr></thead>
+                                            <tbody>
+                                              {(s.detalles || []).map(d => (
+                                                <tr key={d.idDetalle}>
+                                                  <td>{d.insumo?.nombreInsumo || `Insumo #${d.idInsumo}`}</td>
+                                                  <td className="productivo-table-value">{toNum(d.cantidad)} <small>{d.insumo?.unidadMedida || ''}</small></td>
+                                                  <td>{fmtCurrency(d.precioEstimado)}</td>
+                                                  <td>{fmtCurrency(d.subtotalEstimado)}</td>
+                                                </tr>
+                                              ))}
+                                            </tbody>
+                                          </table>
+                                          <p className="productivo-subtitle">Observaciones: {s.observaciones || 'Sin observaciones'}</p>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  ) : null}
+                                </Fragment>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>
@@ -560,8 +601,8 @@ export function InventarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
                 <div className="productivo-tab-content">
                   {canComCreate ? (
                     <article className="productivo-card">
-                      <div className="users-admin-card__title"><h2>Registrar compra realizada</h2></div>
-                      <p className="productivo-subtitle"><AlertTriangle size={14} aria-hidden /> Al confirmar, el stock se actualizara automaticamente (RN-16)</p>
+                      <div className="users-admin-card__title"><h2>Registrar recepcion de compra</h2></div>
+                      <p className="productivo-subtitle"><AlertTriangle size={14} aria-hidden /> Al confirmar, la cantidad recibida se sumara automaticamente al stock.</p>
                       <div className="productivo-field-row">
                         <label className="productivo-field"><span>Solicitud aprobada</span>
                           <select value={compraForm.idSolicitud} onChange={e => onSelectSolicitudForCompra(e.target.value)} data-testid="compra-solicitud">
@@ -569,7 +610,7 @@ export function InventarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
                             {solicitudesAprobadas.map(s => <option key={s.idSolicitud} value={s.idSolicitud}>S#{s.idSolicitud} - {toInputDate(s.fechaSolicitud)}</option>)}
                           </select>
                         </label>
-                        <label className="productivo-field"><span>Fecha de compra</span><input type="date" value={compraForm.fechaCompra} onChange={e => setCompraForm(p => ({ ...p, fechaCompra: e.target.value }))} data-testid="compra-fecha" /></label>
+                        <label className="productivo-field"><span>Fecha de recepcion</span><input type="date" value={compraForm.fechaCompra} onChange={e => setCompraForm(p => ({ ...p, fechaCompra: e.target.value }))} data-testid="compra-fecha" /></label>
                       </div>
 
                       {compraDetalles.length > 0 ? (
@@ -580,8 +621,8 @@ export function InventarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
                             return (
                               <div key={i} className="inventario-detalle-row">
                                 <span className="inventario-detalle-label">{ins?.nombreInsumo || `Insumo #${d.idInsumo}`}</span>
-                                <input type="number" min="0.1" step="0.1" placeholder="Cant. real" value={d.cantidadReal} onChange={e => updateCompraDetalle(i, 'cantidadReal', e.target.value)} data-testid={`compra-det-cant-${i}`} />
-                                <input type="number" min="0.01" step="0.01" placeholder="Precio unit." value={d.precioUnitario} onChange={e => updateCompraDetalle(i, 'precioUnitario', e.target.value)} data-testid={`compra-det-precio-${i}`} />
+                                <input type="number" min="0.1" step="0.1" placeholder="Cant. recibida" value={d.cantidadReal} onChange={e => updateCompraDetalle(i, 'cantidadReal', e.target.value)} data-testid={`compra-det-cant-${i}`} />
+                                <input type="number" min="0.01" step="0.01" placeholder="Precio final unit." value={d.precioUnitario} onChange={e => updateCompraDetalle(i, 'precioUnitario', e.target.value)} data-testid={`compra-det-precio-${i}`} />
                                 <span className="inventario-detalle-subtotal">{fmtCurrency((Number(d.cantidadReal) || 0) * (Number(d.precioUnitario) || 0))}</span>
                               </div>
                             );
@@ -598,17 +639,53 @@ export function InventarioAdminPage({ onGoHome, onGoUsersAdmin, onNavigateModule
                     {loadingCom ? <p className="productivo-helper">Cargando...</p> : (
                       <div className="productivo-table-wrap">
                         <table className="productivo-table">
-                          <thead><tr><th>ID</th><th>Solicitud</th><th>Fecha</th><th>Total</th><th>Realizada por</th></tr></thead>
+                          <thead><tr><th>ID</th><th>Solicitud</th><th>Fecha recepcion</th><th>Total pagado</th><th>Registrada por</th><th>Acciones</th></tr></thead>
                           <tbody>
-                            {compras.length === 0 ? <tr><td colSpan={5} className="productivo-table-empty">No hay registros para mostrar.</td></tr> : compras.map(c => (
-                              <tr key={c.idCompra}>
-                                <td className="productivo-table-id">C#{c.idCompra}</td>
-                                <td>S#{c.idSolicitud}</td>
-                                <td>{toInputDate(c.fechaCompra)}</td>
-                                <td className="productivo-table-value">{fmtCurrency(c.totalReal)}</td>
-                                <td>{c.realizador?.nombreCompleto || 'N/A'}</td>
-                              </tr>
-                            ))}
+                            {compras.length === 0 ? <tr><td colSpan={6} className="productivo-table-empty">No hay registros para mostrar.</td></tr> : compras.map(c => {
+                              const isExpanded = expandedCompraId === c.idCompra;
+                              return (
+                                <Fragment key={c.idCompra}>
+                                  <tr>
+                                    <td className="productivo-table-id">C#{c.idCompra}</td>
+                                    <td>S#{c.idSolicitud}</td>
+                                    <td>{toInputDate(c.fechaCompra)}</td>
+                                    <td className="productivo-table-value">{fmtCurrency(c.totalReal)}</td>
+                                    <td>{c.realizador?.nombreCompleto || 'N/A'}</td>
+                                    <td>
+                                      <Button type="button" variant="ghost" onClick={() => setExpandedCompraId(isExpanded ? null : c.idCompra)} data-testid={`btn-ver-compra-${c.idCompra}`}>
+                                        {isExpanded ? 'Ocultar detalle' : 'Ver detalle'}
+                                      </Button>
+                                    </td>
+                                  </tr>
+                                  {isExpanded ? (
+                                    <tr>
+                                      <td colSpan={6}>
+                                        <div className="inventario-solicitud-detail" data-testid={`compra-detalle-${c.idCompra}`}>
+                                          <div className="inventario-detalles-header">
+                                            <strong>Confirmacion de compra C#{c.idCompra}</strong>
+                                            <span>Total pagado: {fmtCurrency(c.totalReal)}</span>
+                                          </div>
+                                          <table className="productivo-table">
+                                            <thead><tr><th>Insumo</th><th>Cantidad recibida</th><th>Precio final unit.</th><th>Subtotal</th></tr></thead>
+                                            <tbody>
+                                              {(c.detalles || []).map(d => (
+                                                <tr key={d.idDetalleCompra}>
+                                                  <td>{d.insumo?.nombreInsumo || `Insumo #${d.idInsumo}`}</td>
+                                                  <td className="productivo-table-value">{toNum(d.cantidadReal)} <small>{d.insumo?.unidadMedida || ''}</small></td>
+                                                  <td>{fmtCurrency(d.precioUnitario)}</td>
+                                                  <td>{fmtCurrency(d.subtotal)}</td>
+                                                </tr>
+                                              ))}
+                                            </tbody>
+                                          </table>
+                                          <p className="productivo-subtitle">Solicitud origen: S#{c.idSolicitud} | Fecha de recepcion: {toInputDate(c.fechaCompra)}</p>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  ) : null}
+                                </Fragment>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>

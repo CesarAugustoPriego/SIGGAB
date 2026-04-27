@@ -43,12 +43,12 @@ export function canAprobarSolicitud(roleName: string | undefined) {
 
 /** Puede ver compras realizadas */
 export function canViewCompras(roleName: string | undefined) {
-  return hasRole(roleName, ['administrador', 'propietario']);
+  return hasRole(roleName, ['administrador', 'almacen']);
 }
 
 /** Puede registrar compras realizadas */
 export function canCreateCompra(roleName: string | undefined) {
-  return hasRole(roleName, ['administrador']);
+  return hasRole(roleName, ['almacen']);
 }
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
