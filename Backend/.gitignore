@@ -14,7 +14,13 @@ generated/
 
 # ─── Backups locales ───
 backups/
-uploads/
+uploads/*
+!uploads/animales/
+uploads/animales/*
+!uploads/animales/*.jpg
+!uploads/animales/*.jpeg
+!uploads/animales/*.png
+!uploads/animales/*.webp
 
 # ─── OS ───
 .DS_Store
