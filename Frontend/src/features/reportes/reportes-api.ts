@@ -116,7 +116,6 @@ export const reportesApi = {
       fechaInicio: filters.fechaInicio,
       fechaFin: filters.fechaFin,
       idAnimal: filters.idAnimal,
-      idLote: filters.idLote,
       formato: 'json',
     });
     return httpClient.get<ReporteProductivo>(`/reportes/productivo${query}`);
@@ -164,7 +163,6 @@ export const reportesApi = {
         fechaInicio: filters.fechaInicio,
         fechaFin: filters.fechaFin,
         idAnimal: filters.idAnimal,
-        idLote: filters.idLote,
       },
       format,
       'reporte-productivo',

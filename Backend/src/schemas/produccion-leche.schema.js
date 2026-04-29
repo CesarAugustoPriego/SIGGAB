@@ -2,7 +2,6 @@ const { z } = require('zod');
 
 const createProduccionLecheSchema = z.object({
   idAnimal: z.number({ required_error: 'El animal es obligatorio' }).int().positive(),
-  idLote: z.number({ required_error: 'El lote es obligatorio' }).int().positive(),
   litrosProducidos: z
     .number({ required_error: 'Los litros producidos son obligatorios' })
     .positive('Los litros deben ser un valor positivo'),

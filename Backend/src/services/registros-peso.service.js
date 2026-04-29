@@ -1,6 +1,5 @@
 const registrosPesoRepository = require('../repositories/registros-peso.repository');
 const animalesRepository = require('../repositories/animales.repository');
-const lotesRepository = require('../repositories/lotes-productivos.repository');
 const { registrarAccion } = require('./bitacora.service');
 
 async function getAll(filters = {}) {
@@ -33,13 +32,8 @@ async function create(data, idUsuario) {
     );
   }
 
-  // Verificar lote existe
-  const lote = await lotesRepository.findById(data.idLote);
-  if (!lote) throw Object.assign(new Error('Lote de validación no encontrado'), { statusCode: 400 });
-
   const registro = await registrosPesoRepository.create({
     idAnimal: data.idAnimal,
-    idLote: data.idLote,
     peso: data.peso,
     fechaRegistro: new Date(data.fechaRegistro),
     registradoPor: idUsuario,

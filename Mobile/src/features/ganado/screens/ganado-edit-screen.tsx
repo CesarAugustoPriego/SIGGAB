@@ -47,6 +47,7 @@ function hasChanges(form: AnimalFormState, animal: Animal) {
   if (form.procedencia !== animal.procedencia) return true;
   if (Number(form.edadEstimada) !== animal.edadEstimada) return true;
   if (form.estadoSanitarioInicial.trim() !== animal.estadoSanitarioInicial) return true;
+  if (form.fotoBase64 || form.eliminarFoto) return true;
   return false;
 }
 

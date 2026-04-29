@@ -228,6 +228,7 @@ async function main() {
       fechaIngreso: '2024-01-01',
       pesoInicial: 320,
       idRaza: 1,
+      sexo: 'HEMBRA',
       procedencia: 'ADQUIRIDA',
       edadEstimada: 22,
       estadoSanitarioInicial: 'Apto para manejo',
@@ -260,17 +261,10 @@ async function main() {
   });
   test('Veterinario autoriza evento sanitario (RF05/RF11)', res.status === 200, `status=${res.status}`);
 
-  res = await request('POST', '/lotes-productivos', {
-    token: adminToken,
-    body: { fechaInicio: '2024-06-01', fechaFin: '2024-06-30' },
-  });
-  test('Crear lote productivo para pruebas', res.status === 201, `status=${res.status}`);
-  const loteId = res.data?.data?.idLote;
-
   // Registro de peso
   res = await request('POST', '/registros-peso', {
     token: produccionToken,
-    body: { idAnimal: animalId, idLote: loteId, peso: 355, fechaRegistro: '2024-06-10' },
+    body: { idAnimal: animalId, peso: 355, fechaRegistro: '2024-06-10' },
   });
   test('Produccion crea registro de peso', res.status === 201, `status=${res.status}`);
   const registroPesoId = res.data?.data?.idRegistroPeso;
@@ -302,7 +296,7 @@ async function main() {
   // Produccion leche
   res = await request('POST', '/produccion-leche', {
     token: produccionToken,
-    body: { idAnimal: animalId, idLote: loteId, litrosProducidos: 19.2, fechaRegistro: '2024-06-11' },
+    body: { idAnimal: animalId, litrosProducidos: 19.2, fechaRegistro: '2024-06-11' },
   });
   test('Produccion crea registro de leche', res.status === 201, `status=${res.status}`);
   const produccionId = res.data?.data?.idProduccion;
@@ -330,7 +324,6 @@ async function main() {
     token: produccionToken,
     body: {
       idAnimal: animalId,
-      idLote: loteId,
       tipoEvento: 'CELO',
       fechaEvento: '2024-06-12',
       observaciones: 'Evento inicial',

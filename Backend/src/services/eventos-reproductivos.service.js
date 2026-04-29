@@ -1,39 +1,6 @@
 const eventosReproRepository = require('../repositories/eventos-reproductivos.repository');
 const animalesRepository = require('../repositories/animales.repository');
-const lotesRepository = require('../repositories/lotes-productivos.repository');
 const { registrarAccion } = require('./bitacora.service');
-
-function isNullConstraintError(error) {
-  const code = String(error?.code || '');
-  const message = String(error?.message || '').toLowerCase();
-  return code === 'P2011' || message.includes('null constraint violation');
-}
-
-async function resolveFallbackLoteId(idUsuario, fechaEvento) {
-  const lotesPendientes = await lotesRepository.findAll({ estado: 'PENDIENTE' });
-  if (lotesPendientes.length > 0) return lotesPendientes[0].idLote;
-
-  const fechaBase = new Date(fechaEvento);
-  const loteCreado = await lotesRepository.create({
-    fechaInicio: fechaBase,
-    fechaFin: fechaBase,
-    creadoPor: idUsuario,
-  });
-
-  await registrarAccion({
-    idUsuario,
-    accion: 'CREAR',
-    tablaAfectada: 'lote_validacion_productiva',
-    idRegistro: loteCreado.idLote,
-    detalles: {
-      fechaInicio: fechaEvento,
-      fechaFin: fechaEvento,
-      origen: 'fallback_evento_reproductivo',
-    },
-  });
-
-  return loteCreado.idLote;
-}
 
 async function getAll(filters = {}) {
   return eventosReproRepository.findAll(filters);
@@ -56,31 +23,13 @@ async function create(data, idUsuario) {
     throw Object.assign(new Error('Solo se pueden registrar eventos reproductivos en hembras.'), { statusCode: 400 });
   }
 
-  if (data.idLote !== undefined && data.idLote !== null) {
-    const lote = await lotesRepository.findById(data.idLote);
-    if (!lote) throw Object.assign(new Error('Lote de validacion no encontrado'), { statusCode: 400 });
-  }
-
-  const createPayload = {
+  const evento = await eventosReproRepository.create({
     idAnimal: data.idAnimal,
-    idLote: data.idLote ?? null,
     tipoEvento: data.tipoEvento,
     fechaEvento: new Date(data.fechaEvento),
     observaciones: data.observaciones,
     registradoPor: idUsuario,
-  };
-
-  let evento;
-  try {
-    evento = await eventosReproRepository.create(createPayload);
-  } catch (error) {
-    if ((data.idLote === undefined || data.idLote === null) && isNullConstraintError(error)) {
-      const fallbackLoteId = await resolveFallbackLoteId(idUsuario, data.fechaEvento);
-      evento = await eventosReproRepository.create({ ...createPayload, idLote: fallbackLoteId });
-    } else {
-      throw error;
-    }
-  }
+  });
 
   await registrarAccion({
     idUsuario,

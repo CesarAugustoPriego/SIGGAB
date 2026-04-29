@@ -12,6 +12,8 @@ Respuesta esperada:
 
 Carpeta de salida:
 - `BACKUP_DIR` en entorno (default: `backups`).
+- El respaldo JSON incluye tambien las fotos existentes de animales en `uploads/animales` codificadas en base64 dentro de `data.animalPhotos`.
+- Si un animal apunta a una foto local que ya no existe, el respaldo guarda ese `fotoUrl` como `null` para no restaurar enlaces rotos.
 
 Opcional (RF10 nube):
 - `BACKUP_CLOUD_ENABLED=true`
@@ -57,6 +59,8 @@ Reglas de seguridad:
 - Sin `force` el script no aplica cambios.
 - La restauracion elimina datos actuales y reemplaza por el contenido del backup.
 - Incluye reseteo de secuencias `SERIAL` para evitar colisiones de IDs posteriores.
+- Restaura las fotos incluidas en `data.animalPhotos` antes de insertar los registros.
+- Los respaldos antiguos que no tienen `data.animalPhotos` restauran los animales sin `fotoUrl` local, para evitar imagenes rotas.
 
 ## 5. Tablas incluidas en respaldo/restauracion
 - `roles`
@@ -64,10 +68,10 @@ Reglas de seguridad:
 - `bitacora`
 - `razas`
 - `animales`
+- `animalPhotos` (archivos existentes de `uploads/animales`, en base64)
 - `tipos_evento_sanitario`
 - `eventos_sanitarios`
 - `calendario_sanitario`
-- `lote_validacion_productiva`
 - `registro_peso`
 - `produccion_leche`
 - `eventos_reproductivos`

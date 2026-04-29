@@ -100,7 +100,6 @@ model Usuario {
   refreshTokens              RefreshToken[]
   eventosSanitariosAutorizados EventoSanitario[] @relation("AutorizadoPor")
   calendariosProgramados     CalendarioSanitario[] @relation("ProgramadoPor")
-  lotesCreados               LoteValidacionProductiva[] @relation("CreadoPor")
   registrosPesoRegistrados   RegistroPeso[] @relation("RegistradoPorPeso")
   registrosPesoValidados     RegistroPeso[] @relation("ValidadoPorPeso")
   produccionesRegistradas    ProduccionLeche[] @relation("RegistradoPorLeche")
@@ -256,27 +255,9 @@ model CalendarioSanitario {
 // MÓDULO: PRODUCTIVO
 // ─────────────────────────────────────────────────
 
-model LoteValidacionProductiva {
-  idLote        Int            @id @default(autoincrement()) @map("id_lote")
-  fechaInicio   DateTime       @map("fecha_inicio") @db.Date
-  fechaFin      DateTime       @map("fecha_fin") @db.Date
-  creadoPor     Int            @map("creado_por")
-  fechaCreacion DateTime       @default(now()) @map("fecha_creacion")
-  estado        EstadoRegistro @default(PENDIENTE)
-
-  creador Usuario @relation("CreadoPor", fields: [creadoPor], references: [idUsuario])
-
-  registrosPeso        RegistroPeso[]
-  produccionesLeche    ProduccionLeche[]
-  eventosReproductivos EventoReproductivo[]
-
-  @@map("lote_validacion_productiva")
-}
-
 model RegistroPeso {
   idRegistroPeso   Int            @id @default(autoincrement()) @map("id_registro_peso")
   idAnimal         Int            @map("id_animal")
-  idLote           Int            @map("id_lote")
   peso             Decimal
   fechaRegistro    DateTime       @map("fecha_registro") @db.Date
   registradoPor    Int            @map("registrado_por")
@@ -284,12 +265,10 @@ model RegistroPeso {
   validadoPor      Int?           @map("validado_por")
 
   animal      Animal                   @relation(fields: [idAnimal], references: [idAnimal])
-  lote        LoteValidacionProductiva @relation(fields: [idLote], references: [idLote])
   registrador Usuario                  @relation("RegistradoPorPeso", fields: [registradoPor], references: [idUsuario])
   validador   Usuario?                 @relation("ValidadoPorPeso", fields: [validadoPor], references: [idUsuario])
 
   @@index([idAnimal])
-  @@index([idLote])
   @@index([fechaRegistro])
   @@map("registro_peso")
 }
@@ -297,7 +276,6 @@ model RegistroPeso {
 model ProduccionLeche {
   idProduccion     Int            @id @default(autoincrement()) @map("id_produccion")
   idAnimal         Int            @map("id_animal")
-  idLote           Int            @map("id_lote")
   litrosProducidos Decimal        @map("litros_producidos")
   fechaRegistro    DateTime       @map("fecha_registro") @db.Date
   registradoPor    Int            @map("registrado_por")
@@ -305,12 +283,10 @@ model ProduccionLeche {
   validadoPor      Int?           @map("validado_por")
 
   animal      Animal                   @relation(fields: [idAnimal], references: [idAnimal])
-  lote        LoteValidacionProductiva @relation(fields: [idLote], references: [idLote])
   registrador Usuario                  @relation("RegistradoPorLeche", fields: [registradoPor], references: [idUsuario])
   validador   Usuario?                 @relation("ValidadoPorLeche", fields: [validadoPor], references: [idUsuario])
 
   @@index([idAnimal])
-  @@index([idLote])
   @@index([fechaRegistro])
   @@map("produccion_leche")
 }
@@ -318,7 +294,6 @@ model ProduccionLeche {
 model EventoReproductivo {
   idEventoReproductivo Int            @id @default(autoincrement()) @map("id_evento_reproductivo")
   idAnimal             Int            @map("id_animal")
-  idLote               Int?           @map("id_lote")
   tipoEvento           String         @map("tipo_evento") @db.VarChar(50)
   fechaEvento          DateTime       @map("fecha_evento") @db.Date
   observaciones        String?        @db.Text
@@ -327,12 +302,10 @@ model EventoReproductivo {
   validadoPor          Int?           @map("validado_por")
 
   animal      Animal                   @relation(fields: [idAnimal], references: [idAnimal])
-  lote        LoteValidacionProductiva? @relation(fields: [idLote], references: [idLote])
   registrador Usuario                  @relation("RegistradoPorRepro", fields: [registradoPor], references: [idUsuario])
   validador   Usuario?                 @relation("ValidadoPorRepro", fields: [validadoPor], references: [idUsuario])
 
   @@index([idAnimal])
-  @@index([idLote])
   @@index([fechaEvento])
   @@map("eventos_reproductivos")
 }

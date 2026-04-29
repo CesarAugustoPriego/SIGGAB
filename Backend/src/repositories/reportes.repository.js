@@ -31,22 +31,21 @@ async function getProductivo(filters) {
 
   const whereBase = {};
   if (filters.idAnimal) whereBase.idAnimal = Number(filters.idAnimal);
-  if (filters.idLote) whereBase.idLote = Number(filters.idLote);
 
   const [registrosPeso, produccionLeche, eventosReproductivos] = await Promise.all([
     prisma.registroPeso.findMany({
       where: { ...whereBase, fechaRegistro: rango },
-      include: { animal: { select: { idAnimal: true, numeroArete: true } }, lote: true },
+      include: { animal: { select: { idAnimal: true, numeroArete: true } } },
       orderBy: { fechaRegistro: 'desc' },
     }),
     prisma.produccionLeche.findMany({
       where: { ...whereBase, fechaRegistro: rango },
-      include: { animal: { select: { idAnimal: true, numeroArete: true } }, lote: true },
+      include: { animal: { select: { idAnimal: true, numeroArete: true } } },
       orderBy: { fechaRegistro: 'desc' },
     }),
     prisma.eventoReproductivo.findMany({
       where: { ...whereBase, fechaEvento: rango },
-      include: { animal: { select: { idAnimal: true, numeroArete: true } }, lote: true },
+      include: { animal: { select: { idAnimal: true, numeroArete: true } } },
       orderBy: { fechaEvento: 'desc' },
     }),
   ]);

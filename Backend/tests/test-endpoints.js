@@ -670,36 +670,9 @@ async function main() {
   console.log(results.join('\n')); results.length = 0;
 
   // ═══════════════════════════════════════════════
-  // 15. PRODUCTIVO — LOTES
+  // 15. PRODUCTIVO - FLUJO DIRECTO
   // ═══════════════════════════════════════════════
-  console.log('\n📊 PRODUCTIVO — LOTES');
-
-  let loteId = null;
-
-  // 15.1 Crear lote
-  res = await request('POST', '/lotes-productivos', {
-    fechaInicio: '2024-06-01',
-    fechaFin: '2024-06-30',
-  }, accessToken);
-  test('POST /lotes-productivos crea lote', res.status === 201);
-  loteId = res.data.data?.idLote;
-
-  // 15.2 Fecha fin antes de inicio → 400 (Zod refine)
-  res = await request('POST', '/lotes-productivos', {
-    fechaInicio: '2024-06-30',
-    fechaFin: '2024-06-01',
-  }, accessToken);
-  test('Lote con fechas invertidas → 400', res.status === 400);
-
-  // 15.3 Listar lotes
-  res = await request('GET', '/lotes-productivos', null, accessToken);
-  test('GET /lotes-productivos retorna lista', res.status === 200 && Array.isArray(res.data.data));
-
-  // 15.4 Obtener lote por ID
-  if (loteId) {
-    res = await request('GET', `/lotes-productivos/${loteId}`, null, accessToken);
-    test('GET /lotes-productivos/:id retorna lote', res.status === 200 && res.data.data?.idLote === loteId);
-  }
+  console.log('\nPRODUCTIVO - FLUJO DIRECTO');
 
   console.log(results.join('\n')); results.length = 0;
 
@@ -718,6 +691,7 @@ async function main() {
     fechaIngreso: '2024-01-01',
     pesoInicial: 300,
     idRaza: 1,
+    sexo: 'HEMBRA',
   }, accessToken);
   const prodAnimalId = res.data.data?.idAnimal;
   test('Animal para registros productivos creado', res.status === 201);
@@ -725,10 +699,9 @@ async function main() {
   let pesoId = null;
 
   // 16.1 Registrar peso válido (RN-01 + RN-02)
-  if (loteId && prodAnimalId) {
+  if (prodAnimalId) {
     res = await request('POST', '/registros-peso', {
       idAnimal: prodAnimalId,
-      idLote: loteId,
       peso: 350,
       fechaRegistro: '2024-06-10',
     }, accessToken);
@@ -737,10 +710,9 @@ async function main() {
   }
 
   // 16.2 Peso demasiado bajo → 400 (RN-02: < 50% de pesoInicial=300 → min 150)
-  if (loteId && prodAnimalId) {
+  if (prodAnimalId) {
     res = await request('POST', '/registros-peso', {
       idAnimal: prodAnimalId,
-      idLote: loteId,
       peso: 100,
       fechaRegistro: '2024-06-11',
     }, accessToken);
@@ -776,10 +748,9 @@ async function main() {
 
   let produccionId = null;
 
-  if (loteId && prodAnimalId) {
+  if (prodAnimalId) {
     res = await request('POST', '/produccion-leche', {
       idAnimal: prodAnimalId,
-      idLote: loteId,
       litrosProducidos: 18.5,
       fechaRegistro: '2024-06-10',
     }, accessToken);
@@ -804,10 +775,9 @@ async function main() {
 
   let eventoReproId = null;
 
-  if (loteId && prodAnimalId) {
+  if (prodAnimalId) {
     res = await request('POST', '/eventos-reproductivos', {
       idAnimal: prodAnimalId,
-      idLote: loteId,
       tipoEvento: 'PARTO',
       fechaEvento: '2024-06-15',
       observaciones: 'Parto normal sin complicaciones',
@@ -817,10 +787,9 @@ async function main() {
   }
 
   // Tipo inválido → 400
-  if (loteId && prodAnimalId) {
+  if (prodAnimalId) {
     res = await request('POST', '/eventos-reproductivos', {
       idAnimal: prodAnimalId,
-      idLote: loteId,
       tipoEvento: 'INVALIDO',
       fechaEvento: '2024-06-16',
     }, accessToken);
@@ -836,21 +805,14 @@ async function main() {
   }
 
   // Animal dado de baja no puede registrar eventos productivos (RN-01)
-  if (loteId && createdAnimalId) {
+  if (createdAnimalId) {
     // createdAnimalId ya está dado de baja (VENDIDO) desde el test de Fase 1
     res = await request('POST', '/eventos-reproductivos', {
       idAnimal: createdAnimalId,
-      idLote: loteId,
       tipoEvento: 'CELO',
       fechaEvento: '2024-06-20',
     }, accessToken);
     test('Evento reproductivo en animal BAJA → 400 (RN-01)', res.status === 400);
-  }
-
-  // Validar lote completo
-  if (loteId) {
-    res = await request('PATCH', `/lotes-productivos/${loteId}/validar`, { estado: 'APROBADO' }, accessToken);
-    test('PATCH /lotes-productivos/:id/validar aprueba lote', res.status === 200 && res.data.data?.estado === 'APROBADO');
   }
 
   console.log(results.join('\n')); results.length = 0;

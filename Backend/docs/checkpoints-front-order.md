@@ -66,7 +66,7 @@ con validacion del backend antes de avanzar de bloque.
 
 ## Checkpoint 6 - Productivo operativo
 - Endpoints:
-  - Lotes, peso, leche y reproductivos (CRUD + validar)
+  - Peso, leche y reproductivos (CRUD + validar por registro)
 
 ## Checkpoint 7 - Inventario y compras
 - Endpoints:

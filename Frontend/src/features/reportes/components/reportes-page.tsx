@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/auth-context';
 import { getVisibleNavItemsForRole } from '../../auth/navigation-utils';
 import { sanitarioApi } from '../../sanitario/sanitario-api';
-import { productivoApi } from '../../productivo/productivo-api';
 import { Button, NAV_ITEMS, LogOut } from '../../../shared/ui';
 import { ApiClientError } from '../../../types/api';
 import { reportesApi } from '../reportes-api';
@@ -10,7 +9,6 @@ import type {
   AnimalReporteOption,
   DownloadFormat,
   EstadoRegistro,
-  LoteReporteOption,
   ReporteAdministrativo,
   ReporteComparativo,
   ReporteProductivo,
@@ -102,7 +100,6 @@ export function ReportesPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Rep
 
   const [tiposEvento, setTiposEvento] = useState<TipoEventoReporteOption[]>([]);
   const [animales, setAnimales] = useState<AnimalReporteOption[]>([]);
-  const [lotes, setLotes] = useState<LoteReporteOption[]>([]);
 
   const [sanitarioReport, setSanitarioReport] = useState<ReporteSanitario | null>(null);
   const [productivoReport, setProductivoReport] = useState<ReporteProductivo | null>(null);
@@ -119,7 +116,6 @@ export function ReportesPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Rep
     fechaInicio: DEFAULT_FECHA_INICIO,
     fechaFin: DEFAULT_FECHA_FIN,
     idAnimal: '',
-    idLote: '',
   });
   const [administrativoFilters, setAdministrativoFilters] = useState({
     fechaInicio: DEFAULT_FECHA_INICIO,
@@ -140,7 +136,6 @@ export function ReportesPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Rep
       id: `peso-${registro.idRegistroPeso}`,
       fecha: registro.fechaRegistro,
       arete: registro.animal.numeroArete,
-      lote: registro.idLote,
       tipo: 'PESO',
       valor: `${formatDecimal(registro.peso, 1)} kg`,
       estado: registro.estadoValidacion,
@@ -150,7 +145,6 @@ export function ReportesPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Rep
       id: `leche-${registro.idProduccion}`,
       fecha: registro.fechaRegistro,
       arete: registro.animal.numeroArete,
-      lote: registro.idLote,
       tipo: 'LECHE',
       valor: `${formatDecimal(registro.litrosProducidos, 2)} L`,
       estado: registro.estadoValidacion,
@@ -160,7 +154,6 @@ export function ReportesPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Rep
       id: `repro-${evento.idEventoReproductivo}`,
       fecha: evento.fechaEvento,
       arete: evento.animal.numeroArete,
-      lote: evento.idLote,
       tipo: 'REPRO',
       valor: evento.tipoEvento,
       estado: evento.estadoValidacion,
@@ -217,22 +210,14 @@ export function ReportesPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Rep
 
         const tiposPromise = canSanitario ? sanitarioApi.getTiposEvento() : Promise.resolve([]);
         const animalesPromise = canProductivo ? sanitarioApi.getAnimalesActivos() : Promise.resolve([]);
-        const lotesPromise = canProductivo ? productivoApi.getLotes() : Promise.resolve([]);
 
-        const [tipos, animalesActivos, lotesActivos] = await Promise.all([
+        const [tipos, animalesActivos] = await Promise.all([
           tiposPromise,
           animalesPromise,
-          lotesPromise,
         ]);
 
         setTiposEvento(tipos.map((item) => ({ idTipoEvento: item.idTipoEvento, nombreTipo: item.nombreTipo })));
         setAnimales(animalesActivos.map((item) => ({ idAnimal: item.idAnimal, numeroArete: item.numeroArete })));
-        setLotes(lotesActivos.map((item) => ({
-          idLote: item.idLote,
-          fechaInicio: item.fechaInicio,
-          fechaFin: item.fechaFin,
-          estado: item.estado,
-        })));
       } catch (error) {
         await handleApiError(error);
       } finally {
@@ -278,7 +263,6 @@ export function ReportesPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Rep
       fechaInicio: productivoFilters.fechaInicio,
       fechaFin: productivoFilters.fechaFin,
       idAnimal: parseOptionalId(productivoFilters.idAnimal),
-      idLote: parseOptionalId(productivoFilters.idLote),
     };
 
     void executeAction('productivo-json', async () => {
@@ -323,7 +307,6 @@ export function ReportesPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Rep
       fechaInicio: productivoFilters.fechaInicio,
       fechaFin: productivoFilters.fechaFin,
       idAnimal: parseOptionalId(productivoFilters.idAnimal),
-      idLote: parseOptionalId(productivoFilters.idLote),
     };
     void runDownload(`productivo-${format}`, `Reporte productivo ${format.toUpperCase()} descargado.`, () => (
       reportesApi.downloadProductivo(filters, format)
@@ -485,12 +468,6 @@ export function ReportesPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Rep
                           <option value="">Todos</option>{animales.map((item) => <option key={item.idAnimal} value={item.idAnimal}>{item.numeroArete}</option>)}
                         </select>
                       </label>
-                      <label className="productivo-field">
-                        <span>Lote</span>
-                        <select value={productivoFilters.idLote} onChange={(event) => setProductivoFilters((prev) => ({ ...prev, idLote: event.target.value }))}>
-                          <option value="">Todos</option>{lotes.map((item) => <option key={item.idLote} value={item.idLote}>#{item.idLote} [{item.estado}]</option>)}
-                        </select>
-                      </label>
                     </div>
                     <div className="reportes-actions">
                       <Button type="button" onClick={onRunProductivo} disabled={busyAction !== null}>{busyAction === 'productivo-json' ? 'Generando...' : 'Generar'}</Button>
@@ -512,13 +489,12 @@ export function ReportesPage({ onGoHome, onGoUsersAdmin, onNavigateModule }: Rep
                         </div>
                         <div className="productivo-table-wrap">
                           <table className="productivo-table">
-                            <thead><tr><th>Fecha</th><th>Arete</th><th>Lote</th><th>Tipo</th><th>Valor</th><th>Estado</th></tr></thead>
+                            <thead><tr><th>Fecha</th><th>Arete</th><th>Tipo</th><th>Valor</th><th>Estado</th></tr></thead>
                             <tbody>
-                              {productivoRows.length === 0 ? <tr><td colSpan={6} className="productivo-table-empty">No hay registros para mostrar.</td></tr> : productivoRows.map((item) => (
+                              {productivoRows.length === 0 ? <tr><td colSpan={5} className="productivo-table-empty">No hay registros para mostrar.</td></tr> : productivoRows.map((item) => (
                                 <tr key={item.id}>
                                   <td>{formatDate(item.fecha)}</td>
                                   <td className="productivo-table-id">{item.arete}</td>
-                                  <td>#{item.lote}</td>
                                   <td>{item.tipo}</td>
                                   <td>{item.valor}</td>
                                   <td><span className={`productivo-status ${getEstadoClass(item.estado)}`}>{item.estado}</span></td>

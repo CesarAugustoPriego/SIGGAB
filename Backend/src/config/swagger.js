@@ -232,19 +232,6 @@ const options = {
           },
         },
 
-        LoteProductivo: {
-          type: 'object',
-          properties: {
-            idLote: { type: 'integer' },
-            fechaInicio: { type: 'string', format: 'date' },
-            fechaFin: { type: 'string', format: 'date' },
-            estado: {
-              type: 'string',
-              enum: ['PENDIENTE', 'APROBADO', 'RECHAZADO'],
-            },
-          },
-        },
-
         DashboardResumen: {
           type: 'object',
           properties: {

@@ -32,10 +32,6 @@ router.use(auth);
  *         schema:
  *           type: integer
  *       - in: query
- *         name: idLote
- *         schema:
- *           type: integer
- *       - in: query
  *         name: tipo
  *         schema:
  *           type: string
@@ -61,9 +57,6 @@ router.use(auth);
  *             properties:
  *               idAnimal:
  *                 type: integer
- *               idLote:
- *                 type: integer
- *                 nullable: true
  *               tipoEvento:
  *                 type: string
  *                 enum: [CELO, MONTA, PRENEZ, PARTO, ABORTO]

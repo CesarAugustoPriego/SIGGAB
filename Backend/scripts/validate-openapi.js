@@ -13,8 +13,6 @@ const requiredOperations = [
   ['get', '/eventos-sanitarios'],
   ['patch', '/eventos-sanitarios/{id}/aprobar'],
   ['get', '/calendario-sanitario/alertas'],
-  ['get', '/lotes-productivos'],
-  ['patch', '/lotes-productivos/{id}/validar'],
   ['get', '/registros-peso'],
   ['patch', '/registros-peso/{id}/validar'],
   ['get', '/produccion-leche'],

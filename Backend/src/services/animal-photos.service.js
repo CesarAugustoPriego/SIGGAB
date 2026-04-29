@@ -1,10 +1,13 @@
 const fs = require('fs/promises');
 const path = require('path');
 const { randomUUID } = require('crypto');
+const {
+  ANIMAL_UPLOADS_DIR,
+  MANAGED_ANIMAL_PREFIX,
+  getManagedAnimalPhotoPath,
+} = require('../utils/upload-paths');
 
-const ROOT_DIR = path.resolve(__dirname, '..', '..');
-const UPLOADS_DIR = path.join(ROOT_DIR, 'uploads', 'animales');
-const MANAGED_PREFIX = '/uploads/animales/';
+const UPLOADS_DIR = ANIMAL_UPLOADS_DIR;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 const EXTENSIONS_BY_MIME = {
@@ -53,15 +56,7 @@ async function ensureUploadsDir() {
 }
 
 function toManagedFilePath(fotoUrl) {
-  if (!fotoUrl) return null;
-
-  const relativePath = String(fotoUrl).replace(/^https?:\/\/[^/]+/i, '');
-  if (!relativePath.startsWith(MANAGED_PREFIX)) return null;
-
-  const resolvedPath = path.resolve(ROOT_DIR, relativePath.slice(1));
-  if (!resolvedPath.startsWith(UPLOADS_DIR)) return null;
-
-  return resolvedPath;
+  return getManagedAnimalPhotoPath(fotoUrl)?.filePath || null;
 }
 
 async function removeManagedAnimalPhoto(fotoUrl) {
@@ -94,7 +89,7 @@ async function persistAnimalPhoto({ fotoBase64, numeroArete, currentFotoUrl = nu
   await fs.writeFile(filePath, buffer);
   await removeManagedAnimalPhoto(currentFotoUrl);
 
-  return `${MANAGED_PREFIX}${filename}`;
+  return `${MANAGED_ANIMAL_PREFIX}${filename}`;
 }
 
 module.exports = {

@@ -267,13 +267,12 @@ export function AprobacionesPage({ onGoHome, onGoUsersAdmin, onNavigateModule }:
                         <div className="productivo-table-wrap">
                           <table className="productivo-table">
                             <thead>
-                              <tr><th>Arete</th><th>Lote</th><th>Peso (kg)</th><th>Fecha</th><th>Acciones</th></tr>
+                              <tr><th>Arete</th><th>Peso (kg)</th><th>Fecha</th><th>Acciones</th></tr>
                             </thead>
                             <tbody>
                               {pesos.map(r => (
                                 <tr key={r.idRegistroPeso}>
                                   <td className="productivo-table-id">{r.animal?.numeroArete || 'N/A'}</td>
-                                  <td>#{r.idLote}</td>
                                   <td className="productivo-table-value">{Number(r.peso).toFixed(1)} kg</td>
                                   <td>{fmtDate(r.fechaRegistro)}</td>
                                   <td>
@@ -298,13 +297,12 @@ export function AprobacionesPage({ onGoHome, onGoUsersAdmin, onNavigateModule }:
                         <div className="productivo-table-wrap">
                           <table className="productivo-table">
                             <thead>
-                              <tr><th>Arete</th><th>Lote</th><th>Litros</th><th>Fecha</th><th>Acciones</th></tr>
+                              <tr><th>Arete</th><th>Litros</th><th>Fecha</th><th>Acciones</th></tr>
                             </thead>
                             <tbody>
                               {leches.map(r => (
                                 <tr key={r.idProduccion}>
                                   <td className="productivo-table-id">{r.animal?.numeroArete || 'N/A'}</td>
-                                  <td>#{r.idLote}</td>
                                   <td className="productivo-table-value">{Number(r.litrosProducidos).toFixed(1)} L</td>
                                   <td>{fmtDate(r.fechaRegistro)}</td>
                                   <td>
@@ -329,13 +327,12 @@ export function AprobacionesPage({ onGoHome, onGoUsersAdmin, onNavigateModule }:
                         <div className="productivo-table-wrap">
                           <table className="productivo-table">
                             <thead>
-                              <tr><th>Arete</th><th>Lote</th><th>Tipo</th><th>Observaciones</th><th>Fecha</th><th>Acciones</th></tr>
+                              <tr><th>Arete</th><th>Tipo</th><th>Observaciones</th><th>Fecha</th><th>Acciones</th></tr>
                             </thead>
                             <tbody>
                               {reproductivos.map(r => (
                                 <tr key={r.idEventoReproductivo}>
                                   <td className="productivo-table-id">{r.animal?.numeroArete || 'N/A'}</td>
-                                  <td>#{r.idLote}</td>
                                   <td><span className="productivo-tipo">{r.tipoEvento}</span></td>
                                   <td>{r.observaciones || '-'}</td>
                                   <td>{fmtDate(r.fechaEvento)}</td>

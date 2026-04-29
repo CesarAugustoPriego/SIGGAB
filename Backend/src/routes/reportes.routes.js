@@ -105,10 +105,6 @@ router.get(
  *         schema:
  *           type: integer
  *       - in: query
- *         name: idLote
- *         schema:
- *           type: integer
- *       - in: query
  *         name: formato
  *         schema:
  *           type: string

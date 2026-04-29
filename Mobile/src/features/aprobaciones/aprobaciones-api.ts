@@ -10,7 +10,7 @@ function mapPeso(p: any): InboxItem {
     title: `Registro de Peso: ${p.peso} kg`,
     subtitle: `Animal N° ${p.animal?.numeroArete || 'Desconocido'}`,
     date: p.fechaRegistro,
-    details: `Lote Productivo: #${p.idLote}`,
+    details: 'Pendiente de validacion administrativa',
   };
 }
 
@@ -22,7 +22,7 @@ function mapLeche(l: any): InboxItem {
     title: `Produccion Leche: ${l.litrosProducidos} L`,
     subtitle: `Animal N° ${l.animal?.numeroArete || 'Desconocido'}`,
     date: l.fechaRegistro,
-    details: `Lote Productivo: #${l.idLote}`,
+    details: 'Pendiente de validacion administrativa',
   };
 }
 

@@ -39,17 +39,9 @@ async function main() {
     });
     log += 'Created sanitario\n';
 
-    let lote = await prisma.loteValidacionProductiva.findFirst();
-    if (!lote) {
-      lote = await prisma.loteValidacionProductiva.create({
-        data: { fechaInicio: new Date(), fechaFin: new Date(), creadoPor: user.idUsuario, estado: 'PENDIENTE' }
-      });
-    }
-
     await prisma.registroPeso.create({
       data: {
         idAnimal: animal.idAnimal,
-        idLote: lote.idLote,
         peso: 500,
         fechaRegistro: new Date(),
         registradoPor: user.idUsuario,
@@ -60,7 +52,6 @@ async function main() {
     await prisma.produccionLeche.create({
       data: {
         idAnimal: animal.idAnimal,
-        idLote: lote.idLote,
         litrosProducidos: 30.5,
         fechaRegistro: new Date(),
         registradoPor: user.idUsuario,
@@ -71,7 +62,6 @@ async function main() {
     await prisma.eventoReproductivo.create({
       data: {
         idAnimal: animal.idAnimal,
-        idLote: lote.idLote,
         tipoEvento: 'PARTO',
         fechaEvento: new Date(),
         registradoPor: user.idUsuario,

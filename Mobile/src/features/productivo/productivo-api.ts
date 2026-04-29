@@ -1,7 +1,5 @@
 import { httpClient } from '@/src/lib/http-client';
 import type {
-  LoteProductivo,
-  CreateLoteInput,
   RegistroPeso,
   CreateRegistroPesoInput,
   ProduccionLeche,
@@ -22,17 +20,7 @@ function buildQuery(params: Record<string, string | number | undefined>) {
 }
 
 export const productivoApi = {
-  // ─── Lotes ──────────────────────────────────────────────────────────────────
-  getLotes: (estado?: string) => {
-    const q = buildQuery({ estado });
-    return httpClient.get<LoteProductivo[]>(`/lotes-productivos${q}`);
-  },
-
-  createLote: (payload: CreateLoteInput) =>
-    httpClient.post<LoteProductivo>('/lotes-productivos', payload),
-
-  // ─── Registro de peso ───────────────────────────────────────────────────────
-  getRegistrosPeso: (params: { idAnimal?: number; idLote?: number; estado?: string } = {}) => {
+  getRegistrosPeso: (params: { idAnimal?: number; estado?: string } = {}) => {
     const q = buildQuery(params);
     return httpClient.get<RegistroPeso[]>(`/registros-peso${q}`);
   },
@@ -40,8 +28,7 @@ export const productivoApi = {
   createRegistroPeso: (payload: CreateRegistroPesoInput) =>
     httpClient.post<RegistroPeso>('/registros-peso', payload),
 
-  // ─── Producción de leche ────────────────────────────────────────────────────
-  getProduccionLeche: (params: { idAnimal?: number; idLote?: number; estado?: string } = {}) => {
+  getProduccionLeche: (params: { idAnimal?: number; estado?: string } = {}) => {
     const q = buildQuery(params);
     return httpClient.get<ProduccionLeche[]>(`/produccion-leche${q}`);
   },
@@ -49,8 +36,7 @@ export const productivoApi = {
   createProduccionLeche: (payload: CreateProduccionLecheInput) =>
     httpClient.post<ProduccionLeche>('/produccion-leche', payload),
 
-  // ─── Eventos reproductivos ──────────────────────────────────────────────────
-  getEventosReproductivos: (params: { idAnimal?: number; idLote?: number; tipo?: string; estado?: string } = {}) => {
+  getEventosReproductivos: (params: { idAnimal?: number; tipo?: string; estado?: string } = {}) => {
     const q = buildQuery(params);
     return httpClient.get<EventoReproductivo[]>(`/eventos-reproductivos${q}`);
   },

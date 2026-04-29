@@ -120,8 +120,22 @@ function readFileAsDataUrl(file: File) {
 }
 
 function AnimalPhoto({ animal, className }: { animal: Animal | null; className: string }) {
-  if (animal?.fotoUrl) {
-    return <img src={animal.fotoUrl} alt={`Ejemplar ${animal.numeroArete}`} className={className} />;
+  const photoUrl = animal?.fotoUrl || '';
+  const [failedUrl, setFailedUrl] = useState('');
+
+  useEffect(() => {
+    setFailedUrl('');
+  }, [photoUrl]);
+
+  if (photoUrl && failedUrl !== photoUrl) {
+    return (
+      <img
+        src={photoUrl}
+        alt={`Ejemplar ${animal?.numeroArete || ''}`}
+        className={className}
+        onError={() => setFailedUrl(photoUrl)}
+      />
+    );
   }
 
   return (

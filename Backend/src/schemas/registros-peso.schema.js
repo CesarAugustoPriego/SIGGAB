@@ -2,7 +2,6 @@ const { z } = require('zod');
 
 const createRegistroPesoSchema = z.object({
   idAnimal: z.number({ required_error: 'El animal es obligatorio' }).int().positive(),
-  idLote: z.number({ required_error: 'El lote es obligatorio' }).int().positive(),
   peso: z.number({ required_error: 'El peso es obligatorio' }).positive('El peso debe ser un valor positivo'),
   fechaRegistro: z
     .string({ required_error: 'La fecha de registro es obligatoria' })

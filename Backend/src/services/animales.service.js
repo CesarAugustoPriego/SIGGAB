@@ -69,7 +69,6 @@ async function getHistorialByArete(numeroArete) {
     prisma.registroPeso.findMany({
       where: { idAnimal: animal.idAnimal },
       include: {
-        lote: true,
         registrador: { select: { idUsuario: true, nombreCompleto: true } },
       },
       orderBy: { fechaRegistro: 'desc' },
@@ -77,7 +76,6 @@ async function getHistorialByArete(numeroArete) {
     prisma.produccionLeche.findMany({
       where: { idAnimal: animal.idAnimal },
       include: {
-        lote: true,
         registrador: { select: { idUsuario: true, nombreCompleto: true } },
       },
       orderBy: { fechaRegistro: 'desc' },
@@ -85,7 +83,6 @@ async function getHistorialByArete(numeroArete) {
     prisma.eventoReproductivo.findMany({
       where: { idAnimal: animal.idAnimal },
       include: {
-        lote: true,
         registrador: { select: { idUsuario: true, nombreCompleto: true } },
       },
       orderBy: { fechaEvento: 'desc' },

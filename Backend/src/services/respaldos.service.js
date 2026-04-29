@@ -2,6 +2,7 @@ const fs = require('fs/promises');
 const path = require('path');
 const prisma = require('../repositories/prisma');
 const env = require('../config/env');
+const { getManagedAnimalPhotoPath } = require('../utils/upload-paths');
 
 const AUTO_BACKUP_SOURCE = 'AUTO_SCHEDULER';
 let backupIntervalHandle = null;
@@ -50,17 +51,59 @@ async function uploadBackupToCloud(filePath, fileName) {
   };
 }
 
+async function fileExists(filePath) {
+  return fs.access(filePath).then(() => true).catch(() => false);
+}
+
+async function collectAnimalPhotos(animales = []) {
+  const photosByUrl = new Map();
+  const normalizedAnimals = [];
+
+  for (const animal of animales) {
+    if (!animal.fotoUrl) {
+      normalizedAnimals.push(animal);
+      continue;
+    }
+
+    const managedPhoto = getManagedAnimalPhotoPath(animal.fotoUrl);
+    if (!managedPhoto) {
+      normalizedAnimals.push(animal);
+      continue;
+    }
+
+    if (!(await fileExists(managedPhoto.filePath))) {
+      normalizedAnimals.push({ ...animal, fotoUrl: null });
+      continue;
+    }
+
+    if (!photosByUrl.has(managedPhoto.relativeUrl)) {
+      const content = await fs.readFile(managedPhoto.filePath);
+      photosByUrl.set(managedPhoto.relativeUrl, {
+        relativeUrl: managedPhoto.relativeUrl,
+        sizeBytes: content.length,
+        contentBase64: content.toString('base64'),
+      });
+    }
+
+    normalizedAnimals.push({ ...animal, fotoUrl: managedPhoto.relativeUrl });
+  }
+
+  return {
+    animales: normalizedAnimals,
+    animalPhotos: Array.from(photosByUrl.values()),
+  };
+}
+
 async function collectBackupData() {
   const [
     roles,
     usuarios,
     bitacora,
     razas,
-    animales,
+    animalesRaw,
     tiposEventoSanitario,
     eventosSanitarios,
     calendarioSanitario,
-    lotesProductivos,
     registrosPeso,
     produccionLeche,
     eventosReproductivos,
@@ -80,7 +123,6 @@ async function collectBackupData() {
     prisma.tipoEventoSanitario.findMany(),
     prisma.eventoSanitario.findMany(),
     prisma.calendarioSanitario.findMany(),
-    prisma.loteValidacionProductiva.findMany(),
     prisma.registroPeso.findMany(),
     prisma.produccionLeche.findMany(),
     prisma.eventoReproductivo.findMany(),
@@ -93,16 +135,18 @@ async function collectBackupData() {
     prisma.detalleCompra.findMany(),
   ]);
 
+  const { animales, animalPhotos } = await collectAnimalPhotos(animalesRaw);
+
   return {
     roles,
     usuarios,
     bitacora,
     razas,
     animales,
+    animalPhotos,
     tiposEventoSanitario,
     eventosSanitarios,
     calendarioSanitario,
-    lotesProductivos,
     registrosPeso,
     produccionLeche,
     eventosReproductivos,
@@ -132,7 +176,8 @@ async function runBackup({ executedBy = null, source = 'MANUAL' } = {}) {
       generatedAt: new Date().toISOString(),
       source,
       executedBy,
-      version: '1.0.0',
+      version: '1.1.0',
+      includesAnimalPhotos: true,
     },
     data: await collectBackupData(),
   };

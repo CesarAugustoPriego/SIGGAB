@@ -5,7 +5,6 @@ async function getAll(req, res, next) {
   try {
     const filters = {};
     if (req.query.idAnimal) filters.idAnimal = req.query.idAnimal;
-    if (req.query.idLote) filters.idLote = req.query.idLote;
     if (req.query.estado) filters.estadoValidacion = req.query.estado;
     return sendSuccess(res, await registrosPesoService.getAll(filters), 'Registros de peso obtenidos');
   } catch (e) { next(e); }

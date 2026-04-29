@@ -3,14 +3,12 @@ const prisma = require('./prisma');
 async function findAll(filters = {}) {
   const where = {};
   if (filters.idAnimal) where.idAnimal = Number(filters.idAnimal);
-  if (filters.idLote) where.idLote = Number(filters.idLote);
   if (filters.tipoEvento) where.tipoEvento = filters.tipoEvento;
   if (filters.estadoValidacion) where.estadoValidacion = filters.estadoValidacion;
   return prisma.eventoReproductivo.findMany({
     where,
     include: {
       animal: { select: { idAnimal: true, numeroArete: true } },
-      lote: true,
       registrador: { select: { idUsuario: true, nombreCompleto: true } },
       validador: { select: { idUsuario: true, nombreCompleto: true } },
     },
@@ -23,7 +21,6 @@ async function findById(id) {
     where: { idEventoReproductivo: id },
     include: {
       animal: true,
-      lote: true,
       registrador: { select: { idUsuario: true, nombreCompleto: true } },
       validador: { select: { idUsuario: true, nombreCompleto: true } },
     },
@@ -33,7 +30,7 @@ async function findById(id) {
 async function create(data) {
   return prisma.eventoReproductivo.create({
     data,
-    include: { animal: { select: { idAnimal: true, numeroArete: true } }, lote: true },
+    include: { animal: { select: { idAnimal: true, numeroArete: true } } },
   });
 }
 
@@ -41,7 +38,7 @@ async function update(id, data) {
   return prisma.eventoReproductivo.update({
     where: { idEventoReproductivo: id },
     data,
-    include: { animal: { select: { idAnimal: true, numeroArete: true } }, lote: true },
+    include: { animal: { select: { idAnimal: true, numeroArete: true } } },
   });
 }
 

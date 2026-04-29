@@ -27,7 +27,6 @@ export interface ReporteProductivoFilters {
   fechaInicio?: string;
   fechaFin?: string;
   idAnimal?: number;
-  idLote?: number;
 }
 
 export interface ReporteAdministrativoFilters {
@@ -51,13 +50,6 @@ export interface TipoEventoReporteOption {
 export interface AnimalReporteOption {
   idAnimal: number;
   numeroArete: string;
-}
-
-export interface LoteReporteOption {
-  idLote: number;
-  fechaInicio: string;
-  fechaFin: string;
-  estado: EstadoRegistro;
 }
 
 export interface ReporteSanitarioRegistro {
@@ -95,7 +87,6 @@ export interface ReporteSanitario {
 export interface ReporteProductivoPesoRegistro {
   idRegistroPeso: number;
   idAnimal: number;
-  idLote: number;
   peso: NumericValue;
   fechaRegistro: string;
   estadoValidacion: EstadoRegistro;
@@ -108,7 +99,6 @@ export interface ReporteProductivoPesoRegistro {
 export interface ReporteProductivoLecheRegistro {
   idProduccion: number;
   idAnimal: number;
-  idLote: number;
   litrosProducidos: NumericValue;
   fechaRegistro: string;
   estadoValidacion: EstadoRegistro;
@@ -121,7 +111,6 @@ export interface ReporteProductivoLecheRegistro {
 export interface ReporteProductivoReproductivoRegistro {
   idEventoReproductivo: number;
   idAnimal: number;
-  idLote: number;
   tipoEvento: string;
   fechaEvento: string;
   observaciones: string | null;

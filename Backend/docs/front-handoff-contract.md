@@ -18,7 +18,7 @@
 - Ganado: `/animales`, `/animales/:id`, `/animales/arete/:numero`, `/animales/:id/baja`.
 - Escaneo/historial: `/animales/arete/:numero/historial`.
 - Sanitario: `/eventos-sanitarios`, `/eventos-sanitarios/:id/aprobar`, `/calendario-sanitario`.
-- Productivo: `/lotes-productivos`, `/registros-peso`, `/produccion-leche`, `/eventos-reproductivos`.
+- Productivo: `/registros-peso`, `/produccion-leche`, `/eventos-reproductivos`.
 - Inventario: `/insumos`, `/insumos/tipos`, `/insumos/movimientos`.
 - Compras: `/solicitudes-compra`, `/solicitudes-compra/:id/aprobar`, `/compras-realizadas`.
 
@@ -28,7 +28,7 @@
   - `GET /dashboard/bitacora` (roles Propietario/Administrador).
 - Reportes configurables:
   - `GET /reportes/sanitario?fechaInicio&fechaFin&formato=json|csv|pdf`
-  - `GET /reportes/productivo?fechaInicio&fechaFin&idAnimal&idLote&formato=json|csv|pdf`
+  - `GET /reportes/productivo?fechaInicio&fechaFin&idAnimal&formato=json|csv|pdf`
   - `GET /reportes/administrativo?fechaInicio&fechaFin&formato=json|csv|pdf`
   - `GET /reportes/comparativo?modulo&periodoAInicio&periodoAFin&periodoBInicio&periodoBFin&formato=json|csv|pdf`
 - Respaldos:

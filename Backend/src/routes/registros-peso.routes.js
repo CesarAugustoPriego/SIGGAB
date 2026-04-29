@@ -32,10 +32,6 @@ router.use(auth);
  *         schema:
  *           type: integer
  *       - in: query
- *         name: idLote
- *         schema:
- *           type: integer
- *       - in: query
  *         name: estado
  *         schema:
  *           type: string
@@ -52,11 +48,9 @@ router.use(auth);
  *         application/json:
  *           schema:
  *             type: object
- *             required: [idAnimal, idLote, peso, fechaRegistro]
+ *             required: [idAnimal, peso, fechaRegistro]
  *             properties:
  *               idAnimal:
- *                 type: integer
- *               idLote:
  *                 type: integer
  *               peso:
  *                 type: number

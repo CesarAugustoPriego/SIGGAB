@@ -5,6 +5,7 @@ require('dotenv').config();
 const fs = require('fs/promises');
 const path = require('path');
 const prisma = require('../src/repositories/prisma');
+const { getManagedAnimalPhotoPath } = require('../src/utils/upload-paths');
 
 function parseArgs(argv) {
   const parsed = {
@@ -59,10 +60,10 @@ function computeCounts(data) {
     bitacora: ensureArray(data.bitacora).length,
     razas: ensureArray(data.razas).length,
     animales: ensureArray(data.animales).length,
+    animalPhotos: ensureArray(data.animalPhotos).length,
     tiposEventoSanitario: ensureArray(data.tiposEventoSanitario).length,
     eventosSanitarios: ensureArray(data.eventosSanitarios).length,
     calendarioSanitario: ensureArray(data.calendarioSanitario).length,
-    lotesProductivos: ensureArray(data.lotesProductivos).length,
     registrosPeso: ensureArray(data.registrosPeso).length,
     produccionLeche: ensureArray(data.produccionLeche).length,
     eventosReproductivos: ensureArray(data.eventosReproductivos).length,
@@ -76,6 +77,51 @@ function computeCounts(data) {
   };
 }
 
+function withoutLegacyLoteFields(record) {
+  if (!record || typeof record !== 'object') return record;
+  const { idLote: _idLote, lote: _lote, ...rest } = record;
+  return rest;
+}
+
+function normalizeBackupAnimalPhotos(data) {
+  const photos = [];
+  const photoUrls = new Set();
+
+  for (const photo of ensureArray(data.animalPhotos)) {
+    const managedPhoto = getManagedAnimalPhotoPath(photo?.relativeUrl);
+    if (!managedPhoto || typeof photo?.contentBase64 !== 'string') continue;
+
+    photos.push({
+      relativeUrl: managedPhoto.relativeUrl,
+      filePath: managedPhoto.filePath,
+      contentBase64: photo.contentBase64,
+    });
+    photoUrls.add(managedPhoto.relativeUrl);
+  }
+
+  const animales = ensureArray(data.animales).map((animal) => {
+    const managedPhoto = getManagedAnimalPhotoPath(animal?.fotoUrl);
+    if (!managedPhoto) return animal;
+
+    return {
+      ...animal,
+      fotoUrl: photoUrls.has(managedPhoto.relativeUrl) ? managedPhoto.relativeUrl : null,
+    };
+  });
+
+  return { animales, photos };
+}
+
+async function restoreAnimalPhotoFiles(photos) {
+  for (const photo of photos) {
+    const content = Buffer.from(photo.contentBase64, 'base64');
+    if (!content.length) continue;
+
+    await fs.mkdir(path.dirname(photo.filePath), { recursive: true });
+    await fs.writeFile(photo.filePath, content);
+  }
+}
+
 async function resetSerialSequences(tx) {
   const sequenceConfig = [
     ['roles', 'id_rol'],
@@ -86,7 +132,6 @@ async function resetSerialSequences(tx) {
     ['tipos_evento_sanitario', 'id_tipo_evento'],
     ['eventos_sanitarios', 'id_evento'],
     ['calendario_sanitario', 'id_calendario'],
-    ['lote_validacion_productiva', 'id_lote'],
     ['registro_peso', 'id_registro_peso'],
     ['produccion_leche', 'id_produccion'],
     ['eventos_reproductivos', 'id_evento_reproductivo'],
@@ -113,6 +158,9 @@ async function resetSerialSequences(tx) {
 }
 
 async function restoreBackup(data) {
+  const { animales, photos } = normalizeBackupAnimalPhotos(data);
+  await restoreAnimalPhotoFiles(photos);
+
   await prisma.$transaction(async (tx) => {
     // Limpieza en orden inverso para respetar FK.
     await tx.detalleCompra.deleteMany();
@@ -125,7 +173,6 @@ async function restoreBackup(data) {
     await tx.eventoReproductivo.deleteMany();
     await tx.produccionLeche.deleteMany();
     await tx.registroPeso.deleteMany();
-    await tx.loteValidacionProductiva.deleteMany();
     await tx.calendarioSanitario.deleteMany();
     await tx.eventoSanitario.deleteMany();
     await tx.tipoEventoSanitario.deleteMany();
@@ -146,8 +193,8 @@ async function restoreBackup(data) {
     if (ensureArray(data.razas).length) {
       await tx.raza.createMany({ data: data.razas });
     }
-    if (ensureArray(data.animales).length) {
-      await tx.animal.createMany({ data: data.animales });
+    if (animales.length) {
+      await tx.animal.createMany({ data: animales });
     }
     if (ensureArray(data.tiposEventoSanitario).length) {
       await tx.tipoEventoSanitario.createMany({ data: data.tiposEventoSanitario });
@@ -158,17 +205,14 @@ async function restoreBackup(data) {
     if (ensureArray(data.calendarioSanitario).length) {
       await tx.calendarioSanitario.createMany({ data: data.calendarioSanitario });
     }
-    if (ensureArray(data.lotesProductivos).length) {
-      await tx.loteValidacionProductiva.createMany({ data: data.lotesProductivos });
-    }
     if (ensureArray(data.registrosPeso).length) {
-      await tx.registroPeso.createMany({ data: data.registrosPeso });
+      await tx.registroPeso.createMany({ data: data.registrosPeso.map(withoutLegacyLoteFields) });
     }
     if (ensureArray(data.produccionLeche).length) {
-      await tx.produccionLeche.createMany({ data: data.produccionLeche });
+      await tx.produccionLeche.createMany({ data: data.produccionLeche.map(withoutLegacyLoteFields) });
     }
     if (ensureArray(data.eventosReproductivos).length) {
-      await tx.eventoReproductivo.createMany({ data: data.eventosReproductivos });
+      await tx.eventoReproductivo.createMany({ data: data.eventosReproductivos.map(withoutLegacyLoteFields) });
     }
     if (ensureArray(data.tiposInsumo).length) {
       await tx.tipoInsumo.createMany({ data: data.tiposInsumo });

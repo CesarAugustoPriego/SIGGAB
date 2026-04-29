@@ -21,7 +21,6 @@ const sanitarioReporteSchema = baseReporteSchema.extend({
 
 const productivoReporteSchema = baseReporteSchema.extend({
   idAnimal: z.coerce.number().int().positive().optional(),
-  idLote: z.coerce.number().int().positive().optional(),
 });
 
 const administrativoReporteSchema = baseReporteSchema;

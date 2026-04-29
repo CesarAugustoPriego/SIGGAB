@@ -1,9 +1,5 @@
 import { httpClient } from '../../lib/http-client';
 import type {
-  LoteProductivo,
-  LoteFilters,
-  CreateLoteInput,
-  ValidarLoteInput,
   RegistroPeso,
   RegistroPesoFilters,
   CreateRegistroPesoInput,
@@ -31,24 +27,8 @@ function buildQuery(params: Record<string, string | number | undefined>) {
 }
 
 export const productivoApi = {
-  // ─── Lotes ──────────────────────────────────────────────────────────────────
-  getLotes: (filters: LoteFilters = {}) => {
-    const q = buildQuery({ estado: filters.estado });
-    return httpClient.get<LoteProductivo[]>(`/lotes-productivos${q}`);
-  },
-
-  getLoteById: (id: number) =>
-    httpClient.get<LoteProductivo>(`/lotes-productivos/${id}`),
-
-  createLote: (payload: CreateLoteInput) =>
-    httpClient.post<LoteProductivo>('/lotes-productivos', payload),
-
-  validarLote: (id: number, payload: ValidarLoteInput) =>
-    httpClient.patch<LoteProductivo>(`/lotes-productivos/${id}/validar`, payload),
-
-  // ─── Registro de peso ───────────────────────────────────────────────────────
   getRegistrosPeso: (filters: RegistroPesoFilters = {}) => {
-    const q = buildQuery({ idAnimal: filters.idAnimal, idLote: filters.idLote, estado: filters.estado });
+    const q = buildQuery({ idAnimal: filters.idAnimal, estado: filters.estado });
     return httpClient.get<RegistroPeso[]>(`/registros-peso${q}`);
   },
 
@@ -61,9 +41,8 @@ export const productivoApi = {
   validarRegistroPeso: (id: number, payload: ValidarRegistroInput) =>
     httpClient.patch<RegistroPeso>(`/registros-peso/${id}/validar`, payload),
 
-  // ─── Producción de leche ────────────────────────────────────────────────────
   getProduccionLeche: (filters: ProduccionLecheFilters = {}) => {
-    const q = buildQuery({ idAnimal: filters.idAnimal, idLote: filters.idLote, estado: filters.estado });
+    const q = buildQuery({ idAnimal: filters.idAnimal, estado: filters.estado });
     return httpClient.get<ProduccionLeche[]>(`/produccion-leche${q}`);
   },
 
@@ -76,9 +55,8 @@ export const productivoApi = {
   validarProduccionLeche: (id: number, payload: ValidarRegistroInput) =>
     httpClient.patch<ProduccionLeche>(`/produccion-leche/${id}/validar`, payload),
 
-  // ─── Eventos reproductivos ──────────────────────────────────────────────────
   getEventosReproductivos: (filters: EventoReproductivoFilters = {}) => {
-    const q = buildQuery({ idAnimal: filters.idAnimal, idLote: filters.idLote, tipo: filters.tipo, estado: filters.estado });
+    const q = buildQuery({ idAnimal: filters.idAnimal, tipo: filters.tipo, estado: filters.estado });
     return httpClient.get<EventoReproductivo[]>(`/eventos-reproductivos${q}`);
   },
 

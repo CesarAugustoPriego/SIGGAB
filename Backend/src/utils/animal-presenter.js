@@ -1,3 +1,6 @@
+const fs = require('fs');
+const { getManagedAnimalPhotoPath } = require('./upload-paths');
+
 function ensureLeadingSlash(value) {
   if (!value) return value;
   return value.startsWith('/') ? value : `/${value}`;
@@ -32,6 +35,11 @@ function toAbsolutePhotoUrl(req, fotoUrl) {
   const host = req.get('host');
   const rawValue = String(fotoUrl).trim();
   if (!rawValue) return null;
+
+  const managedPhoto = getManagedAnimalPhotoPath(rawValue);
+  if (managedPhoto && !fs.existsSync(managedPhoto.filePath)) {
+    return null;
+  }
 
   if (/^https?:\/\//i.test(rawValue)) {
     try {

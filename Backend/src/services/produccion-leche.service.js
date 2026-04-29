@@ -1,6 +1,5 @@
 const produccionLecheRepository = require('../repositories/produccion-leche.repository');
 const animalesRepository = require('../repositories/animales.repository');
-const lotesRepository = require('../repositories/lotes-productivos.repository');
 const { registrarAccion } = require('./bitacora.service');
 
 async function getAll(filters = {}) {
@@ -24,12 +23,8 @@ async function create(data, idUsuario) {
     throw Object.assign(new Error('Solo se puede registrar produccion de leche en hembras.'), { statusCode: 400 });
   }
 
-  const lote = await lotesRepository.findById(data.idLote);
-  if (!lote) throw Object.assign(new Error('Lote de validación no encontrado'), { statusCode: 400 });
-
   const registro = await produccionLecheRepository.create({
     idAnimal: data.idAnimal,
-    idLote: data.idLote,
     litrosProducidos: data.litrosProducidos,
     fechaRegistro: new Date(data.fechaRegistro),
     registradoPor: idUsuario,

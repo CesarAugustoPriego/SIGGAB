@@ -13,7 +13,6 @@ const calendarioSanitarioRoutes = require('./calendario-sanitario.routes');
 const insumosRoutes = require('./insumos.routes');
 const solicitudesCompraRoutes = require('./solicitudes-compra.routes');
 const comprasRealizadasRoutes = require('./compras-realizadas.routes');
-const lotesProductivosRoutes = require('./lotes-productivos.routes');
 const registrosPesoRoutes = require('./registros-peso.routes');
 const produccionLecheRoutes = require('./produccion-leche.routes');
 const eventosReproductivosRoutes = require('./eventos-reproductivos.routes');
@@ -41,7 +40,6 @@ router.use('/solicitudes-compra', solicitudesCompraRoutes);
 router.use('/compras-realizadas', comprasRealizadasRoutes);
 
 // Fase 2: Productivo
-router.use('/lotes-productivos', lotesProductivosRoutes);
 router.use('/registros-peso', registrosPesoRoutes);
 router.use('/produccion-leche', produccionLecheRoutes);
 router.use('/eventos-reproductivos', eventosReproductivosRoutes);

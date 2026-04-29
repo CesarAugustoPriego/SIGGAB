@@ -24,7 +24,7 @@ Iniciar desarrollo Front sin friccion sobre modulos ya estables (Fase 1 y Fase 2
 
 ## Fase B - Operativo Front (Semana 2)
 1. Productivo:
-   - Lotes, peso, leche, eventos reproductivos
+   - Peso, leche y eventos reproductivos con validacion individual
    - Flujos de validacion por rol (admin)
 2. Inventario y compras:
    - Tipos, insumos, movimientos

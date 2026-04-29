@@ -37,11 +37,6 @@ export function canListProductivo(roleName: string | undefined) {
   ]);
 }
 
-/** Puede crear lotes */
-export function canCreateLote(roleName: string | undefined) {
-  return hasRole(roleName, ['produccion', 'administrador']);
-}
-
 /** Puede crear registros (peso, leche) */
 export function canCreateRegistro(roleName: string | undefined) {
   return hasRole(roleName, ['produccion', 'campo', 'administrador']);
@@ -52,7 +47,7 @@ export function canEditRegistro(roleName: string | undefined) {
   return hasRole(roleName, ['produccion']);
 }
 
-/** Puede validar (aprobar/rechazar) registros y lotes */
+/** Puede validar (aprobar/rechazar) registros */
 export function canValidarRegistro(roleName: string | undefined) {
   return hasRole(roleName, ['administrador']);
 }
