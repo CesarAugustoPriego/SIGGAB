@@ -4,7 +4,6 @@ import { Feather } from '@expo/vector-icons';
 import {
   ActivityIndicator,
   Alert,
-  Dimensions,
   Image,
   Pressable,
   ScrollView,
@@ -13,7 +12,6 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { BarChart, PieChart } from 'react-native-gifted-charts';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/src/features/auth/auth-context';
@@ -46,8 +44,6 @@ interface TabConfig {
   label: string;
 }
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
-const CHART_WIDTH = Math.max(260, Math.min(SCREEN_WIDTH - 54, 410));
 const COLORS = {
   blue: '#2563EB',
   green: '#15803D',
@@ -60,7 +56,6 @@ const COLORS = {
   border: '#DDE4DD',
   panel: '#F5F7F5',
 };
-const PALETTE = [COLORS.blue, COLORS.green, COLORS.amber, COLORS.red, COLORS.purple, COLORS.teal];
 
 const today = new Date();
 const todayIso = today.toISOString().slice(0, 10);
@@ -77,12 +72,6 @@ function formatNumber(value: number | string | null | undefined, digits = 0) {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,
   });
-}
-
-function statusColor(status: string) {
-  if (status === 'CRITICO' || status === 'ENFERMO') return COLORS.red;
-  if (status === 'BAJO' || status === 'EN_TRATAMIENTO') return COLORS.amber;
-  return COLORS.green;
 }
 
 function isValidPeriod(period: PeriodoFilters) {
@@ -287,37 +276,6 @@ export function ReportesHomeScreen() {
     }));
   });
 
-  const renderBar = (data: { value: number; label: string; frontColor?: string }[], height = 220) => (
-    <View style={styles.chartBox}>
-      {data.length === 0 ? <EmptyState text="Sin datos para graficar." /> : (
-        <BarChart
-          data={data}
-          width={CHART_WIDTH}
-          height={height}
-          barWidth={34}
-          spacing={24}
-          roundedTop
-          roundedBottom={false}
-          noOfSections={4}
-          yAxisThickness={0}
-          xAxisThickness={1}
-          xAxisColor="#D7DED7"
-          yAxisTextStyle={styles.axisText}
-          xAxisLabelTextStyle={styles.axisText}
-          isAnimated
-        />
-      )}
-    </View>
-  );
-
-  const renderComparativoChart = (report: ReporteComparativoFechas | ReportePerdidasComparativo | null) => {
-    const data = (report?.metricas || []).flatMap((item, index) => ([
-      { value: Number(item.periodoA || 0), label: `${item.label} P1`, frontColor: PALETTE[index % PALETTE.length] },
-      { value: Number(item.periodoB || 0), label: `${item.label} P2`, frontColor: PALETTE[(index + 1) % PALETTE.length] },
-    ])).slice(0, 8);
-    return renderBar(data, 240);
-  };
-
   if (!canView) {
     return (
       <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
@@ -434,7 +392,6 @@ export function ReportesHomeScreen() {
                   <Kpi label="Bajos" value={formatNumber(inventario.resumen.bajos)} tone={COLORS.amber} />
                   <Kpi label="Criticos" value={formatNumber(inventario.resumen.criticos)} tone={COLORS.red} />
                 </View>
-                {renderBar(inventario.estados.map((item) => ({ value: item.total, label: item.estado, frontColor: statusColor(item.estado) })))}
                 <ReportDownloads
                   busyKey={downloadKey}
                   baseKey="inventario"
@@ -455,7 +412,6 @@ export function ReportesHomeScreen() {
                   <Kpi label="Tratamiento" value={formatNumber(sanitario.resumen.enTratamiento)} tone={COLORS.amber} />
                   <Kpi label="Enfermos" value={formatNumber(sanitario.resumen.enfermos)} tone={COLORS.red} />
                 </View>
-                {renderBar(sanitario.distribucion.map((item) => ({ value: item.total, label: item.label, frontColor: statusColor(item.estado) })))}
                 <ReportDownloads
                   busyKey={downloadKey}
                   baseKey="sanitario"
@@ -476,7 +432,6 @@ export function ReportesHomeScreen() {
                   <Kpi label="Promedio" value={`${formatNumber(productividad.resumen.pesoPromedioKg, 1)} kg`} />
                   <Kpi label="GPD" value={`${formatNumber(productividad.resumen.gpdPromedioKgDia, 2)} kg/dia`} tone={COLORS.green} />
                 </View>
-                {renderBar(productividad.metricas.map((item, index) => ({ value: item.value, label: item.label, frontColor: index === 2 ? COLORS.green : COLORS.blue })))}
                 <ReportDownloads
                   busyKey={downloadKey}
                   baseKey="productividad"
@@ -491,7 +446,6 @@ export function ReportesHomeScreen() {
           <View style={styles.card}>
             {comparativo ? (
               <>
-                {renderComparativoChart(comparativo)}
                 <ReportDownloads
                   busyKey={downloadKey}
                   baseKey="comparativo"
@@ -509,23 +463,6 @@ export function ReportesHomeScreen() {
                 <View style={styles.kpiGrid}>
                   <Kpi label="Bajas" value={formatNumber(perdidas.resumen.bajasTotales)} tone={COLORS.red} />
                   <Kpi label="Peso perdido" value={`${formatNumber(perdidas.resumen.pesoTotalPerdidoKg, 1)} kg`} tone={COLORS.amber} />
-                </View>
-                <View style={styles.chartBox}>
-                  {perdidas.porMotivo.length === 0 ? <EmptyState text="Sin bajas en el periodo." /> : (
-                    <PieChart
-                      data={perdidas.porMotivo.map((item, index) => ({
-                        value: item.pesoKg,
-                        text: item.motivo,
-                        color: PALETTE[index % PALETTE.length],
-                      }))}
-                      donut
-                      radius={92}
-                      innerRadius={48}
-                      showText
-                      textColor="#1A241A"
-                      textSize={10}
-                    />
-                  )}
                 </View>
                 <ReportDownloads
                   busyKey={downloadKey}
@@ -654,13 +591,6 @@ const styles = StyleSheet.create({
   },
   kpiLabel: { color: COLORS.muted, fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
   kpiValue: { fontSize: 17, fontWeight: '900', marginTop: 2 },
-  chartBox: {
-    minHeight: 240,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  axisText: { color: COLORS.muted, fontSize: 9 },
   emptyText: {
     color: COLORS.muted,
     textAlign: 'center',
