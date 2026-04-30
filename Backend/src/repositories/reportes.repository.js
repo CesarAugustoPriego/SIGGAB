@@ -7,6 +7,12 @@ function buildDateFilter(fechaInicio, fechaFin) {
   };
 }
 
+function buildEndDateFilter(fechaFin) {
+  return {
+    lte: new Date(fechaFin),
+  };
+}
+
 async function getSanitario(filters) {
   const where = {
     fechaEvento: buildDateFilter(filters.fechaInicio, filters.fechaFin),
@@ -148,10 +154,97 @@ async function getProductivoSummary(fechaInicio, fechaFin) {
   };
 }
 
+async function getInventarioVisual() {
+  return prisma.insumo.findMany({
+    where: { activo: true },
+    include: { tipoInsumo: true },
+    orderBy: { nombreInsumo: 'asc' },
+  });
+}
+
+async function getSanitarioHato(filters) {
+  const eventoRange = filters.fechaInicio
+    ? buildDateFilter(filters.fechaInicio, filters.fechaFin)
+    : buildEndDateFilter(filters.fechaFin);
+
+  return prisma.animal.findMany({
+    where: { estadoActual: 'ACTIVO' },
+    include: {
+      raza: true,
+      eventosSanitarios: {
+        where: {
+          fechaEvento: eventoRange,
+          estadoAprobacion: 'APROBADO',
+        },
+        include: { tipoEvento: true },
+        orderBy: { fechaEvento: 'desc' },
+        take: 1,
+      },
+      registrosPeso: {
+        where: {
+          fechaRegistro: buildEndDateFilter(filters.fechaFin),
+          estadoValidacion: 'APROBADO',
+        },
+        orderBy: { fechaRegistro: 'desc' },
+        take: 1,
+      },
+    },
+    orderBy: { numeroArete: 'asc' },
+  });
+}
+
+async function getProductividad(filters) {
+  const where = { estadoActual: 'ACTIVO' };
+  if (filters.edadMinimaMeses !== undefined) {
+    where.edadEstimada = { gte: Number(filters.edadMinimaMeses) };
+  }
+
+  return prisma.animal.findMany({
+    where,
+    include: {
+      raza: true,
+      registrosPeso: {
+        where: {
+          fechaRegistro: buildEndDateFilter(filters.fechaFin),
+          estadoValidacion: 'APROBADO',
+        },
+        orderBy: { fechaRegistro: 'asc' },
+      },
+    },
+    orderBy: { numeroArete: 'asc' },
+  });
+}
+
+async function getBajas(filters) {
+  const where = {
+    estadoActual: { not: 'ACTIVO' },
+    fechaBaja: buildDateFilter(filters.fechaInicio, filters.fechaFin),
+  };
+
+  return prisma.animal.findMany({
+    where,
+    include: {
+      raza: true,
+      registrosPeso: {
+        where: {
+          fechaRegistro: buildEndDateFilter(filters.fechaFin),
+          estadoValidacion: 'APROBADO',
+        },
+        orderBy: { fechaRegistro: 'desc' },
+      },
+    },
+    orderBy: { fechaBaja: 'desc' },
+  });
+}
+
 module.exports = {
   getSanitario,
   getProductivo,
   getAdministrativo,
   getSanitarioSummary,
   getProductivoSummary,
+  getInventarioVisual,
+  getSanitarioHato,
+  getProductividad,
+  getBajas,
 };

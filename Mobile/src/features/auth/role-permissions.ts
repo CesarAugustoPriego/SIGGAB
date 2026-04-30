@@ -166,6 +166,43 @@ export function canViewReportes(roleName: string | undefined) {
   ]);
 }
 
+export function canViewReporteInventario(roleName: string | undefined) {
+  return hasRole(roleName, ['propietario', 'administrador', 'almacen']);
+}
+
+export function canViewReporteSanitario(roleName: string | undefined) {
+  return hasRole(roleName, [
+    'propietario',
+    'administrador',
+    'medico veterinario',
+    'veterinario',
+    'almacen',
+  ]);
+}
+
+export function canViewReporteProductivo(roleName: string | undefined) {
+  return hasRole(roleName, ['propietario', 'administrador', 'produccion']);
+}
+
+export function canViewReporteComparativo(roleName: string | undefined) {
+  return hasRole(roleName, [
+    'propietario',
+    'administrador',
+    'medico veterinario',
+    'veterinario',
+    'produccion',
+  ]);
+}
+
+export function canViewReportePerdidas(roleName: string | undefined) {
+  return hasRole(roleName, [
+    'propietario',
+    'administrador',
+    'medico veterinario',
+    'veterinario',
+  ]);
+}
+
 export function canApproveProductivo(roleName: string | undefined) {
   return isAdministratorRole(roleName);
 }

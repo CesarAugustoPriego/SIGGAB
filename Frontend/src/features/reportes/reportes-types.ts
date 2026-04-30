@@ -4,6 +4,7 @@ export type EstadoRegistro = 'PENDIENTE' | 'APROBADO' | 'RECHAZADO';
 export type EstadoSolicitud = 'PENDIENTE' | 'APROBADA' | 'RECHAZADA';
 export type TipoMovimiento = 'ENTRADA' | 'SALIDA';
 export type ModuloComparativo = 'sanitario' | 'productivo';
+export type ModuloComparativoFechas = 'productividad' | 'sanitario' | 'perdidas';
 export type NumericValue = number | string;
 
 export interface ReportPeriod {
@@ -34,12 +35,52 @@ export interface ReporteAdministrativoFilters {
   fechaFin?: string;
 }
 
+export interface ReporteInventarioFilters {
+  fechaInicio?: string;
+  fechaFin?: string;
+  categoria?: string;
+}
+
+export interface ReporteSanitarioHatoFilters {
+  fechaInicio?: string;
+  fechaFin?: string;
+  estado?: 'SANO' | 'EN_TRATAMIENTO' | 'ENFERMO';
+}
+
+export interface ReporteProductividadFilters {
+  fechaInicio?: string;
+  fechaFin?: string;
+  edadMinimaMeses?: number;
+}
+
 export interface ReporteComparativoFilters {
   modulo: ModuloComparativo;
   periodoAInicio: string;
   periodoAFin: string;
   periodoBInicio: string;
   periodoBFin: string;
+}
+
+export interface ReporteComparativoFechasFilters {
+  modulo: ModuloComparativoFechas;
+  periodoAInicio: string;
+  periodoAFin: string;
+  periodoBInicio: string;
+  periodoBFin: string;
+  edadMinimaMeses?: number;
+}
+
+export interface ReportePeriodosFilters {
+  periodoAInicio: string;
+  periodoAFin: string;
+  periodoBInicio: string;
+  periodoBFin: string;
+}
+
+export interface ReportePerdidasFilters {
+  fechaInicio?: string;
+  fechaFin?: string;
+  motivo?: string;
 }
 
 export interface TipoEventoReporteOption {
@@ -241,4 +282,132 @@ export interface ReporteComparativo {
   periodoA: Record<string, number | string>;
   periodoB: Record<string, number | string>;
   variacion: Record<string, ReporteComparativoVariacion>;
+}
+
+export interface ReporteInventarioInsumo {
+  idInsumo: number;
+  nombre: string;
+  categoria: string;
+  stockActual: number;
+  unidadMedida: string;
+  estado: 'OPTIMO' | 'BAJO' | 'CRITICO';
+  puntoReorden: number | null;
+  caducidad: string | null;
+}
+
+export interface ReporteInventario {
+  tipo: 'inventario';
+  periodo: ReportPeriod;
+  resumen: {
+    totalInsumos: number;
+    criticos: number;
+    bajos: number;
+    optimos: number;
+    stockTotalUnidades: number;
+  };
+  categorias: { categoria: string; totalInsumos: number; stockTotal: number }[];
+  estados: { estado: string; total: number }[];
+  insumos: ReporteInventarioInsumo[];
+}
+
+export interface ReporteSanitarioHatoAnimal {
+  idAnimal: number;
+  arete: string;
+  raza: string;
+  edadMeses: number;
+  sexo: string;
+  pesoKg: number;
+  estadoSanitario: 'SANO' | 'EN_TRATAMIENTO' | 'ENFERMO';
+  estadoSanitarioLabel: string;
+  tratamiento: string;
+}
+
+export interface ReporteSanitarioHato {
+  tipo: 'sanitario-hato';
+  periodo: ReportPeriod;
+  resumen: {
+    totalEvaluados: number;
+    sanos: number;
+    enTratamiento: number;
+    enfermos: number;
+  };
+  distribucion: { estado: string; label: string; total: number }[];
+  animales: ReporteSanitarioHatoAnimal[];
+}
+
+export interface ReporteMetricaComparativa {
+  label: string;
+  periodoA: number;
+  periodoB: number;
+  delta: number;
+  porcentaje: number;
+  unit: string;
+}
+
+export interface ReporteSanitarioComparativo {
+  tipo: 'sanitario-comparativo';
+  periodoA: Record<string, number | string>;
+  periodoB: Record<string, number | string>;
+  metricas: ReporteMetricaComparativa[];
+}
+
+export interface ReporteProductividadAnimal {
+  idAnimal: number;
+  arete: string;
+  raza: string;
+  edadMeses: number;
+  pesoKg: number;
+  gpdKgDia: number | null;
+}
+
+export interface ReporteProductividad {
+  tipo: 'productividad';
+  periodo: ReportPeriod;
+  filtros: { edadMinimaMeses: number };
+  resumen: {
+    totalAnimales: number;
+    pesoTotalKg: number;
+    pesoPromedioKg: number;
+    gpdPromedioKgDia: number;
+  };
+  metricas: { label: string; value: number; unit: string }[];
+  animales: ReporteProductividadAnimal[];
+}
+
+export interface ReporteComparativoFechas {
+  tipo: 'comparativo-fechas' | 'sanitario-comparativo' | 'perdidas-comparativo';
+  modulo?: ModuloComparativoFechas;
+  periodoA: Record<string, number | string>;
+  periodoB: Record<string, number | string>;
+  metricas: ReporteMetricaComparativa[];
+}
+
+export interface ReportePerdidas {
+  tipo: 'perdidas';
+  periodo: ReportPeriod;
+  resumen: {
+    bajasTotales: number;
+    pesoTotalPerdidoKg: number;
+    filtroActivo: string;
+  };
+  porMotivo: { motivo: string; bajas: number; pesoKg: number; porcentaje: number }[];
+  porPeriodo: { periodo: string; bajas: number; pesoKg: number }[];
+  bajas: {
+    idAnimal: number;
+    arete: string;
+    fechaBaja: string;
+    estadoActual: string;
+    motivo: string;
+    motivoDetalle: string;
+    pesoKg: number;
+    raza: string;
+  }[];
+}
+
+export interface ReportePerdidasComparativo {
+  tipo: 'perdidas-comparativo';
+  periodoA: Record<string, number | string>;
+  periodoB: Record<string, number | string>;
+  metricas: ReporteMetricaComparativa[];
+  motivos: { motivo: string; periodoA: number; periodoB: number; pesoA: number; pesoB: number }[];
 }

@@ -9,6 +9,13 @@ const {
   productivoReporteSchema,
   administrativoReporteSchema,
   comparativoReporteSchema,
+  inventarioReporteSchema,
+  sanitarioHatoReporteSchema,
+  sanitarioComparativoReporteSchema,
+  productividadReporteSchema,
+  comparativoFechasReporteSchema,
+  perdidasReporteSchema,
+  perdidasComparativoReporteSchema,
 } = require('../schemas/reportes.schema');
 
 const router = Router();
@@ -27,6 +34,62 @@ const logReporte = (tipo) => loggingMiddleware({
   getIdRegistro: () => 0,
   getDetalles: (req) => ({ tipo, filtros: req.query }),
 });
+
+router.get(
+  '/inventario',
+  requireRole('Propietario', 'Administrador', 'Almacen'),
+  validate(inventarioReporteSchema, 'query'),
+  logReporte('inventario'),
+  ctrl.getInventario
+);
+
+router.get(
+  '/sanitario-hato',
+  requireRole('Propietario', 'Administrador', 'Medico Veterinario', 'Almacen'),
+  validate(sanitarioHatoReporteSchema, 'query'),
+  logReporte('sanitario-hato'),
+  ctrl.getSanitarioHato
+);
+
+router.get(
+  '/sanitario-comparativo',
+  requireRole('Propietario', 'Administrador', 'Medico Veterinario'),
+  validate(sanitarioComparativoReporteSchema, 'query'),
+  logReporte('sanitario-comparativo'),
+  ctrl.getSanitarioComparativo
+);
+
+router.get(
+  '/productividad',
+  requireRole('Propietario', 'Administrador', 'Produccion'),
+  validate(productividadReporteSchema, 'query'),
+  logReporte('productividad'),
+  ctrl.getProductividad
+);
+
+router.get(
+  '/comparativo-fechas',
+  requireRole('Propietario', 'Administrador', 'Medico Veterinario', 'Produccion'),
+  validate(comparativoFechasReporteSchema, 'query'),
+  logReporte('comparativo-fechas'),
+  ctrl.getComparativoFechas
+);
+
+router.get(
+  '/perdidas',
+  requireRole('Propietario', 'Administrador', 'Medico Veterinario'),
+  validate(perdidasReporteSchema, 'query'),
+  logReporte('perdidas'),
+  ctrl.getPerdidas
+);
+
+router.get(
+  '/perdidas-comparativo',
+  requireRole('Propietario', 'Administrador', 'Medico Veterinario'),
+  validate(perdidasComparativoReporteSchema, 'query'),
+  logReporte('perdidas-comparativo'),
+  ctrl.getPerdidasComparativo
+);
 
 /**
  * @swagger

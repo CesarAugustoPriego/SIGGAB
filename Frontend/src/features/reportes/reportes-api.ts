@@ -8,11 +8,24 @@ import type {
   ReporteAdministrativo,
   ReporteAdministrativoFilters,
   ReporteComparativo,
+  ReporteComparativoFechas,
+  ReporteComparativoFechasFilters,
   ReporteComparativoFilters,
+  ReporteInventario,
+  ReporteInventarioFilters,
+  ReportePerdidas,
+  ReportePerdidasComparativo,
+  ReportePerdidasFilters,
   ReporteProductivo,
   ReporteProductivoFilters,
+  ReporteProductividad,
+  ReporteProductividadFilters,
   ReporteSanitario,
+  ReporteSanitarioComparativo,
+  ReporteSanitarioHato,
+  ReporteSanitarioHatoFilters,
   ReporteSanitarioFilters,
+  ReportePeriodosFilters,
 } from './reportes-types';
 
 function buildQuery(params: Record<string, string | number | undefined>) {
@@ -142,6 +155,81 @@ export const reportesApi = {
     return httpClient.get<ReporteComparativo>(`/reportes/comparativo${query}`);
   },
 
+  getInventario: (filters: ReporteInventarioFilters = {}) => {
+    const query = buildQuery({
+      fechaInicio: filters.fechaInicio,
+      fechaFin: filters.fechaFin,
+      categoria: filters.categoria,
+      formato: 'json',
+    });
+    return httpClient.get<ReporteInventario>(`/reportes/inventario${query}`);
+  },
+
+  getSanitarioHato: (filters: ReporteSanitarioHatoFilters = {}) => {
+    const query = buildQuery({
+      fechaInicio: filters.fechaInicio,
+      fechaFin: filters.fechaFin,
+      estado: filters.estado,
+      formato: 'json',
+    });
+    return httpClient.get<ReporteSanitarioHato>(`/reportes/sanitario-hato${query}`);
+  },
+
+  getSanitarioComparativo: (filters: ReportePeriodosFilters) => {
+    const query = buildQuery({
+      periodoAInicio: filters.periodoAInicio,
+      periodoAFin: filters.periodoAFin,
+      periodoBInicio: filters.periodoBInicio,
+      periodoBFin: filters.periodoBFin,
+      formato: 'json',
+    });
+    return httpClient.get<ReporteSanitarioComparativo>(`/reportes/sanitario-comparativo${query}`);
+  },
+
+  getProductividad: (filters: ReporteProductividadFilters = {}) => {
+    const query = buildQuery({
+      fechaInicio: filters.fechaInicio,
+      fechaFin: filters.fechaFin,
+      edadMinimaMeses: filters.edadMinimaMeses,
+      formato: 'json',
+    });
+    return httpClient.get<ReporteProductividad>(`/reportes/productividad${query}`);
+  },
+
+  getComparativoFechas: (filters: ReporteComparativoFechasFilters) => {
+    const query = buildQuery({
+      modulo: filters.modulo,
+      periodoAInicio: filters.periodoAInicio,
+      periodoAFin: filters.periodoAFin,
+      periodoBInicio: filters.periodoBInicio,
+      periodoBFin: filters.periodoBFin,
+      edadMinimaMeses: filters.edadMinimaMeses,
+      formato: 'json',
+    });
+    return httpClient.get<ReporteComparativoFechas>(`/reportes/comparativo-fechas${query}`);
+  },
+
+  getPerdidas: (filters: ReportePerdidasFilters = {}) => {
+    const query = buildQuery({
+      fechaInicio: filters.fechaInicio,
+      fechaFin: filters.fechaFin,
+      motivo: filters.motivo,
+      formato: 'json',
+    });
+    return httpClient.get<ReportePerdidas>(`/reportes/perdidas${query}`);
+  },
+
+  getPerdidasComparativo: (filters: ReportePeriodosFilters) => {
+    const query = buildQuery({
+      periodoAInicio: filters.periodoAInicio,
+      periodoAFin: filters.periodoAFin,
+      periodoBInicio: filters.periodoBInicio,
+      periodoBFin: filters.periodoBFin,
+      formato: 'json',
+    });
+    return httpClient.get<ReportePerdidasComparativo>(`/reportes/perdidas-comparativo${query}`);
+  },
+
   downloadSanitario: (filters: ReporteSanitarioFilters, format: DownloadFormat) => (
     downloadReport(
       '/reportes/sanitario',
@@ -194,5 +282,56 @@ export const reportesApi = {
       format,
       'reporte-comparativo',
     )
+  ),
+
+  downloadInventario: (filters: ReporteInventarioFilters, format: DownloadFormat) => (
+    downloadReport('/reportes/inventario', {
+      fechaInicio: filters.fechaInicio,
+      fechaFin: filters.fechaFin,
+      categoria: filters.categoria,
+    }, format, 'reporte-inventario')
+  ),
+
+  downloadSanitarioHato: (filters: ReporteSanitarioHatoFilters, format: DownloadFormat) => (
+    downloadReport('/reportes/sanitario-hato', {
+      fechaInicio: filters.fechaInicio,
+      fechaFin: filters.fechaFin,
+      estado: filters.estado,
+    }, format, 'reporte-sanitario-hato')
+  ),
+
+  downloadSanitarioComparativo: (filters: ReportePeriodosFilters, format: DownloadFormat) => (
+    downloadReport('/reportes/sanitario-comparativo', { ...filters }, format, 'reporte-sanitario-comparativo')
+  ),
+
+  downloadProductividad: (filters: ReporteProductividadFilters, format: DownloadFormat) => (
+    downloadReport('/reportes/productividad', {
+      fechaInicio: filters.fechaInicio,
+      fechaFin: filters.fechaFin,
+      edadMinimaMeses: filters.edadMinimaMeses,
+    }, format, 'reporte-productividad')
+  ),
+
+  downloadComparativoFechas: (filters: ReporteComparativoFechasFilters, format: DownloadFormat) => (
+    downloadReport('/reportes/comparativo-fechas', {
+      modulo: filters.modulo,
+      periodoAInicio: filters.periodoAInicio,
+      periodoAFin: filters.periodoAFin,
+      periodoBInicio: filters.periodoBInicio,
+      periodoBFin: filters.periodoBFin,
+      edadMinimaMeses: filters.edadMinimaMeses,
+    }, format, 'reporte-comparativo-fechas')
+  ),
+
+  downloadPerdidas: (filters: ReportePerdidasFilters, format: DownloadFormat) => (
+    downloadReport('/reportes/perdidas', {
+      fechaInicio: filters.fechaInicio,
+      fechaFin: filters.fechaFin,
+      motivo: filters.motivo,
+    }, format, 'reporte-perdidas')
+  ),
+
+  downloadPerdidasComparativo: (filters: ReportePeriodosFilters, format: DownloadFormat) => (
+    downloadReport('/reportes/perdidas-comparativo', { ...filters }, format, 'reporte-perdidas-comparativo')
   ),
 };

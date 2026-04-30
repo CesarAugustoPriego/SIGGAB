@@ -12,7 +12,8 @@ export async function downloadAndShareReport(endpoint: string, format: 'pdf' | '
       throw new Error('No estás autenticado o la sesión expiró.');
     }
 
-    const url = `${env.apiBaseUrl}${endpoint}?formato=${format}`;
+    const separator = endpoint.includes('?') ? '&' : '?';
+    const url = `${env.apiBaseUrl}${endpoint}${separator}formato=${format}`;
     const filename = `Reporte_${new Date().getTime()}.${format}`;
     const fileUri = `${FileSystem.documentDirectory}${filename}`;
 

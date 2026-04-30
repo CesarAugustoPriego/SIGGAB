@@ -76,4 +76,79 @@ async function getComparativo(req, res, next) {
   }
 }
 
-module.exports = { getSanitario, getProductivo, getAdministrativo, getComparativo };
+async function getInventario(req, res, next) {
+  try {
+    const report = await reportesService.getInventarioReport(req.query);
+    return sendReportByFormat(req, res, 'inventario', report, 'Reporte de inventario generado');
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function getSanitarioHato(req, res, next) {
+  try {
+    const report = await reportesService.getSanitarioHatoReport(req.query);
+    return sendReportByFormat(req, res, 'sanitario-hato', report, 'Reporte sanitario del hato generado');
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function getSanitarioComparativo(req, res, next) {
+  try {
+    const report = await reportesService.getSanitarioComparativoReport(req.query);
+    return sendReportByFormat(req, res, 'sanitario-comparativo', report, 'Reporte sanitario comparativo generado');
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function getProductividad(req, res, next) {
+  try {
+    const report = await reportesService.getProductividadReport(req.query);
+    return sendReportByFormat(req, res, 'productividad', report, 'Reporte de productividad generado');
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function getComparativoFechas(req, res, next) {
+  try {
+    const report = await reportesService.getComparativoFechasReport(req.query);
+    return sendReportByFormat(req, res, 'comparativo-fechas', report, 'Reporte comparativo por fechas generado');
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function getPerdidas(req, res, next) {
+  try {
+    const report = await reportesService.getPerdidasReport(req.query);
+    return sendReportByFormat(req, res, 'perdidas', report, 'Reporte de perdidas generado');
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function getPerdidasComparativo(req, res, next) {
+  try {
+    const report = await reportesService.getPerdidasComparativoReport(req.query);
+    return sendReportByFormat(req, res, 'perdidas-comparativo', report, 'Reporte comparativo de perdidas generado');
+  } catch (error) {
+    return next(error);
+  }
+}
+
+module.exports = {
+  getSanitario,
+  getProductivo,
+  getAdministrativo,
+  getComparativo,
+  getInventario,
+  getSanitarioHato,
+  getSanitarioComparativo,
+  getProductividad,
+  getComparativoFechas,
+  getPerdidas,
+  getPerdidasComparativo,
+};

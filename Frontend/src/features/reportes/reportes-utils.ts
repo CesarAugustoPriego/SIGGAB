@@ -50,6 +50,10 @@ export function canViewReporteAdministrativo(roleName: string | undefined) {
   ]);
 }
 
+export function canViewReporteInventario(roleName: string | undefined) {
+  return canViewReporteAdministrativo(roleName);
+}
+
 export function canViewReporteComparativo(roleName: string | undefined) {
   return hasRole(roleName, [
     'propietario',
@@ -57,6 +61,15 @@ export function canViewReporteComparativo(roleName: string | undefined) {
     'medico veterinario',
     'veterinario',
     'produccion',
+  ]);
+}
+
+export function canViewReportePerdidas(roleName: string | undefined) {
+  return hasRole(roleName, [
+    'propietario',
+    'administrador',
+    'medico veterinario',
+    'veterinario',
   ]);
 }
 
