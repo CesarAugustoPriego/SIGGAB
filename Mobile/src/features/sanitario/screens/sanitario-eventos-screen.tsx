@@ -436,7 +436,10 @@ export function SanitarioEventosScreen() {
             <Text style={styles.heroArete}>{animal.numeroArete}</Text>
           </View>
 
-          <Image source={require('../../../../assets/images/auth-hero-register.jpg')} style={styles.heroAnimal} />
+          <Image
+            source={animal.fotoUrl ? { uri: animal.fotoUrl } : require('../../../../assets/images/auth-hero-register.jpg')}
+            style={styles.heroAnimal}
+          />
         </View>
 
         <View style={styles.pillBar}>
